@@ -1,0 +1,17 @@
+# Copyright 2024 The Chromium Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("profiler") {
+  public = [ "unwind_util.h" ]
+
+  sources = [ "unwind_util.cc" ]
+
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+
+  deps = [
+    "//base",
+    "//components/version_info:version_info",
+    "//radium/common:channel_info",
+  ]
+}

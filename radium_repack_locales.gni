@@ -1,0 +1,74 @@
+# Copyright 2014 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//tools/grit/repack.gni")
+
+assert(!is_ios, "Radium/iOS shouldn't use anything in //radium")
+
+# Wraps repack_locales(), setting the source_patterns and deps required for
+# Chrome.
+#
+# Extra Parameters:
+#
+#   additional_source_patterns [optional]
+#      Extra source_patterns for repack_locales().
+template("radium_repack_locales") {
+  repack_locales(target_name) {
+    forward_variables_from(invoker, "*", [ "additional_source_patterns" ])
+
+    # Each input pak file should also have a deps line.
+    source_patterns = [
+      "${root_gen_dir}/components/omnibox/resources/omnibox_pedal_synonyms_",
+      "${root_gen_dir}/components/plus_addresses/resources/strings/plus_addresses_strings_",
+      "${root_gen_dir}/components/strings/components_locale_settings_",
+      "${root_gen_dir}/components/strings/components_strings_",
+      "${root_gen_dir}/components/strings/privacy_sandbox_strings_",
+      "${root_gen_dir}/third_party/blink/public/strings/blink_strings_",
+      "${root_gen_dir}/third_party/blink/public/strings/permission_element_strings_",
+      "${root_gen_dir}/device/bluetooth/strings/bluetooth_strings_",
+      "${root_gen_dir}/device/fido/strings/fido_strings_",
+      "${root_gen_dir}/services/strings/services_strings_",
+      "${root_gen_dir}/third_party/libaddressinput/address_input_strings_",
+      "${root_gen_dir}/ui/strings/app_locale_settings_",
+      "${root_gen_dir}/ui/strings/auto_image_annotation_strings_",
+      "${root_gen_dir}/ui/strings/ax_strings_",
+      "${root_gen_dir}/ui/strings/ui_strings_",
+    ]
+    if (!defined(deps)) {
+      deps = []
+    }
+    deps += [
+      "//components/omnibox/resources:omnibox_pedal_synonyms",
+      "//components/plus_addresses/resources/strings",
+      "//components/strings:components_branded_strings",
+      "//components/strings:components_locale_settings",
+      "//components/strings:components_strings",
+      "//components/strings:privacy_sandbox_strings",
+      "//device/bluetooth/strings",
+      "//device/fido/strings",
+      "//services/strings",
+      "//third_party/blink/public/strings",
+      "//third_party/blink/public/strings:permission_element_strings",
+      "//third_party/libaddressinput:strings",
+      "//ui/strings:app_locale_settings",
+      "//ui/strings:auto_image_annotation_strings",
+      "//ui/strings:ax_strings",
+      "//ui/strings:ui_strings",
+    ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    if (!is_android) {
+      source_patterns += [ "${root_gen_dir}/components/strings/search_engine_descriptions_strings_" ]
+      deps += [ "//components/strings:search_engine_descriptions_strings" ]
+    }
+
+    source_patterns += [ "${root_gen_dir}/components/strings/components_${branding_path_product}_strings_" ]
+
+    if (defined(invoker.additional_source_patterns)) {
+      source_patterns += invoker.additional_source_patterns
+    }
+  }
+}

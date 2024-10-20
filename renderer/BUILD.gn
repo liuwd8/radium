@@ -1,0 +1,3 @@
+group("renderer") {
+  deps = [ "//tools/v8_context_snapshot" ]
+}

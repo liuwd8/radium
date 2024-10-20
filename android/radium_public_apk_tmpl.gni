@@ -1,0 +1,159 @@
+# Copyright 2024 The Chromium Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//base/android/resource_exclusions.gni")
+import("//build/config/android/rules.gni")
+import("//build/config/locales.gni")
+import("//components/crash/android/silent_java_assert_reporting.gni")
+import("//radium/version.gni")
+
+default_radium_public_jinja_variables = [
+  "channel=$android_channel",
+  "enable_cardboard=$enable_cardboard",
+  "enable_vr=$enable_vr",
+  "enable_openxr=$enable_openxr",
+  "enable_arcore=$enable_arcore",
+  "is_desktop_android=$is_desktop_android",
+  "zygote_preload_class=org.chromium.content_public.app.ZygotePreload",
+]
+
+# Generates an AndroidManifest.xml along with an optional second manifest
+# dependent on the original.
+#
+# Variables:
+#   input: The base manifest template with the main application definition.
+#   output: Output path for |input|.
+#   split_input: Path to an alternate manifest that will be built if
+#     definitions_in_split is true.
+#   split_output: Output path for |split_input|.
+#   variables: Variables to pass to the jinja templates.
+#   definitions_in_split: If true will pass definitions_in_split=true in the
+#     variables passed to |input| and generate |split_output|.
+template("split_manifest_template") {
+  _definitions_in_split =
+      defined(invoker.definitions_in_split) && invoker.definitions_in_split
+  jinja_template(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "includes",
+                             "input",
+                             "output",
+                             "variables",
+                           ])
+    if (_definitions_in_split) {
+      variables += [ "definitions_in_split=true" ]
+    }
+  }
+
+  if (_definitions_in_split) {
+    jinja_template("${target_name}__split") {
+      forward_variables_from(invoker,
+                             [
+                               "includes",
+                               "variables",
+                             ])
+      if (!defined(includes)) {
+        includes = []
+      }
+      includes += [ invoker.input ]
+      input = invoker.split_input
+      output = invoker.split_output
+      _rebased_input = rebase_path(invoker.input, "//")
+      variables += [ "base_manifest=${_rebased_input}" ]
+    }
+  } else {
+    not_needed(invoker,
+               [
+                 "split_input",
+                 "split_output",
+               ])
+  }
+}
+
+template("radium_apk_tmpl") {
+  _target_type = invoker.target_type
+  assert(_target_type == "android_apk" ||
+         _target_type == "android_app_bundle_module")
+
+  _is_bundle = _target_type == "android_app_bundle_module"
+
+  _version_code = ""
+
+  _android_manifest = "$target_gen_dir/$target_name/AndroidManifest.xml"
+  _split_android_manifest =
+      "$target_gen_dir/$target_name/AndroidManifest_split.xml"
+  _android_manifest_target_name = "${target_name}__android_manifest"
+  split_manifest_template(_android_manifest_target_name) {
+    definitions_in_split = _is_bundle
+    includes = []
+    output = _android_manifest
+    variables = default_radium_public_jinja_variables +
+                [ "manifest_package=$_manifest_package" ]
+
+    input = "//radium/android/java/AndroidManifest.xml"
+  }
+
+  target(_target_type, target_name) {
+    android_manifest = _android_manifest
+    android_manifest_dep = ":$_android_manifest_target_name"
+    manifest_package = _manifest_package
+
+    if (defined(invoker.version_name)) {
+      version_name = invoker.version_name
+    } else {
+      # TODO: 动态生成
+      version_name = "0.0.1.0"
+    }
+    if (defined(invoker.version_code)) {
+      # Override for the actual versionCode, but not for trichrome_version.
+      version_code = invoker.version_code
+    } else {
+      version_code = _version_code
+    }
+
+    if (_target_type == "android_apk") {
+      command_line_flags_file = "radium-command-line"
+    }
+
+    if (_is_bundle) {
+      is_base_module = true
+    }
+
+    product_config_java_packages = [ "com.liuwd8.radium.browser" ]
+
+    # Chrome does not enable Strict Mode checks.
+    disable_strict_mode_context = true
+
+    if (enable_silent_java_assert_reporting) {
+      custom_assertion_handler = crash_reporting_assertion_handler
+    }
+
+    # Include resource strings files only for supported locales.
+    aapt_locale_allowlist = platform_pak_locales
+
+    resource_exclusion_regex = common_resource_exclusion_regex
+    resource_exclusion_exceptions = common_resource_exclusion_exceptions
+
+    # Exceptions (rationale in https://crbug.com/691733):
+    resource_exclusion_exceptions += [
+      "*ic_file_download_white*",  # Bottom edge seems misaligned.
+      "*ic_lock.*",  # Bottom edge seems misaligned.
+    ]
+
+    # Most of these, with the exception of resource_exclusion_exceptions,
+    # are currently duplicated in system_webview_apk_tmpl.gni.
+
+    # Used only by alert dialog on tiny screens.
+    _material_package = "com_google_android_material.*"
+    resource_exclusion_regex += "|${_material_package}values-small"
+
+    # Used only by date picker (which chrome doesn't use).
+    resource_exclusion_regex += "|${_material_package}-(w480dp-port|w360dp-port|h480dp-land|h360dp-land)"
+
+    # Material design layouts that cause views to be kept that we don't use.
+    # Instead of manually filtering, unused resource removal would be better:
+    # https://crbug.com/636448
+    resource_exclusion_regex += "|${_material_package}/xml.*badge_"
+  }
+}

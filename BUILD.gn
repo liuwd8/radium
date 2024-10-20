@@ -1,0 +1,148 @@
+# Copyright 2024 The Chromium Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+import("//build/config/win/console_app.gni")
+import("//build/config/win/manifest.gni")
+import("//radium/radium_paks.gni")
+import("//tools/resources/generate_resource_allowlist.gni")
+
+assert(!is_ios, "Chromium/iOS shouldn't use anything in //chrome")
+
+if (is_win && enable_resource_allowlist_generation) {
+  _radium_resource_allowlist = "$target_gen_dir/chrome_resource_allowlist.txt"
+}
+
+group("all") {
+  deps = [ ":radium" ]
+}
+
+group("radium") {
+  deps = []
+
+  if (is_android) {
+    deps += [ "//radium/android:radium_apk" ]
+  } else {
+    deps += [ ":radium_exe" ]
+  }
+}
+
+executable("radium_exe") {
+  output_name = "radium"
+
+  sources = []
+
+  public_deps = []
+  deps = [ "//base" ]
+
+  data = [ "$root_out_dir/radium_resources.pak" ]
+  data_deps = []
+
+  if (is_win) {
+    sources += [ "app/radium_exe_main_win.cc" ]
+    deps += [ ":radium_dll" ]
+
+    if (win_console_app) {
+      defines += [ "WIN_CONSOLE_APP" ]
+    } else {
+      # Set /SUBSYSTEM:WINDOWS for chrome.exe itself, unless a console build
+      # has been requested.
+      configs -= [ "//build/config/win:console" ]
+      configs += [ "//build/config/win:windowed" ]
+    }
+  } else if (use_aura) {
+    sources += [ "app/radium_exe_main_aura.cc" ]
+  }
+
+  if (is_linux) {
+    sources += [
+      "app/radium_dll_resource.h",
+      "app/radium_main.cc",
+      "app/radium_main_delegate.cc",
+      "app/radium_main_delegate.h",
+      "app/startup_timestamps.h",
+    ]
+
+    deps += [
+      ":dependencies",
+      "//content/public/app",
+      "//radium/common",
+    ]
+
+    # These files are used by the installer so we need a public dep.
+    public_deps += [ ":packed_resources" ]
+
+    # The step's output are needed at runtime, so we also need a data_dep.
+    data_deps += [ ":packed_resources" ]
+
+    if (use_ozone) {
+      deps += [ "//ui/ozone" ]
+      if (is_linux) {
+        deps += [ "//ui/linux:display_server_utils" ]
+      }
+    }
+  }
+}
+
+if (is_win) {
+  shared_library("radium_dll") {
+    deps = [ ":dependencies" ]
+  }
+}
+
+group("dependencies") {
+  public_deps = [
+    "//components/content_settings/core/common",
+    "//components/crash/core/app",
+    "//components/memory_system",
+    "//components/startup_metric_utils",
+    "//radium/browser",
+    "//radium/renderer",
+  ]
+}
+
+if (!is_android) {
+  radium_paks("packed_resources") {
+    if (is_mac) {
+      output_dir = "$root_gen_dir/repack"
+      copy_data_to_bundle = true
+    } else {
+      output_dir = root_out_dir
+      mark_as_data = true
+    }
+
+    if (enable_resource_allowlist_generation) {
+      repack_allowlist = _radium_resource_allowlist
+      deps = [ ":resource_allowlist" ]
+    }
+
+    # This needs to be in-sync with //radium/app/packed_resources_integrity.h.
+    files_to_hash = [
+      "radium_resources.pak",
+      "radium_100_percent.pak",
+    ]
+    if (enable_hidpi) {
+      files_to_hash += [ "radium_200_percent.pak" ]
+    }
+  }
+
+  # # This is extracted to deserialize build dependency around
+  # # :packed_resources_integrity_hash and improve build parallelism.
+  # source_set("packed_resources_integrity_header") {
+  #   sources = [ "app/packed_resources_integrity.h" ]
+
+  #   # chrome/app/packed_resources_integrity.cc file is generated in dependency.
+  #   deps = [ ":packed_resources_integrity" ]
+  # }
+}
+
+# Android also supports this, but uses
+# //chrome/android:${_variant}_resource_allowlist.
+if (is_win && enable_resource_allowlist_generation) {
+  generate_resource_allowlist("resource_allowlist") {
+    deps = [ ":radium_dll" ]
+    inputs = [ "$root_out_dir/radium.dll.pdb" ]
+    output = _radium_resource_allowlist
+  }
+}

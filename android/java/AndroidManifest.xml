@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+# Copyright 2024 The Chromium Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+-->
+
+<!--
+Note: This is a jinja2 template, processed at build time into the final manifest.
+
+Blocks denoted with { % block some_name % }foo{ % endblock % } can be overridden
+by a child template that "extends" this file.
+-->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="{{ manifest_package }}"
+    {% set definitions_in_split = definitions_in_split|default(0) == 'true' %}
+    {% if definitions_in_split %}
+    android:isolatedSplits="true"
+    {% endif %}
+    tools:ignore="MissingVersion">
+    <!-- android:versionCode and android:versionName is set through gyp. See build/common.gypi -->
+</manifest>

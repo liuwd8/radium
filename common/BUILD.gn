@@ -1,0 +1,83 @@
+group("common") {
+  public_deps = [ ":common_lib" ]
+  if (is_win) {
+    public_deps += [ "//chrome/common/win:delay_load_hooks" ]
+  }
+}
+
+source_set("channel_info") {
+  sources = [
+    "channel_info.cc",
+    "channel_info.h",
+  ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+  public_deps = [
+    "//base",
+    "//components/version_info",
+    "//components/version_info:version_string",
+  ]
+}
+
+static_library("common_lib") {
+  visibility = [ ":*" ]
+
+  sources = [
+    "logging_radium.cc",
+    "logging_radium.h",
+    "radium_content_client.cc",
+    "radium_content_client.h",
+    "radium_paths.cc",
+    "radium_paths.h",
+    "radium_paths_internal.h",
+    "radium_result_codes.cc",
+    "radium_result_codes.h",
+  ]
+
+  deps = [
+    ":channel_info",
+    ":constants",
+    ":url_constants",
+    "//base",
+    "//content/public/common",
+    "//radium/common/profiler",
+  ]
+}
+
+# Separate out the constants that aren't intermingled with or dependent on code
+# so that they can be used without adding any binary bloat.
+static_library("non_code_constants") {
+  sources = [
+    "radium_constants.cc",
+    "radium_constants.h",
+  ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+
+  deps = [ "//base" ]
+
+  public_deps = [ "//ui/base:buildflags" ]
+}
+
+static_library("url_constants") {
+  visibility = [ "//radium/common/*" ]
+  sources = [ "webui_url_constants.h" ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+}
+
+static_library("constants") {
+  sources = [
+    "radium_paths.cc",
+    "radium_paths.h",
+    "radium_paths_internal.h",
+  ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+
+  deps = [
+    ":non_code_constants",
+    "//base",
+    "//components/policy/core/common:policy_path_constants",
+  ]
+
+  if (is_linux) {
+    sources += [ "radium_paths_linux.cc" ]
+  }
+}

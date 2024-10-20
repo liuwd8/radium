@@ -1,0 +1,54 @@
+import("//ui/base/ui_features.gni")
+
+static_library("browser") {
+  sources = [
+    "browser_process.cc",
+    "browser_process.h",
+    "platform_util.h",
+    "radium_browser_main_extra_parts.h",
+    "radium_browser_main_parts.cc",
+    "radium_browser_main_parts.h",
+    "radium_content_browser_client.cc",
+    "radium_content_browser_client.h",
+  ]
+
+  deps = [
+    "//components/keep_alive_registry",
+    "//content/public/browser",
+    "//content/public/common",
+    "//radium/browser/ui",
+  ]
+
+  if (use_aura) {
+    # Cross - platform Aura files.
+    sources += [ "platform_util_aura.cc" ]
+
+    deps += [ "//ui/aura" ]
+
+    if (is_linux) {
+      deps += [
+        "//ui/linux:linux_ui",
+        "//ui/linux:linux_ui_factory",
+      ]
+    }
+  }
+
+  if (is_linux) {
+    sources += [
+      "radium_browser_main_extra_parts_linux.cc",
+      "radium_browser_main_extra_parts_linux.h",
+    ]
+  }
+
+  if (use_ozone) {
+    sources += [
+      "radium_browser_main_extra_parts_ozone.cc",
+      "radium_browser_main_extra_parts_ozone.h",
+    ]
+
+    deps += [
+      "//ui/events/ozone",
+      "//ui/ozone",
+    ]
+  }
+}

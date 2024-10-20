@@ -1,0 +1,255 @@
+import("//build/config/locales.gni")
+import("//build/config/ui.gni")
+import("//ui/base/ui_features.gni")
+import("//ui/webui/webui_features.gni")
+import("radium_repack_locales.gni")
+
+# Generates a rule to repack a set of resources, substituting a given string
+# in for the percentage (e.g. "100", "200"). It generates the repacked files in
+# the "gen" directory, and then introduces a copy rule to copy it to the root
+# build directory.
+#
+# Argument:
+#   percent [required]
+#      String to substitute for the percentage.
+template("radium_repack_percent") {
+  percent = invoker.percent
+
+  repack(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "mark_as_data",
+                             "repack_allowlist",
+                             "visibility",
+                           ])
+
+    # All sources should also have deps for completeness.
+    sources = [
+      "$root_gen_dir/components/components_resources_${percent}_percent.pak",
+      "$root_gen_dir/third_party/blink/public/resources/blink_scaled_resources_${percent}_percent.pak",
+      "$root_gen_dir/ui/resources/ui_resources_${percent}_percent.pak",
+    ]
+
+    deps = [
+      "//components/resources",
+      "//components/strings",
+      "//net:net_resources",
+      "//third_party/blink/public:scaled_resources_${percent}_percent",
+      "//ui/resources",
+    ]
+
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    if (toolkit_views) {
+      sources += [ "$root_gen_dir/ui/views/resources/views_resources_${percent}_percent.pak" ]
+      deps += [ "//ui/views/resources" ]
+    }
+
+    output = "${invoker.output_dir}/radium_${percent}_percent.pak"
+  }
+}
+
+template("radium_extra_paks") {
+  repack(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "mark_as_data",
+                             "repack_allowlist",
+                             "visibility",
+                           ])
+    output = "${invoker.output_dir}/radium_resources.pak"
+    sources = [
+      "$root_gen_dir/base/tracing/protos/tracing_proto_resources.pak",
+      "$root_gen_dir/components/autofill/core/browser/autofill_address_rewriter_resources.pak",
+      "$root_gen_dir/components/components_resources.pak",
+      "$root_gen_dir/components/flags_ui_resources.pak",
+      "$root_gen_dir/components/version_ui_resources.pak",
+      "$root_gen_dir/content/attribution_internals_resources.pak",
+      "$root_gen_dir/content/content_resources.pak",
+      "$root_gen_dir/content/histograms_resources.pak",
+      "$root_gen_dir/content/indexed_db_resources.pak",
+      "$root_gen_dir/content/private_aggregation_internals_resources.pak",
+      "$root_gen_dir/content/quota_internals_resources.pak",
+      "$root_gen_dir/mojo/public/js/mojo_bindings_resources.pak",
+      "$root_gen_dir/net/net_resources.pak",
+      "$root_gen_dir/third_party/blink/public/resources/blink_resources.pak",
+      "$root_gen_dir/third_party/blink/public/resources/inspector_overlay_resources.pak",
+      "$root_gen_dir/ui/resources/webui_resources.pak",
+    ]
+    deps = [
+      "//base/tracing/protos:chrome_track_event_resources",
+      "//components/autofill/core/browser:autofill_address_rewriter_resources",
+      "//components/resources",
+      "//content:content_resources",
+      "//content/browser/resources:resources",
+      "//mojo/public/js:resources",
+      "//net:net_resources",
+      "//third_party/blink/public:devtools_inspector_resources",
+      "//third_party/blink/public:resources",
+      "//ui/resources",
+    ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+    if (defined(invoker.additional_paks)) {
+      sources += invoker.additional_paks
+    }
+
+    if (!is_android) {
+      # New paks should be added here by default.
+      sources += [
+        "$root_gen_dir/content/browser/devtools/devtools_resources.pak",
+        "$root_gen_dir/content/browser/tracing/tracing_resources.pak",
+        "$root_gen_dir/content/traces_internals_resources.pak",
+      ]
+      deps += [
+        "//content/browser/devtools:devtools_resources",
+        "//content/browser/tracing:resources",
+      ]
+      if (!optimize_webui) {
+        # Only add when optimize_webui=false, since in other cases the same
+        # resources are already bundled within the UIs that use them.
+        sources += [ "$root_gen_dir/chrome/settings_shared_resources.pak" ]
+        deps += [ "//chrome/browser/resources/settings_shared:resources" ]
+      }
+    }
+  }
+}
+
+# Defines repack() targets used by Chrome. Specifically:
+# * chrome_100_percent.pak
+# * chrome_200_percent.pak (optionally)
+# * radium_resources.pak
+# * locale .pak files
+#
+# Parameters:
+#   output_dir [required]: Directory to output .pak files. Locale .pak files
+#       will always be place in $output_dir/radium_locales
+#   additional_extra_paks: List of extra .pak sources for radium_resources.pak.
+#   locale_allowlist: if set, override repack_allowlist for locale .pak files.
+#   files_to_hash: if set, a list of pak file names to generate SHA256 hashes
+#     for.
+#   copy_data_to_bundle:
+#   deps:
+#   mark_as_data:
+#   output_dir:
+#   public_deps:
+#   repack_allowlist:
+#   visibility:
+#     Normal meanings.
+#
+template("radium_paks") {
+  radium_repack_percent("${target_name}_100_percent") {
+    percent = "100"
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "deps",
+                             "mark_as_data",
+                             "output_dir",
+                             "repack_allowlist",
+                             "visibility",
+                           ])
+  }
+
+  if (enable_hidpi) {
+    radium_repack_percent("${target_name}_200_percent") {
+      percent = "200"
+      forward_variables_from(invoker,
+                             [
+                               "copy_data_to_bundle",
+                               "deps",
+                               "mark_as_data",
+                               "output_dir",
+                               "repack_allowlist",
+                               "visibility",
+                             ])
+    }
+  }
+
+  radium_extra_paks("${target_name}_extra") {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "deps",
+                             "mark_as_data",
+                             "output_dir",
+                             "repack_allowlist",
+                             "visibility",
+                           ])
+    if (defined(invoker.additional_extra_paks)) {
+      additional_paks = invoker.additional_extra_paks
+    }
+  }
+
+  radium_repack_locales("${target_name}_locales") {
+    forward_variables_from(invoker,
+                           [
+                             "copy_data_to_bundle",
+                             "deps",
+                             "mark_as_data",
+                             "visibility",
+                           ])
+    if (defined(invoker.locale_allowlist)) {
+      repack_allowlist = invoker.locale_allowlist
+    } else if (defined(invoker.repack_allowlist)) {
+      repack_allowlist = invoker.repack_allowlist
+    }
+
+    input_locales = platform_pak_locales
+    output_dir = "${invoker.output_dir}/radium_locales"
+
+    if (is_mac) {
+      output_locales = locales_as_apple_outputs
+    } else {
+      output_locales = platform_pak_locales
+    }
+  }
+
+  group(target_name) {
+    forward_variables_from(invoker, [ "deps" ])
+    public_deps = [
+      ":${target_name}_100_percent",
+      ":${target_name}_extra",
+      ":${target_name}_locales",
+    ]
+    if (enable_hidpi) {
+      public_deps += [ ":${target_name}_200_percent" ]
+    }
+    if (defined(invoker.public_deps)) {
+      public_deps += invoker.public_deps
+    }
+  }
+
+  if (defined(invoker.files_to_hash)) {
+    _prefix = "$target_gen_dir/app/${target_name}_integrity"
+
+    # User of this template needs to check in a pre-generated "$_prefix.h".
+    _integrity_outputs = [ "$_prefix.cc" ]
+
+    action("${target_name}_integrity_hash") {
+      script = "tools/build/sha256_file.py"
+      outputs = _integrity_outputs
+      inputs = []
+      foreach(file, invoker.files_to_hash) {
+        inputs += [ "${invoker.output_dir}/$file" ]
+      }
+
+      args = rebase_path([ _prefix ] + inputs, root_build_dir)
+      deps = [ ":${invoker.target_name}" ]
+    }
+
+    source_set("${target_name}_integrity") {
+      sources = _integrity_outputs
+
+      # This allows starting compilation in dependent targets earlier.
+      public = []
+
+      deps = [ ":${target_name}_hash" ]
+    }
+  }
+}
