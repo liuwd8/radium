@@ -57,6 +57,23 @@ static_library("non_code_constants") {
   public_deps = [ "//ui/base:buildflags" ]
 }
 
+component("radium_features") {
+  defines = [ "IS_RADIUM_FEATURES_IMPL" ]
+
+  sources = [
+    "radium_features.cc",
+    "radium_features.h",
+  ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+
+  deps = [
+    ":non_code_constants",
+    "//base",
+  ]
+
+  public_deps = [ "//ui/base:buildflags" ]
+}
+
 static_library("url_constants") {
   visibility = [ "//radium/common/*" ]
   sources = [ "webui_url_constants.h" ]
@@ -73,6 +90,7 @@ static_library("constants") {
 
   deps = [
     ":non_code_constants",
+    ":radium_features",
     "//base",
     "//components/policy/core/common:policy_path_constants",
   ]

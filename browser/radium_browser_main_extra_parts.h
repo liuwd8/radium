@@ -9,7 +9,9 @@ class RadiumBrowserMainExtraParts {
  public:
   virtual ~RadiumBrowserMainExtraParts() = default;
 
-  virtual void PreMainMessageLoopRun() {}
+  // EarlyInitialization methods.
+  virtual void PreEarlyInitialization() {}
+  virtual void PostEarlyInitialization() {}
 
   // ToolkitInitialized methods.
   virtual void ToolkitInitialized() {}
@@ -22,6 +24,7 @@ class RadiumBrowserMainExtraParts {
   virtual void PreCreateThreads() {}
   virtual void PreProfileInit() {}
   virtual void PostBrowserStart() {}
+  virtual void PreMainMessageLoopRun() {}
   virtual void PostMainMessageLoopRun() {}
 };
 

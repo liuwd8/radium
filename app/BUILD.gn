@@ -1,0 +1,42 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//radium/common/features.gni")
+import("//radium/locales.gni")
+import("//tools/grit/grit_args.gni")
+import("//tools/grit/grit_rule.gni")
+
+group("resources") {
+  deps = [ ":strings" ]
+}
+
+xtb_locales = support_locales - [ "en-US" ]
+
+grit("strings") {
+  source = "radium_strings.grd"
+  defines = radium_grit_defines
+  output_dir = "$root_gen_dir/radium"
+  outputs = [ "grit/radium_strings.h" ] +
+            process_file_template(support_locales,
+                                  [ "radium_strings_{{source_name_part}}.pak" ])
+}
+
+action("generate_xtb_file") {
+  script = "//radium/tools/generate_translations.py"
+
+  sources = [ "radium_strings.grd" ]
+
+  outputs = [ "${target_gen_dir}/generate_translations.xtb" ]
+
+  args = [
+           "-i",
+           rebase_path("radium_strings.grd"),
+           "--xtb",
+           rebase_path("//chrome/app/resources"),
+           "--template_file",
+           rebase_path("translations"),
+           "-o",
+           rebase_path("translations"),
+         ] + grit_args + xtb_locales
+}

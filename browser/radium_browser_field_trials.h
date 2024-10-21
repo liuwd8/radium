@@ -15,7 +15,7 @@ class RadiumBrowserFieldTrials : public variations::PlatformFieldTrials {
   RadiumBrowserFieldTrials(const RadiumBrowserFieldTrials&) = delete;
   RadiumBrowserFieldTrials& operator=(const RadiumBrowserFieldTrials&) = delete;
 
-  ~RadiumBrowserFieldTrials();
+  ~RadiumBrowserFieldTrials() override;
 
  private:
 };

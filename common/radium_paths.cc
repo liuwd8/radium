@@ -401,7 +401,7 @@ bool PathProvider(int key, base::FilePath* result) {
       if (!base::PathService::Get(base::DIR_SRC_TEST_DATA_ROOT, &cur)) {
         return false;
       }
-      cur = cur.Append(FILE_PATH_LITERAL("chrome"));
+      cur = cur.Append(FILE_PATH_LITERAL("radium"));
       cur = cur.Append(FILE_PATH_LITERAL("test"));
       cur = cur.Append(FILE_PATH_LITERAL("data"));
       if (!base::PathExists(cur)) {  // We don't want to create this.
@@ -412,7 +412,7 @@ bool PathProvider(int key, base::FilePath* result) {
       if (!base::PathService::Get(base::DIR_SRC_TEST_DATA_ROOT, &cur)) {
         return false;
       }
-      cur = cur.Append(FILE_PATH_LITERAL("chrome"));
+      cur = cur.Append(FILE_PATH_LITERAL("radium"));
       cur = cur.Append(FILE_PATH_LITERAL("tools"));
       cur = cur.Append(FILE_PATH_LITERAL("test"));
       if (!base::PathExists(cur)) {  // We don't want to create this
@@ -451,8 +451,8 @@ bool PathProvider(int key, base::FilePath* result) {
         return false;
       }
 
-      cur = cur.Append(FILE_PATH_LITERAL("Google"))
-                .Append(FILE_PATH_LITERAL("Chrome"))
+      cur = cur.Append(FILE_PATH_LITERAL("Liuwd8"))
+                .Append(FILE_PATH_LITERAL("Radium"))
                 .Append(FILE_PATH_LITERAL("External Extensions"));
 #else
       if (!base::PathService::Get(base::DIR_MODULE, &cur)) {

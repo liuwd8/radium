@@ -62,10 +62,10 @@ bool GetUserMediaDirectory(const std::string& xdg_name,
 bool GetDefaultUserDataDirectory(base::FilePath* result) {
   std::unique_ptr<base::Environment> env(base::Environment::Create());
   base::FilePath config_dir;
-  std::string chrome_config_home_str;
-  if (env->GetVar("CHROME_CONFIG_HOME", &chrome_config_home_str) &&
-      base::IsStringUTF8(chrome_config_home_str)) {
-    config_dir = base::FilePath::FromUTF8Unsafe(chrome_config_home_str);
+  std::string radium_config_home_str;
+  if (env->GetVar("RADIUM_CONFIG_HOME", &radium_config_home_str) &&
+      base::IsStringUTF8(radium_config_home_str)) {
+    config_dir = base::FilePath::FromUTF8Unsafe(radium_config_home_str);
   } else {
     config_dir = base::nix::GetXDGDirectory(
         env.get(), base::nix::kXdgConfigHomeEnvVar, base::nix::kDotConfigDir);

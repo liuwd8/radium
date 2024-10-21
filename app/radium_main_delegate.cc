@@ -25,7 +25,9 @@
 #include "content/public/common/url_constants.h"
 #include "net/http/http_cache.h"
 #include "net/url_request/url_request.h"
+#include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/radium_content_browser_client.h"
+#include "radium/browser/radium_resource_bundle_helper.h"
 #include "radium/common/logging_radium.h"
 #include "radium/common/profiler/unwind_util.h"
 #include "radium/common/radium_paths.h"
@@ -432,12 +434,11 @@ void RadiumMainDelegate::ZygoteForked() {
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 
 bool RadiumMainDelegate::ShouldCreateFeatureList(InvokedIn invoked_in) {
-  // return absl::holds_alternative<InvokedInChildProcess>(invoked_in);
-  return true;
+  return absl::holds_alternative<InvokedInChildProcess>(invoked_in);
 }
 
 bool RadiumMainDelegate::ShouldInitializeMojo(InvokedIn invoked_in) {
-  return absl::holds_alternative<InvokedInChildProcess>(invoked_in);
+  return ShouldCreateFeatureList(invoked_in);
 }
 
 std::optional<int> RadiumMainDelegate::PostEarlyInitialization(
@@ -464,13 +465,12 @@ std::optional<int> RadiumMainDelegate::PostEarlyInitialization(
   // a ChromeNetworkDelegate attached that selectively allows cookies again.
   net::URLRequest::SetDefaultCookiePolicyToBlock();
 
-  // // The DBus initialization above is needed for FeatureList creation here;
-  // // features are needed for Mojo initialization; and Mojo initialization is
-  // // needed for LacrosService initialization below.
-  // ChromeFeatureListCreator* chrome_feature_list_creator =
-  //     chrome_content_browser_client_->startup_data()
-  //         ->chrome_feature_list_creator();
-  // chrome_feature_list_creator->CreateFeatureList();
+  // The DBus initialization above is needed for FeatureList creation here;
+  // features are needed for Mojo initialization; and Mojo initialization is
+  // needed for LacrosService initialization below.
+  RadiumFeatureListCreator* radium_feature_list_creator =
+      radium_content_browser_client_->radium_feature_list_creator();
+  radium_feature_list_creator->CreateFeatureList();
 
 #if BUILDFLAG(IS_OZONE)
   // Initialize Ozone platform and add required feature flags as per platform's
@@ -484,6 +484,12 @@ std::optional<int> RadiumMainDelegate::PostEarlyInitialization(
   content::InitializeMojoCore();
 
   CommonEarlyInitialization(invoked_in);
+
+  // Initializes the resource bundle and determines the locale.
+  std::string actual_locale = LoadLocalState(radium_feature_list_creator);
+  radium_feature_list_creator->SetApplicationLocale(actual_locale);
+  radium_feature_list_creator->OverrideCachedUIStrings();
+
   return std::nullopt;
 }
 

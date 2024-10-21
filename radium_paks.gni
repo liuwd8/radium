@@ -1,8 +1,8 @@
-import("//build/config/locales.gni")
 import("//build/config/ui.gni")
+import("//radium/locales.gni")
+import("//radium/radium_repack_locales.gni")
 import("//ui/base/ui_features.gni")
 import("//ui/webui/webui_features.gni")
-import("radium_repack_locales.gni")
 
 # Generates a rule to repack a set of resources, substituting a given string
 # in for the percentage (e.g. "100", "200"). It generates the repacked files in
@@ -200,13 +200,13 @@ template("radium_paks") {
       repack_allowlist = invoker.repack_allowlist
     }
 
-    input_locales = platform_pak_locales
+    input_locales = support_locales
     output_dir = "${invoker.output_dir}/radium_locales"
 
     if (is_mac) {
       output_locales = locales_as_apple_outputs
     } else {
-      output_locales = platform_pak_locales
+      output_locales = support_locales
     }
   }
 

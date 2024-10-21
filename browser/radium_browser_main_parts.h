@@ -8,11 +8,15 @@
 #include "content/public/browser/browser_main_parts.h"
 #include "content/public/common/result_codes.h"
 
+class BrowserProcess;
 class RadiumBrowserMainExtraParts;
+class RadiumFeatureListCreator;
+class StartupBrowserCreator;
 
 class RadiumBrowserMainParts : public content::BrowserMainParts {
  public:
-  explicit RadiumBrowserMainParts();
+  explicit RadiumBrowserMainParts(
+      RadiumFeatureListCreator* radium_feature_list_creator);
   RadiumBrowserMainParts(const RadiumBrowserMainParts&) = delete;
   RadiumBrowserMainParts& operator=(const RadiumBrowserMainParts&) = delete;
 
@@ -21,24 +25,41 @@ class RadiumBrowserMainParts : public content::BrowserMainParts {
   // Add additional ChromeBrowserMainExtraParts.
   void AddParts(std::unique_ptr<RadiumBrowserMainExtraParts> parts);
 
- private:
+ protected:
   // content::BrowserMainParts:
-  int PreMainMessageLoopRun() override;
+  int PreEarlyInitialization() override;
   void ToolkitInitialized() override;
   void PreCreateMainMessageLoop() override;
   void PostCreateMainMessageLoop() override;
   int PreCreateThreads() override;
+  int PreMainMessageLoopRun() override;
+#if !BUILDFLAG(IS_ANDROID)
+  bool ShouldInterceptMainMessageLoopRun() override;
+#endif
+  void WillRunMainMessageLoop(
+      std::unique_ptr<base::RunLoop>& run_loop) override;
+  void PostMainMessageLoopRun() override;
 
   // Methods for Main Message Loop -------------------------------------------
 
   int PreCreateThreadsImpl();
   int PreMainMessageLoopRunImpl();
 
+  const raw_ptr<RadiumFeatureListCreator> radium_feature_list_creator_;
+
   int result_code_ = content::RESULT_CODE_NORMAL_EXIT;
 
   // Vector of additional ChromeBrowserMainExtraParts.
   // Parts are deleted in the inverse order they are added.
   std::vector<std::unique_ptr<RadiumBrowserMainExtraParts>> radium_extra_parts_;
+
+  // Members initialized after / released before main_message_loop_ ------------
+  std::unique_ptr<BrowserProcess> browser_process_;
+
+#if !BUILDFLAG(IS_ANDROID)
+  // Browser creation happens on the Java side in Android.
+  std::unique_ptr<StartupBrowserCreator> browser_creator_;
+#endif  // !BUILDFLAG(IS_ANDROID)
 };
 
 #endif  // RADIUM_BROWSER_RADIUM_BROWSER_MAIN_PARTS_H_

@@ -1,22 +1,76 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//components/enterprise/buildflags/buildflags.gni")
+import("//crypto/features.gni")
 import("//ui/base/ui_features.gni")
 
 static_library("browser") {
   sources = [
+    "browser_prefs.cc",
+    "browser_prefs.h",
     "browser_process.cc",
     "browser_process.h",
+    "global_features.cc",
+    "global_features.h",
+    "net/cert_verifier_service_time_updater.cc",
+    "net/cert_verifier_service_time_updater.h",
+    "net/convert_explicitly_allowed_network_ports_pref.cc",
+    "net/convert_explicitly_allowed_network_ports_pref.h",
+    "net/cookie_encryption_provider_impl.cc",
+    "net/cookie_encryption_provider_impl.h",
+    "net/default_dns_over_https_config_source.cc",
+    "net/default_dns_over_https_config_source.h",
+    "net/dns_over_https_config_source.h",
+    "net/profile_network_context_service.cc",
+    "net/profile_network_context_service.h",
+    "net/profile_network_context_service_factory.cc",
+    "net/profile_network_context_service_factory.h",
+    "net/proxy_config_monitor.cc",
+    "net/proxy_config_monitor.h",
+    "net/proxy_service_factory.cc",
+    "net/proxy_service_factory.h",
+    "net/radium_mojo_proxy_resolver_factory.cc",
+    "net/radium_mojo_proxy_resolver_factory.h",
+    "net/secure_dns_config.cc",
+    "net/secure_dns_config.h",
+    "net/secure_dns_util.cc",
+    "net/secure_dns_util.h",
+    "net/stub_resolver_config_reader.cc",
+    "net/stub_resolver_config_reader.h",
+    "net/system_network_context_manager.cc",
+    "net/system_network_context_manager.h",
     "platform_util.h",
     "radium_browser_main_extra_parts.h",
     "radium_browser_main_parts.cc",
     "radium_browser_main_parts.h",
     "radium_content_browser_client.cc",
     "radium_content_browser_client.h",
+    "radium_resource_bundle_helper.cc",
+    "radium_resource_bundle_helper.h",
+    "ssl/ssl_config_service_manager.cc",
+    "ssl/ssl_config_service_manager.h",
   ]
 
   deps = [
+    "//components/certificate_transparency",
+    "//components/embedder_support",
+    "//components/embedder_support:browser_util",
+    "//components/embedder_support/origin_trials",
     "//components/keep_alive_registry",
+    "//components/net_log",
+    "//components/os_crypt/async/browser",
+    "//components/proxy_config",
     "//content/public/browser",
     "//content/public/common",
+    "//radium/browser/content_settings",
+    "//radium/browser/metrics",
+    "//radium/browser/profiles",
     "//radium/browser/ui",
+    "//services/cert_verifier:lib",
+    "//services/network/public/cpp",
+    "//services/network/public/mojom",
   ]
 
   if (use_aura) {
@@ -33,10 +87,19 @@ static_library("browser") {
     }
   }
 
+  if (!is_win) {
+    sources += [
+      "radium_browser_main_parts_posix.cc",
+      "radium_browser_main_parts_posix.h",
+    ]
+  }
+
   if (is_linux) {
     sources += [
       "radium_browser_main_extra_parts_linux.cc",
       "radium_browser_main_extra_parts_linux.h",
+      "radium_browser_main_parts_linux.cc",
+      "radium_browser_main_parts_linux.h",
     ]
   }
 
@@ -50,5 +113,26 @@ static_library("browser") {
       "//ui/events/ozone",
       "//ui/ozone",
     ]
+  }
+
+  if (is_linux && use_dbus) {
+    deps += [ "//components/os_crypt/async/browser:secret_portal_key_provider" ]
+  }
+
+  if (use_nss_certs) {
+    sources += [
+      "net/nss_service.cc",
+      "net/nss_service.h",
+      "net/nss_service_factory.cc",
+      "net/nss_service_factory.h",
+    ]
+    if (is_linux) {
+      sources += [ "net/nss_service_linux.cc" ]
+    }
+    configs += [ "//build/config/linux/nss" ]
+  }
+
+  if (enterprise_client_certificates) {
+    deps += [ "//components/enterprise/client_certificates/core" ]
   }
 }

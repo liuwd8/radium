@@ -1,8 +1,15 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
 import("//build/config/ui.gni")
+import("//crypto/features.gni")
 
 static_library("ui") {
   sources = [
     "browser.h",
+    "startup/startup_browser_creator.cc",
+    "startup/startup_browser_creator.h",
     "ui_features.cc",
     "ui_features.h",
   ]
@@ -58,6 +65,13 @@ static_library("ui") {
           "//dbus",
         ]
       }
+    }
+
+    if (use_nss_certs) {
+      sources += [
+        "crypto_module_delegate_nss.cc",
+        "crypto_module_delegate_nss.h",
+      ]
     }
   }
 }

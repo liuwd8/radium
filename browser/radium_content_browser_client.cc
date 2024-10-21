@@ -2,26 +2,47 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "radium/browser/radium_content_browser_client.h"
+
 #include <memory>
 
 #include "build/build_config.h"
+#include "components/prefs/pref_service.h"
+#include "radium/browser/browser_process.h"
+#include "radium/browser/metrics/radium_feature_list_creator.h"
+#include "radium/browser/net/profile_network_context_service.h"
+#include "radium/browser/net/profile_network_context_service_factory.h"
+#include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/radium_browser_main_parts.h"
-#include "radium/browser/radium_content_browser_client.h"
 
 #if BUILDFLAG(IS_LINUX)
 #include "radium/browser/radium_browser_main_extra_parts_linux.h"
+#include "radium/browser/radium_browser_main_parts_linux.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views_linux.h"
 #elif BUILDFLAG(IS_OZONE)
 #include "radium/browser/radium_browser_main_extra_parts_ozone.h"
 #endif
 
-RadiumContentBrowserClient::RadiumContentBrowserClient() = default;
+RadiumContentBrowserClient::RadiumContentBrowserClient()
+    : radium_feature_list_creator_(
+          std::make_unique<RadiumFeatureListCreator>()) {}
+
 RadiumContentBrowserClient::~RadiumContentBrowserClient() = default;
+
+RadiumFeatureListCreator*
+RadiumContentBrowserClient::radium_feature_list_creator() const {
+  return radium_feature_list_creator_.get();
+}
 
 std::unique_ptr<content::BrowserMainParts>
 RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   std::unique_ptr<RadiumBrowserMainParts> main_parts =
-      std::make_unique<RadiumBrowserMainParts>();
+#if BUILDFLAG(IS_LINUX)
+      std::make_unique<RadiumBrowserMainPartsLinux>(
+          radium_feature_list_creator_.get());
+#else
+#error "Unimplemented platform"
+#endif
 
   // Construct additional browser parts. Stages are called in the order in
   // which they are added.
@@ -46,4 +67,47 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
 #endif
 
   return main_parts;
+}
+
+void RadiumContentBrowserClient::OnNetworkServiceCreated(
+    network::mojom::NetworkService* network_service) {
+  PrefService* local_state;
+  if (BrowserProcess::Get()) {
+    local_state = BrowserProcess::Get()->local_state();
+  } else {
+    local_state =
+        nullptr;  // startup_data_.chrome_feature_list_creator()->local_state();
+  }
+  DCHECK(local_state);
+
+  // Create SystemNetworkContextManager if it has not been created yet. We need
+  // to set up global NetworkService state before anything else uses it and this
+  // is the first opportunity to initialize SystemNetworkContextManager with the
+  // NetworkService.
+  if (!SystemNetworkContextManager::HasInstance()) {
+    SystemNetworkContextManager::CreateInstance(local_state);
+  }
+
+  SystemNetworkContextManager::GetInstance()->OnNetworkServiceCreated(
+      network_service);
+}
+
+void RadiumContentBrowserClient::ConfigureNetworkContextParams(
+    content::BrowserContext* context,
+    bool in_memory,
+    const base::FilePath& relative_partition_path,
+    network::mojom::NetworkContextParams* network_context_params,
+    cert_verifier::mojom::CertVerifierCreationParams*
+        cert_verifier_creation_params) {
+  ProfileNetworkContextService* service =
+      ProfileNetworkContextServiceFactory::GetForContext(context);
+  if (service) {
+    service->ConfigureNetworkContextParams(in_memory, relative_partition_path,
+                                           network_context_params,
+                                           cert_verifier_creation_params);
+  } else {
+    // Set default params.
+    network_context_params->user_agent = GetUserAgentBasedOnPolicy(context);
+    network_context_params->accept_language = GetApplicationLocale();
+  }
 }

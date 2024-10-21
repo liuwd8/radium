@@ -1,0 +1,73 @@
+# Copyright 2015 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/compiler/compiler.gni")
+import("//build/config/dcheck_always_on.gni")
+import("//build/config/features.gni")
+import("//components/compose/features.gni")
+import("//components/nacl/features.gni")
+import("//components/safe_browsing/buildflags.gni")
+import("//components/sharing_message/buildflags.gni")
+import("//components/signin/features.gni")
+import("//components/supervised_user/buildflags.gni")
+import("//crypto/features.gni")
+import("//device/vr/buildflags/buildflags.gni")
+import("//extensions/buildflags/buildflags.gni")
+import("//media/media_options.gni")
+import("//net/features.gni")
+import("//pdf/features.gni")
+import("//ppapi/buildflags/buildflags.gni")
+import("//printing/buildflags/buildflags.gni")
+import("//services/screen_ai/buildflags/features.gni")
+import("//ui/base/ui_features.gni")
+import("//ui/webui/webui_features.gni")
+
+assert(use_blink, "Chromium without blink shouldn't use anything in //radium")
+
+# Please keep features in alphabetical order.
+declare_args() {
+  # Enables the build to have logging enabled by default.
+  # This is intended for use only in developer builds.
+  radium_enable_logging_by_default = is_debug
+
+  # Platforms for which Chrome supports a certificate management UI that
+  # shows the Chrome Root Store. This is specific to the v2 UI that is
+  # supported on all desktop platforms, as opposed to the v1 UI which is only
+  # supported on platforms using NSS (Linux and CrOS).
+  radium_root_store_cert_management_ui = is_win || is_mac || is_linux
+
+  # Enables usage of notifications via Chrome's MessageCenter.
+  enable_radium_notifications = is_mac || is_win || is_linux || is_fuchsia
+}
+
+# Logging must be disabled by default in all official builds (including special
+# DCHECK-enabled builds). Logging is enabled by default for debug builds, and
+# may be selectively enabled by default for release builds.
+assert(!radium_enable_logging_by_default || !is_official_build,
+       "Logging must be disabled by default in Official builds")
+
+# Every grit target in //radium should apply these defines so that the
+# proper build flags can be set.
+radium_grit_defines = [
+  "enable_arcore=$enable_arcore",
+  "enable_cardboard=$enable_cardboard",
+  "enable_compose=$enable_compose",
+  "enable_openxr=$enable_openxr",
+  "enable_printing=$enable_printing",
+  "enable_extensions=$enable_extensions",
+  "enable_extensions_core=$enable_extensions_core",
+  "enable_ink=$enable_ink",
+  "enable_pdf_ink2=$enable_pdf_ink2",
+  "enable_nacl=$enable_nacl",
+  "enable_dice_support=$enable_dice_support",
+  "enable_pdf=$enable_pdf",
+  "enable_print_preview=$enable_print_preview",
+  "enable_supervised_users=$enable_supervised_users",
+  "enable_vr=$enable_vr",
+  "is_official_build=$is_official_build",
+  "safe_browsing_mode=$safe_browsing_mode",
+  "optimize_webui=$optimize_webui",
+  "radium_root_store_cert_management_ui=$radium_root_store_cert_management_ui",
+  "use_nss_certs=$use_nss_certs",
+]

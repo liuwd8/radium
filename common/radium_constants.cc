@@ -8,8 +8,22 @@
 
 namespace radium {
 
+const base::FilePath::CharType kCacheDirname[] = FPL("Cache");
+const base::FilePath::CharType kCookieFilename[] = FPL("Cookies");
 const base::FilePath::CharType kGCMStoreDirname[] = FPL("GCM Store");
 const base::FilePath::CharType kLocalStateFilename[] = FPL("Local State");
+const base::FilePath::CharType kMediaCacheDirname[] = FPL("Media Cache");
+const base::FilePath::CharType kNetworkDataDirname[] = FPL("Network");
+const base::FilePath::CharType kNetworkPersistentStateFilename[] =
+    FPL("Network Persistent State");
+const base::FilePath::CharType kSCTAuditingPendingReportsFileName[] =
+    FPL("SCT Auditing Pending Reports");
+const base::FilePath::CharType kTransportSecurityPersisterFilename[] =
+    FPL("TransportSecurity");
+const base::FilePath::CharType kTrustTokenFilename[] = FPL("Trust Tokens");
+// Only use if the ENABLE_REPORTING build flag is true
+const base::FilePath::CharType kReportingAndNelStoreFilename[] =
+    FPL("Reporting and NEL");
 
 }  // namespace radium
 

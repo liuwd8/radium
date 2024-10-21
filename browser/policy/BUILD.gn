@@ -1,0 +1,23 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("policy") {
+  public = [
+    "configuration_policy_handler_list_factory.h",
+    "radium_browser_policy_connector.h",
+  ]
+
+  sources = [
+    "configuration_policy_handler_list_factory.cc",
+    "radium_browser_policy_connector.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//components/policy/core/browser",
+    "//content/public/child",
+    "//radium/common",
+    "//services/network/public/cpp",
+  ]
+}

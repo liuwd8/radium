@@ -1,0 +1,17 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("metrics") {
+  public = [ "radium_feature_list_creator.h" ]
+
+  sources = [ "radium_feature_list_creator.cc" ]
+
+  deps = [
+    "//base",
+    "//components/prefs",
+    "//content/public/child",
+    "//radium/browser/policy",
+    "//radium/common:constants",
+  ]
+}

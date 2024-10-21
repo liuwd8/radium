@@ -1,0 +1,32 @@
+source_set("profiles") {
+  public = [
+    "profile.h",
+    "profile_keyed_service_factory.h",
+    "profile_selections.h",
+    "profiles_state.h",
+    "refcounted_profile_keyed_service_factory.h",
+  ]
+
+  sources = [
+    "profile.cc",
+    "profile_keyed_service_factory.cc",
+    "profile_selections.cc",
+    "profiles_state.cc",
+    "refcounted_profile_keyed_service_factory.cc",
+  ]
+
+  public_deps = [ "//base" ]
+
+  # Cannot depend on //chrome/browser:browser.
+  deps = [
+    "//components/keyed_service/content",
+    "//components/language/core/browser",
+    "//components/pref_registry",
+    "//components/prefs",
+    "//components/profile_metrics",
+    "//components/sync/service",
+    "//components/variations",
+    "//content/public/browser",
+    "//radium/common:constants",
+  ]
+}
