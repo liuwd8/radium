@@ -7,7 +7,16 @@
 
 class Profile;
 
+namespace base {
+class CommandLine;
+class FilePath;
+}  // namespace base
+
 namespace profiles {
+
+// Returns the path to the default profile directory, based on the given
+// user data directory.
+base::FilePath GetDefaultProfileDir(const base::FilePath& user_data_dir);
 
 // Returns true if the profile is a regular profile and specifically not an Ash
 // internal profile. Callers who do not care about checking for Ash internal

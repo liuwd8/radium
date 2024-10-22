@@ -5,6 +5,7 @@
 #ifndef RADIUM_BROWSER_RADIUM_BROWSER_MAIN_PARTS_H_
 #define RADIUM_BROWSER_RADIUM_BROWSER_MAIN_PARTS_H_
 
+#include "base/files/file_path.h"
 #include "content/public/browser/browser_main_parts.h"
 #include "content/public/common/result_codes.h"
 
@@ -12,6 +13,7 @@ class BrowserProcess;
 class RadiumBrowserMainExtraParts;
 class RadiumFeatureListCreator;
 class StartupBrowserCreator;
+class Profile;
 
 class RadiumBrowserMainParts : public content::BrowserMainParts {
  public:
@@ -40,6 +42,18 @@ class RadiumBrowserMainParts : public content::BrowserMainParts {
       std::unique_ptr<base::RunLoop>& run_loop) override;
   void PostMainMessageLoopRun() override;
 
+  // Additional stages for ChromeBrowserMainExtraParts. These stages are called
+  // in order from PreMainMessageLoopRun(). See implementation for details.
+  virtual void PreProfileInit();
+  // `PostProfileInit()` is called for each regular profile that is created. The
+  // first call has `is_initial_profile`=true, and subsequent calls have
+  // `is_initial_profile`=false.
+  // It may be called during startup if a profile is loaded immediately, or
+  // later if the profile picker is shown.
+  virtual void PostProfileInit(Profile* profile, bool is_initial_profile);
+  virtual void PreBrowserStart();
+  virtual void PostBrowserStart();
+
   // Methods for Main Message Loop -------------------------------------------
 
   int PreCreateThreadsImpl();
@@ -60,6 +74,8 @@ class RadiumBrowserMainParts : public content::BrowserMainParts {
   // Browser creation happens on the Java side in Android.
   std::unique_ptr<StartupBrowserCreator> browser_creator_;
 #endif  // !BUILDFLAG(IS_ANDROID)
+
+  base::FilePath user_data_dir_;
 };
 
 #endif  // RADIUM_BROWSER_RADIUM_BROWSER_MAIN_PARTS_H_

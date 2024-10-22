@@ -18,6 +18,9 @@ class RadiumBrowserMainPartsLinux : public RadiumBrowserMainPartsPosix {
   ~RadiumBrowserMainPartsLinux() override;
 
   void PostCreateMainMessageLoop() override;
+  void PreProfileInit() override;
+  void PostMainMessageLoopRun() override;
+  void PostDestroyThreads() override;
 };
 
 #endif  // RADIUM_BROWSER_RADIUM_BROWSER_MAIN_PARTS_LINUX_H_

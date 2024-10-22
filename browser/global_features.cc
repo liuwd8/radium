@@ -4,9 +4,12 @@
 
 #include "radium/browser/global_features.h"
 
+#include <memory>
+
 #include "base/check_is_test.h"
 #include "base/memory/ptr_util.h"
 #include "base/no_destructor.h"
+#include "radium/browser/profiles/profile_manager.h"
 
 namespace {
 
@@ -32,4 +35,6 @@ std::unique_ptr<GlobalFeatures> GlobalFeatures::CreateGlobalFeatures() {
 GlobalFeatures::GlobalFeatures() = default;
 GlobalFeatures::~GlobalFeatures() = default;
 
-void GlobalFeatures::Init() {}
+void GlobalFeatures::Init() {
+  profile_manager_ = ProfileManager::Create();
+}

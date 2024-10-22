@@ -5,14 +5,21 @@
 #include "radium/browser/radium_browser_main_parts_linux.h"
 
 #include "base/command_line.h"
+#include "base/linux_util.h"
+#include "base/task/thread_pool.h"
 #include "components/os_crypt/sync/key_storage_config_linux.h"
 #include "components/os_crypt/sync/os_crypt.h"
 #include "components/password_manager/core/browser/password_manager_switches.h"
 #include "device/bluetooth/dbus/bluez_dbus_manager.h"
+#include "device/bluetooth/dbus/bluez_dbus_thread_manager.h"
 #include "radium/browser/radium_browser_main_parts_posix.h"
 #include "radium/common/radium_paths_internal.h"
 #include "radium/grit/radium_strings.h"
 #include "ui/base/l10n/l10n_util.h"
+
+#if BUILDFLAG(IS_LINUX)
+#include "ui/ozone/public/ozone_platform.h"
+#endif
 
 RadiumBrowserMainPartsLinux::RadiumBrowserMainPartsLinux(
     RadiumFeatureListCreator* radium_feature_list_creator)
@@ -58,4 +65,35 @@ void RadiumBrowserMainPartsLinux::PostCreateMainMessageLoop() {
 #endif  // !BUILDFLAG(IS_CHROMEOS)
 
   RadiumBrowserMainPartsPosix::PostCreateMainMessageLoop();
+}
+
+void RadiumBrowserMainPartsLinux::PreProfileInit() {
+#if !BUILDFLAG(IS_CHROMEOS_ASH)
+  // Needs to be called after we have chrome::DIR_USER_DATA and
+  // g_browser_process.  This happens in PreCreateThreads.
+  // base::GetLinuxDistro() will initialize its value if needed.
+  base::ThreadPool::PostTask(
+      FROM_HERE, {base::MayBlock(), base::TaskPriority::BEST_EFFORT},
+      base::BindOnce(base::IgnoreResult(&base::GetLinuxDistro)));
+#endif
+
+  RadiumBrowserMainPartsPosix::PreProfileInit();
+}
+
+#if BUILDFLAG(IS_LINUX)
+void RadiumBrowserMainPartsLinux::PostMainMessageLoopRun() {
+  RadiumBrowserMainPartsPosix::PostMainMessageLoopRun();
+  ui::OzonePlatform::GetInstance()->PostMainMessageLoopRun();
+}
+#endif
+
+void RadiumBrowserMainPartsLinux::PostDestroyThreads() {
+#if BUILDFLAG(IS_CHROMEOS)
+  // No-op; per PostBrowserStart() comment, this is done elsewhere.
+#else
+  bluez::BluezDBusManager::Shutdown();
+  bluez::BluezDBusThreadManager::Shutdown();
+#endif  // BUILDFLAG(IS_CHROMEOS)
+
+  RadiumBrowserMainPartsPosix::PostDestroyThreads();
 }

@@ -66,6 +66,7 @@ static_library("browser") {
     "//content/public/common",
     "//radium/browser/content_settings",
     "//radium/browser/metrics",
+    "//radium/browser/prefs",
     "//radium/browser/profiles",
     "//radium/browser/ui",
     "//services/cert_verifier:lib",

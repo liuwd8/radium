@@ -4,9 +4,18 @@
 
 #include "radium/browser/profiles/profiles_state.h"
 
+#include "base/files/file_path.h"
 #include "radium/browser/profiles/profile_selections.h"
+#include "radium/common/radium_constants.h"
 
 namespace profiles {
+
+base::FilePath GetDefaultProfileDir(const base::FilePath& user_data_dir) {
+  base::FilePath default_profile_dir(user_data_dir);
+  default_profile_dir =
+      default_profile_dir.AppendASCII(radium::kInitialProfile);
+  return default_profile_dir;
+}
 
 bool IsRegularUserProfile(Profile* profile) {
   ProfileSelections selections =

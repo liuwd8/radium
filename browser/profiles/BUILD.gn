@@ -2,6 +2,7 @@ source_set("profiles") {
   public = [
     "profile.h",
     "profile_keyed_service_factory.h",
+    "profile_manager.h",
     "profile_selections.h",
     "profiles_state.h",
     "refcounted_profile_keyed_service_factory.h",
@@ -10,6 +11,7 @@ source_set("profiles") {
   sources = [
     "profile.cc",
     "profile_keyed_service_factory.cc",
+    "profile_manager.cc",
     "profile_selections.cc",
     "profiles_state.cc",
     "refcounted_profile_keyed_service_factory.cc",

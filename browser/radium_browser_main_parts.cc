@@ -4,17 +4,45 @@
 
 #include "radium/browser/radium_browser_main_parts.h"
 
+#include "base/command_line.h"
 #include "base/debug/leak_annotations.h"
+#include "base/path_service.h"
 #include "base/run_loop.h"
 #include "base/task/current_thread.h"
 #include "base/threading/hang_watcher.h"
 #include "base/trace_event/trace_event.h"
+#include "chrome/browser/profiles/profiles_state.h"
+#include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/prefs/pref_service.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/global_features.h"
+#include "radium/browser/profiles/profile_manager.h"
 #include "radium/browser/radium_browser_main_extra_parts.h"
 #include "radium/browser/ui/startup/startup_browser_creator.h"
+#include "radium/common/radium_paths.h"
+#include "radium/common/radium_result_codes.h"
+
+#if defined(USE_AURA)
+#include "ui/aura/env.h"
+#endif
 
 namespace {
+StartupProfileInfo CreateInitialProfile(
+    const base::FilePath& cur_dir,
+    const base::CommandLine& parsed_command_line) {
+  TRACE_EVENT0("startup", "RadiumBrowserMainParts::CreateProfile");
+
+  ProfileManager* profile_manager =
+      BrowserProcess::Get()->GetFeatures()->profile_manager();
+  const base::FilePath& user_data_dir = profile_manager->user_data_dir();
+
+  StartupProfileInfo profile_info;
+  profile_info.profile = profile_manager->GetProfile(
+      profiles::GetDefaultProfileDir(user_data_dir));
+  profile_info.mode = StartupProfileMode::kBrowserWindow;
+  return profile_info;
+}
+
 #if !BUILDFLAG(IS_ANDROID)
 // Initialized in PreMainMessageLoopRun() and handed off to content:: in
 // WillRunMainMessageLoop() (or in TakeRunLoopForTest() in tests)
@@ -24,6 +52,16 @@ std::unique_ptr<base::RunLoop>& GetMainRunLoopInstance() {
   return *main_run_loop_instance;
 }
 #endif
+
+void DisallowKeyedServiceFactoryRegistration() {
+  // From this point, do not allow KeyedServiceFactories to be registered, all
+  // factories should be registered in the main registration function
+  // `ChromeBrowserMainExtraPartsProfiles::EnsureBrowserContextKeyedServiceFactoriesBuilt()`.
+  BrowserContextDependencyManager::GetInstance()
+      ->DisallowKeyedServiceFactoryRegistration(
+          "ChromeBrowserMainExtraPartsProfiles::"
+          "EnsureBrowserContextKeyedServiceFactoriesBuilt()");
+}
 
 #if !BUILDFLAG(IS_ANDROID)
 void StartWatchingForProcessShutdownHangs() {
@@ -64,6 +102,10 @@ int RadiumBrowserMainParts::PreEarlyInitialization() {
   // Create BrowserProcess in PreEarlyInitialization() so that we can load
   // field trials (and all it depends upon).
   browser_process_ = std::make_unique<BrowserProcess>(radium_feature_list_creator_);
+
+  if (!base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir_)) {
+    return radium::RESULT_CODE_MISSING_DATA;
+  }
 
   // Continue on and show error later (once UI has been initialized and main
   // message loop is running).
@@ -207,8 +249,36 @@ void RadiumBrowserMainParts::PostMainMessageLoopRun() {
     radium_extra_part->PostMainMessageLoopRun();
   }
 
+  browser_process_->PostDestroyThreads();
+
   browser_process_->StartTearDown();
+
+  // From this point, the BrowserProcess class is no longer alive.
+  browser_process_.reset();
 #endif  // BUILDFLAG(IS_ANDROID)
+}
+
+void RadiumBrowserMainParts::PreProfileInit() {
+  for (auto& radium_extra_part : radium_extra_parts_) {
+    radium_extra_part->PreProfileInit();
+  }
+
+  DisallowKeyedServiceFactoryRegistration();
+}
+
+void RadiumBrowserMainParts::PostProfileInit(Profile* profile,
+                                             bool is_initial_profile) {}
+
+void RadiumBrowserMainParts::PreBrowserStart() {
+  for (auto& radium_extra_part : radium_extra_parts_) {
+    radium_extra_part->PreBrowserStart();
+  }
+}
+
+void RadiumBrowserMainParts::PostBrowserStart() {
+  for (auto& radium_extra_part : radium_extra_parts_) {
+    radium_extra_part->PostBrowserStart();
+  }
 }
 
 int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
@@ -216,7 +286,27 @@ int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
   // running.
   browser_process_->PreMainMessageLoopRun();
 
-  if (true) {
+  // Desktop construction occurs here, (required before profile creation).
+  PreProfileInit();
+
+#if defined(USE_AURA)
+  // Make sure aura::Env has been initialized.
+  CHECK(aura::Env::GetInstance());
+#endif  // defined(USE_AURA)
+
+  StartupProfileInfo profile_info = CreateInitialProfile(
+      base::FilePath(), *base::CommandLine::ForCurrentProcess());
+
+  PreBrowserStart();
+
+#if !BUILDFLAG(IS_ANDROID)
+  // We are in regular browser boot sequence. Open initial tabs and enter the
+  // main message loop.
+  std::vector<Profile*> last_opened_profiles;
+
+  if (browser_creator_->Start(*base::CommandLine::ForCurrentProcess(),
+                              base::FilePath(), profile_info,
+                              last_opened_profiles)) {
     // Create the RunLoop for MainMessageLoopRun() to use and transfer
     // ownership of the browser's lifetime to the BrowserProcess.
     DCHECK(!GetMainRunLoopInstance());
@@ -224,5 +314,10 @@ int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
     browser_process_->SetQuitClosure(
         GetMainRunLoopInstance()->QuitWhenIdleClosure());
   }
+  browser_creator_.reset();
+#endif  // !BUILDFLAG(IS_ANDROID)
+
+  PostBrowserStart();
+
   return result_code_;
 }

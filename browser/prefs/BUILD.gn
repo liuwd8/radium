@@ -1,0 +1,10 @@
+source_set("prefs") {
+  public = [ "profile_prefs.h" ]
+
+  sources = [ "profile_prefs.cc" ]
+
+  deps = [
+    "//base",
+    "//components/prefs",
+  ]
+}

@@ -20,3 +20,27 @@ bool RadiumViewsDelegate::GetSavedWindowPlacement(
     ui::mojom::WindowShowState* show_state) const {
   return false;
 }
+
+void RadiumViewsDelegate::OnBeforeWidgetInit(
+    views::Widget::InitParams* params,
+    views::internal::NativeWidgetDelegate* delegate) {
+  // We need to determine opacity if it's not already specified.
+  if (params->opacity == views::Widget::InitParams::WindowOpacity::kInferred) {
+    params->opacity = views::Widget::InitParams::WindowOpacity::kOpaque;
+  }
+
+  // If we already have a native_widget, we don't have to try to come
+  // up with one.
+  if (params->native_widget) {
+    return;
+  }
+
+  if (!native_widget_factory().is_null()) {
+    params->native_widget = native_widget_factory().Run(*params, delegate);
+    if (params->native_widget) {
+      return;
+    }
+  }
+
+  params->native_widget = CreateNativeWidget(params, delegate);
+}

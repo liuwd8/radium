@@ -10,6 +10,8 @@
 #include "base/functional/callback.h"
 #include "build/build_config.h"
 
+class ProfileManager;
+
 class GlobalFeatures {
  public:
   static std::unique_ptr<GlobalFeatures> CreateGlobalFeatures();
@@ -27,6 +29,11 @@ class GlobalFeatures {
 
   // Called exactly once to initialize features.
   void Init();
+
+  ProfileManager* profile_manager() const { return profile_manager_.get(); }
+
+ private:
+  std::unique_ptr<ProfileManager> profile_manager_;
 };
 
 #endif  // RADIUM_BROWSER_GLOBAL_FEATURES_H_

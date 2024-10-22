@@ -13,8 +13,10 @@ namespace radium {
 extern const base::FilePath::CharType kCacheDirname[];
 extern const base::FilePath::CharType kCookieFilename[];
 extern const base::FilePath::CharType kGCMStoreDirname[];
+extern const base::FilePath::CharType kInitialProfile[];
 extern const base::FilePath::CharType kLocalStateFilename[];
 extern const base::FilePath::CharType kMediaCacheDirname[];
+extern const base::FilePath::CharType kMultiProfileDirPrefix[];
 extern const base::FilePath::CharType kNetworkDataDirname[];
 extern const base::FilePath::CharType kNetworkPersistentStateFilename[];
 extern const base::FilePath::CharType kSCTAuditingPendingReportsFileName[];

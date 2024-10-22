@@ -6,18 +6,22 @@ import("//build/config/ui.gni")
 import("//crypto/features.gni")
 
 static_library("ui") {
+  public = [
+    "startup/startup_browser_creator.h",
+    "ui_features.h",
+  ]
+
   sources = [
     "browser.h",
     "startup/startup_browser_creator.cc",
-    "startup/startup_browser_creator.h",
     "ui_features.cc",
-    "ui_features.h",
   ]
 
   public_deps = []
   deps = [
     "//base",
     "//components/ui_devtools",
+    "//radium/browser/ui/signin",
     "//third_party/inspector_protocol:crdtp",
   ]
 
@@ -43,6 +47,17 @@ static_library("ui") {
       "//ui/views",
       "//ui/views:buildflags",
     ]
+
+    if (is_linux) {
+      sources += [ "views/radium_views_delegate_linux.cc" ]
+    }
+
+    if (is_win || is_linux) {
+      sources += [
+        "views/native_widget_factory.cc",
+        "views/native_widget_factory.h",
+      ]
+    }
 
     if (use_aura && is_linux) {
       sources += [

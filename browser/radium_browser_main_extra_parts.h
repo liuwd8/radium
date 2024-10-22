@@ -23,6 +23,7 @@ class RadiumBrowserMainExtraParts {
   // MainMessageLoopRun methods.
   virtual void PreCreateThreads() {}
   virtual void PreProfileInit() {}
+  virtual void PreBrowserStart() {}
   virtual void PostBrowserStart() {}
   virtual void PreMainMessageLoopRun() {}
   virtual void PostMainMessageLoopRun() {}

@@ -25,6 +25,17 @@ class RadiumViewsDelegate : public views::ViewsDelegate {
       const std::string& window_name,
       gfx::Rect* bounds,
       ui::mojom::WindowShowState* show_state) const override;
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS_LACROS)
+  bool WindowManagerProvidesTitleBar(bool maximized) override;
+#endif
+  void OnBeforeWidgetInit(
+      views::Widget::InitParams* params,
+      views::internal::NativeWidgetDelegate* delegate) override;
+
+ private:
+  views::NativeWidget* CreateNativeWidget(
+      views::Widget::InitParams* params,
+      views::internal::NativeWidgetDelegate* delegate);
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_RADIUM_VIEWS_DELEGATE_H_

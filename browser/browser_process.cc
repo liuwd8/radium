@@ -6,7 +6,9 @@
 
 #include <memory>
 
+#include "base/run_loop.h"
 #include "base/sequence_checker.h"
+#include "base/trace_event/trace_event.h"
 #include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/os_crypt/async/browser/key_provider.h"
@@ -79,6 +81,10 @@ BrowserProcess::BrowserProcess(
 }
 
 BrowserProcess::~BrowserProcess() {
+#if !BUILDFLAG(IS_ANDROID)
+  KeepAliveRegistry::GetInstance()->RemoveObserver(this);
+#endif
+
   g_browser_process = nullptr;
 }
 
@@ -149,7 +155,22 @@ void BrowserProcess::PreMainMessageLoopRun() {
       std::make_unique<os_crypt_async::OSCryptAsync>(std::move(providers));
 }
 
-void BrowserProcess::StartTearDown() {}
+void BrowserProcess::StartTearDown() {
+  // Need to clear profiles (download managers) before the IO thread.
+  {
+    TRACE_EVENT0("shutdown", "BrowserProcess::StartTearDown:ProfileManager");
+    // `profile_manager_` must be destroyed before `background_mode_manager_`,
+    // because the background mode manager does not stop observing profile
+    // changes at destruction (notifying the observers would cause a use-after-
+    // free).
+    features_.reset();
+  }
+
+  local_state_->CommitPendingWrite();
+
+  // This expects to be destroyed before the task scheduler is torn down.
+  SystemNetworkContextManager::DeleteInstance();
+}
 
 void BrowserProcess::PostDestroyThreads() {}
 
@@ -203,6 +224,12 @@ void BrowserProcess::Pin() {
 }
 
 void BrowserProcess::Unpin() {
+#if !BUILDFLAG(IS_ANDROID)
+  KeepAliveRegistry::GetInstance()->SetIsShuttingDown();
+#endif  // !BUILDFLAG(IS_ANDROID)
+
+  CHECK(base::RunLoop::IsRunningOnCurrentThread());
+
 #if !BUILDFLAG(IS_ANDROID)
   std::move(quit_closure_).Run();
 #endif  // !BUILDFLAG(IS_ANDROID)
