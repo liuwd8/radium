@@ -18,7 +18,10 @@ source_set("frame") {
     "untitled_widget_non_client_frame_view_factory_views.cc",
   ]
 
-  deps = [ "//ui/views" ]
+  deps = [
+    "//radium/app/theme:theme_resources",
+    "//ui/views",
+  ]
 
   if (is_linux) {
     sources += [

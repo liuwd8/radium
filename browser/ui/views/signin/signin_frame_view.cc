@@ -6,6 +6,7 @@
 
 #include "components/keep_alive_registry/keep_alive_types.h"
 #include "include/core/SkColor.h"
+#include "radium/browser/ui/color/radium_color_id.h"
 #include "radium/browser/ui/signin/signin_window.h"
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -21,6 +22,8 @@ void SigninWindow::Show() {
   params.wm_class_class = "radium";
   params.wayland_app_id = params.wm_class_class;
 #endif
+  widget->SetTitleBarBackgroundColor(kColorFrameTitleBarBackground);
+  widget->SetTitleBarBackgroundHeight(100);
   widget->Init(std::move(params));
   widget->Show();
 }
@@ -29,7 +32,6 @@ SigninFrameView::SigninFrameView()
     : keep_alive_(KeepAliveOrigin::USER_MANAGER_VIEW,
                   KeepAliveRestartOption::DISABLED) {
   SetHasWindowSizeControls(true);
-  SetBackground(views::CreateSolidBackground(SK_ColorRED));
 }
 
 SigninFrameView::~SigninFrameView() = default;

@@ -6,11 +6,17 @@
 #define RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_DESKTOP_WINDOW_TREE_HOST_LINUX_H_
 
 #include "radium/browser/ui/views/frame/untitled_desktop_window_tree_host.h"
+#include "ui/linux/device_scale_factor_observer.h"
+#include "ui/linux/linux_ui.h"
+#include "ui/native_theme/native_theme.h"
+#include "ui/native_theme/native_theme_observer.h"
 #include "ui/views/widget/desktop_aura/desktop_window_tree_host_linux.h"
 
 class UntitledDesktopWindowTreeHostLinux
     : public UntitledDesktopWindowTreeHost,
-      public views::DesktopWindowTreeHostLinux {
+      public views::DesktopWindowTreeHostLinux,
+      ui::NativeThemeObserver,
+      ui::DeviceScaleFactorObserver {
  public:
   explicit UntitledDesktopWindowTreeHostLinux(
       views::internal::NativeWidgetDelegate* native_widget_delegate,
@@ -35,6 +41,7 @@ class UntitledDesktopWindowTreeHostLinux
   bool UsesNativeSystemMenu() const override;
 
   // views::DesktopWindowTreeHostLinux:
+  void OnWidgetInitDone() override;
   void AddAdditionalInitProperties(
       const views::Widget::InitParams& params,
       ui::PlatformWindowInitProperties* properties) override;
@@ -46,8 +53,19 @@ class UntitledDesktopWindowTreeHostLinux
                             ui::PlatformWindowState new_state) override;
   void OnWindowTiledStateChanged(ui::WindowTiledEdges new_tiled_edges) override;
 
+  // ui::NativeThemeObserver:
+  void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;
+
+  // ui::DeviceScaleFactorObserver:
+  void OnDeviceScaleFactorChanged() override;
+
  private:
   raw_ptr<UntitledWidget> untitled_widget_ = nullptr;
+
+  base::ScopedObservation<ui::NativeTheme, ui::NativeThemeObserver>
+      theme_observation_{this};
+  base::ScopedObservation<ui::LinuxUi, ui::DeviceScaleFactorObserver>
+      scale_observation_{this};
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_DESKTOP_WINDOW_TREE_HOST_LINUX_H_

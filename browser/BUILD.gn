@@ -51,10 +51,13 @@ static_library("browser") {
     "radium_resource_bundle_helper.h",
     "ssl/ssl_config_service_manager.cc",
     "ssl/ssl_config_service_manager.h",
+    "theme/radium_theme_provider.cc",
+    "theme/radium_theme_provider.h",
   ]
 
   deps = [
     "//components/certificate_transparency",
+    "//components/color",
     "//components/embedder_support",
     "//components/embedder_support:browser_util",
     "//components/embedder_support/origin_trials",
@@ -64,6 +67,7 @@ static_library("browser") {
     "//components/proxy_config",
     "//content/public/browser",
     "//content/public/common",
+    "//radium/app/theme:theme_resources",
     "//radium/browser/content_settings",
     "//radium/browser/metrics",
     "//radium/browser/prefs",

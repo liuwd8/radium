@@ -9,16 +9,23 @@
 
 class UntitledWidgetFrameViewLinux : public OpaqueFrameView {
  public:
-  explicit UntitledWidgetFrameViewLinux(views::Widget* widget);
+  explicit UntitledWidgetFrameViewLinux(UntitledWidget* untitled_widget);
   UntitledWidgetFrameViewLinux(const UntitledWidgetFrameViewLinux&) = delete;
   UntitledWidgetFrameViewLinux& operator=(const UntitledWidgetFrameViewLinux&) =
       delete;
   ~UntitledWidgetFrameViewLinux() override;
 
+  // Gets the shadow metrics (radius, offset, and number of shadows).  This will
+  // always return shadow values, even if shadows are not actually drawn.
+  // `active` indicates if the shadow will be drawn on a focused browser window.
+  static gfx::ShadowValues GetShadowValues(bool active);
+
   // UntitledWidgetNonClientFrameView:
   gfx::Insets RestoredMirroredFrameBorderInsets() const override;
   gfx::Insets GetInputInsets() const override;
   SkRRect GetRestoredClipRegion() const override;
+  void PaintRestoredFrameBorder(gfx::Canvas* canvas) const override;
+
   bool ShouldDrawRestoredFrameShadow() const;
 
  private:

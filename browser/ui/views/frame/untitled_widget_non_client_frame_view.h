@@ -11,14 +11,22 @@
 class UntitledWidget;
 class UntitledWindowClientView;
 
+// Type used for functions whose return values depend on the active state of
+// the frame.
+enum class BrowserFrameActiveState {
+  kUseCurrent,  // Use current frame active state.
+  kActive,      // Treat frame as active regardless of current state.
+  kInactive,    // Treat frame as inactive regardless of current state.
+};
+
 class UntitledWidgetNonClientFrameView : public views::NonClientFrameView {
   METADATA_HEADER(UntitledWidgetNonClientFrameView, views::NonClientFrameView)
 
  public:
   static std::unique_ptr<UntitledWidgetNonClientFrameView> Create(
-      views::Widget* widget);
+      UntitledWidget* untitled_widget);
 
-  explicit UntitledWidgetNonClientFrameView(views::Widget* widget);
+  explicit UntitledWidgetNonClientFrameView(UntitledWidget* untitled_widget);
   UntitledWidgetNonClientFrameView(const UntitledWidgetNonClientFrameView&) =
       delete;
   UntitledWidgetNonClientFrameView& operator=(
@@ -26,7 +34,18 @@ class UntitledWidgetNonClientFrameView : public views::NonClientFrameView {
 
   ~UntitledWidgetNonClientFrameView() override;
 
+  using views::NonClientFrameView::ShouldPaintAsActive;
+
+  UntitledWidget* untitled_widget() const { return untitled_widget_; }
+
   bool IsFrameCondensed() const;
+
+  // Computes the height of the top area of the frame.
+  virtual int GetTopAreaHeight() const;
+
+  // Returns the color of the browser frame, which is also the color of the
+  // tabstrip background.
+  virtual SkColor GetFrameColor(BrowserFrameActiveState active_state) const;
 
   // Returns the insets from the edge of the native window to the client view in
   // DIPs. The value is left-to-right even on RTL locales. That is,
@@ -48,13 +67,29 @@ class UntitledWidgetNonClientFrameView : public views::NonClientFrameView {
   // translucent, or if the window is in full screen mode.
   virtual int GetTranslucentTopAreaHeight() const;
 
+  // Compute aspects of the frame needed to paint the frame background.
+  gfx::ImageSkia GetFrameImage(BrowserFrameActiveState active_state =
+                                   BrowserFrameActiveState::kUseCurrent) const;
+  gfx::ImageSkia GetFrameOverlayImage(
+      BrowserFrameActiveState active_state =
+          BrowserFrameActiveState::kUseCurrent) const;
+
  protected:
   // View:
   gfx::Size GetMinimumSize() const override;
   gfx::Size GetMaximumSize() const override;
 
+  // Called when |frame_|'s "paint as active" state has changed.
+  virtual void PaintAsActiveChanged();
+
+  // Converts an ActiveState to a bool representing whether the frame should be
+  // treated as active.
+  bool ShouldPaintAsActive(BrowserFrameActiveState active_state) const;
+
  private:
-  raw_ptr<views::Widget> widget_ = nullptr;
+  raw_ptr<UntitledWidget> untitled_widget_ = nullptr;
+
+  base::CallbackListSubscription paint_as_active_subscription_;
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_WIDGET_NON_CLIENT_FRAME_VIEW_H_

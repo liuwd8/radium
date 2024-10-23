@@ -21,6 +21,7 @@ static_library("ui") {
   deps = [
     "//base",
     "//components/ui_devtools",
+    "//radium/browser/ui/color",
     "//radium/browser/ui/signin",
     "//third_party/inspector_protocol:crdtp",
   ]

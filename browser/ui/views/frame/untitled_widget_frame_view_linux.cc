@@ -11,19 +11,30 @@
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "radium/browser/ui/views/radium_layout_provider.h"
 #include "third_party/skia/include/core/SkRRect.h"
+#include "ui/gfx/canvas.h"
 #include "ui/gfx/geometry/skia_conversions.h"
+#include "ui/gfx/scoped_canvas.h"
+#include "ui/gfx/skia_paint_util.h"
 #include "ui/views/widget/widget.h"
+#include "ui/views/window/frame_background.h"
 
 namespace {
 
 // This is the same thickness as the resize border on ChromeOS.
 constexpr unsigned int kResizeBorder = 10;
+constexpr int kBorderAlpha = 0x26;
 
 }  // namespace
 
+gfx::ShadowValues UntitledWidgetFrameViewLinux::GetShadowValues(bool active) {
+  int elevation = RadiumLayoutProvider::Get()->GetShadowElevationMetric(
+      active ? views::Emphasis::kMaximum : views::Emphasis::kMedium);
+  return gfx::ShadowValue::MakeMdShadowValues(elevation);
+}
+
 UntitledWidgetFrameViewLinux::UntitledWidgetFrameViewLinux(
-    views::Widget* widget)
-    : OpaqueFrameView(widget) {}
+    UntitledWidget* untitled_widget)
+    : OpaqueFrameView(untitled_widget) {}
 
 UntitledWidgetFrameViewLinux::~UntitledWidgetFrameViewLinux() = default;
 
@@ -58,6 +69,60 @@ bool UntitledWidgetFrameViewLinux::ShouldDrawRestoredFrameShadow() const {
   return true;
 }
 
+void UntitledWidgetFrameViewLinux::PaintRestoredFrameBorder(
+    gfx::Canvas* canvas) const {
+  const bool tiled = untitled_widget()->tiled();
+  auto shadow_values =
+      tiled ? gfx::ShadowValues() : GetShadowValues(ShouldPaintAsActive());
+
+  const auto* color_provider = GetColorProvider();
+  SkRRect clip = GetRestoredClipRegion();
+  bool showing_shadow = ShouldDrawRestoredFrameShadow();
+  gfx::Insets border = GetInsets();
+  if (frame_background()) {
+    gfx::ScopedCanvas scoped_canvas(canvas);
+    canvas->sk_canvas()->clipRRect(clip, SkClipOp::kIntersect, true);
+    auto shadow_inset = showing_shadow ? border : gfx::Insets();
+    frame_background()->PaintMaximized(canvas, GetNativeTheme(), color_provider,
+                                       shadow_inset.left(), shadow_inset.top(),
+                                       width() - shadow_inset.width());
+    if (!showing_shadow) {
+      frame_background()->FillFrameBorders(canvas, this, border.left(),
+                                           border.right(), border.bottom());
+    }
+  }
+
+  // If rendering shadows, draw a 1px exterior border, otherwise draw a 1px
+  // interior border.
+  const SkScalar one_pixel = SkFloatToScalar(1 / canvas->image_scale());
+  SkRRect outset_rect = clip;
+  SkRRect inset_rect = clip;
+  if (tiled) {
+    outset_rect.outset(1, 1);
+  } else if (showing_shadow) {
+    outset_rect.outset(one_pixel, one_pixel);
+  } else {
+    inset_rect.inset(one_pixel, one_pixel);
+  }
+
+  cc::PaintFlags flags;
+  const SkColor frame_color = color_provider->GetColor(
+      ShouldPaintAsActive() ? ui::kColorFrameActive : ui::kColorFrameInactive);
+  const SkColor border_color =
+      showing_shadow ? SK_ColorBLACK
+                     : color_utils::PickContrastingColor(
+                           SK_ColorBLACK, SK_ColorWHITE, frame_color);
+  flags.setColor(SkColorSetA(border_color, kBorderAlpha));
+  flags.setAntiAlias(true);
+  if (showing_shadow) {
+    flags.setLooper(gfx::CreateShadowDrawLooper(shadow_values));
+  }
+
+  gfx::ScopedCanvas scoped_canvas(canvas);
+  canvas->sk_canvas()->clipRRect(inset_rect, SkClipOp::kDifference, true);
+  canvas->sk_canvas()->drawRRect(outset_rect, flags);
+}
+
 gfx::Insets UntitledWidgetFrameViewLinux::GetInsets() const {
   if (!ShouldDrawRestoredFrameShadow()) {
     auto no_shadow_border = OpaqueFrameView::GetInsets();
@@ -69,11 +134,7 @@ gfx::Insets UntitledWidgetFrameViewLinux::GetInsets() const {
       static_cast<const UntitledWidget*>(GetWidget());
   const bool tiled = untitled_widget->tiled();
 
-  auto shadow_values =
-      tiled ? gfx::ShadowValues()
-            : gfx::ShadowValue::MakeMdShadowValues(
-                  RadiumLayoutProvider::Get()->GetShadowElevationMetric(
-                      views::Emphasis::kMaximum));
+  auto shadow_values = tiled ? gfx::ShadowValues() : GetShadowValues(true);
 
   // The border must be at least as large as the shadow.
   gfx::Rect frame_extents;
@@ -97,9 +158,7 @@ gfx::Insets UntitledWidgetFrameViewLinux::GetInsets() const {
 }
 
 float UntitledWidgetFrameViewLinux::GetRestoredCornerRadiusDip() const {
-  const UntitledWidget* untitled_widget =
-      static_cast<const UntitledWidget*>(GetWidget());
-  const bool tiled = untitled_widget->tiled();
+  const bool tiled = untitled_widget()->tiled();
   if (tiled || !views::Widget::IsWindowCompositingSupported()) {
     return 0;
   }

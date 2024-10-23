@@ -11,16 +11,19 @@
 #include "base/task/current_thread.h"
 #include "base/threading/hang_watcher.h"
 #include "base/trace_event/trace_event.h"
-#include "chrome/browser/profiles/profiles_state.h"
+#include "components/color/color_mixers.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/prefs/pref_service.h"
 #include "radium/browser/browser_process.h"
 #include "radium/browser/global_features.h"
 #include "radium/browser/profiles/profile_manager.h"
+#include "radium/browser/profiles/profiles_state.h"
 #include "radium/browser/radium_browser_main_extra_parts.h"
+#include "radium/browser/ui/color/radium_color_mixers.h"
 #include "radium/browser/ui/startup/startup_browser_creator.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_result_codes.h"
+#include "ui/color/color_provider_manager.h"
 
 #if defined(USE_AURA)
 #include "ui/aura/env.h"
@@ -119,14 +122,13 @@ void RadiumBrowserMainParts::ToolkitInitialized() {
     radium_extra_part->ToolkitInitialized();
   }
 
-  // // Comes after the extra parts' calls since on GTK that builds the native
-  // // theme that, in turn, adds the GTK core color mixer; core mixers should
-  // all
-  // // be added before we add chrome mixers.
-  // ui::ColorProviderManager::Get().AppendColorProviderInitializer(
-  //     base::BindRepeating(color::AddComponentsColorMixers));
-  // ui::ColorProviderManager::Get().AppendColorProviderInitializer(
-  //     base::BindRepeating(AddChromeColorMixers));
+  // Comes after the extra parts' calls since on GTK that builds the native
+  // theme that, in turn, adds the GTK core color mixer; core mixers should all
+  // be added before we add chrome mixers.
+  ui::ColorProviderManager::Get().AppendColorProviderInitializer(
+      base::BindRepeating(color::AddComponentsColorMixers));
+  ui::ColorProviderManager::Get().AppendColorProviderInitializer(
+      base::BindRepeating(AddRadiumColorMixers));
 }
 
 void RadiumBrowserMainParts::PreCreateMainMessageLoop() {

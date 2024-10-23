@@ -1,0 +1,21 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("color") {
+  public = [
+    "radium_color_id.h",
+    "radium_color_mixers.h",
+  ]
+
+  sources = [
+    "radium_color_mixer.cc",
+    "radium_color_mixers.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//ui/color:color",
+    "//ui/color:mixers",
+  ]
+}

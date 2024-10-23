@@ -8,9 +8,10 @@
 
 namespace {
 
-std::unique_ptr<OpaqueFrameView> CreateOpaqueFrameView(views::Widget* widget) {
+std::unique_ptr<OpaqueFrameView> CreateOpaqueFrameView(
+    UntitledWidget* untitled_widget) {
 #if BUILDFLAG(IS_LINUX)
-  return std::make_unique<UntitledWidgetFrameViewLinux>(widget);
+  return std::make_unique<UntitledWidgetFrameViewLinux>(untitled_widget);
 #else
   return std::make_unique<OpaqueFrameView>(frame, browser_view,
                                            new OpaqueFrameViewLayout());
@@ -20,13 +21,13 @@ std::unique_ptr<OpaqueFrameView> CreateOpaqueFrameView(views::Widget* widget) {
 }  // namespace
 
 std::unique_ptr<UntitledWidgetNonClientFrameView>
-UntitledWidgetNonClientFrameView::Create(views::Widget* widget) {
+UntitledWidgetNonClientFrameView::Create(UntitledWidget* untitled_widget) {
 #if BUILDFLAG(IS_WIN)
   if (frame->ShouldUseNativeFrame()) {
     return std::make_unique<BrowserFrameViewWin>(frame, browser_view);
   }
 #endif
-  auto view = CreateOpaqueFrameView(widget);
+  auto view = CreateOpaqueFrameView(untitled_widget);
   // view->InitViews();
   return view;
 }

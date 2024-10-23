@@ -31,7 +31,12 @@ UntitledDesktopWindowTreeHostLinux::UntitledDesktopWindowTreeHostLinux(
     UntitledWidget* untitled_widget)
     : DesktopWindowTreeHostLinux(native_widget_delegate,
                                  desktop_native_widget_aura),
-      untitled_widget_(untitled_widget) {}
+      untitled_widget_(untitled_widget) {
+  theme_observation_.Observe(ui::NativeTheme::GetInstanceForNativeUi());
+  if (auto* linux_ui = ui::LinuxUi::instance()) {
+    scale_observation_.Observe(linux_ui);
+  }
+}
 
 UntitledDesktopWindowTreeHostLinux::~UntitledDesktopWindowTreeHostLinux() =
     default;
@@ -57,6 +62,12 @@ bool UntitledDesktopWindowTreeHostLinux::UsesNativeSystemMenu() const {
 ////////////////////////////////////////////////////////////////////////////////
 // UntitledDesktopWindowTreeHostLinux,
 //     DesktopWindowTreeHostLinux implementation:
+
+void UntitledDesktopWindowTreeHostLinux::OnWidgetInitDone() {
+  DesktopWindowTreeHostLinux::OnWidgetInitDone();
+
+  UpdateFrameHints();
+}
 
 void UntitledDesktopWindowTreeHostLinux::AddAdditionalInitProperties(
     const views::Widget::InitParams& params,
@@ -196,6 +207,15 @@ void UntitledDesktopWindowTreeHostLinux::OnWindowTiledStateChanged(
       GetWidget()->non_client_view()->SchedulePaint();
     }
   }
+}
+
+void UntitledDesktopWindowTreeHostLinux::OnNativeThemeUpdated(
+    ui::NativeTheme* observed_theme) {
+  UpdateFrameHints();
+}
+
+void UntitledDesktopWindowTreeHostLinux::OnDeviceScaleFactorChanged() {
+  UpdateFrameHints();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,25 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//radium/common/features.gni")
+import("//radium/locales.gni")
+import("//tools/grit/grit_args.gni")
+import("//tools/grit/grit_rule.gni")
+
+grit("theme_resources") {
+  source = "theme_resources.grd"
+  defines = radium_grit_defines
+  outputs = [
+    "grit/theme_resources.h",
+    "grit/theme_resources_map.cc",
+    "grit/theme_resources_map.h",
+    "theme_resources_100_percent.pak",
+    "theme_resources_200_percent.pak",
+    "theme_resources_300_percent.pak",
+  ]
+
+  deps = [ "//ui/resources" ]
+
+  output_dir = "$root_gen_dir/radium"
+}

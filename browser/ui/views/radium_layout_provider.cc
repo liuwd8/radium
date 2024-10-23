@@ -4,6 +4,8 @@
 
 #include "radium/browser/ui/views/radium_layout_provider.h"
 
+#include "base/notreached.h"
+
 namespace {
 
 RadiumLayoutProvider* g_radium_layout_provider = nullptr;
@@ -31,4 +33,19 @@ RadiumLayoutProvider::RadiumLayoutProvider() {
 RadiumLayoutProvider::~RadiumLayoutProvider() {
   DCHECK_EQ(this, g_radium_layout_provider);
   g_radium_layout_provider = nullptr;
+}
+
+int RadiumLayoutProvider::GetDistanceMetric(int metric) const {
+  DCHECK_GE(metric, views::VIEWS_DISTANCE_START);
+  DCHECK_LT(metric, views::VIEWS_DISTANCE_MAX);
+
+  if (metric < views::VIEWS_DISTANCE_END) {
+    return LayoutProvider::GetDistanceMetric(metric);
+  }
+
+  switch (static_cast<RadiumDistanceMetric>(metric)) {
+    case DISTANCE_UNTITLED_WIDGET_TITLE_BAR_HEIGHT:
+      return 41;
+  }
+  NOTREACHED();
 }
