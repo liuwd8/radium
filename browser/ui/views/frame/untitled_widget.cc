@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "radium/browser/theme/radium_theme_provider.h"
+#include "radium/browser/themes/theme_service.h"
 #include "radium/browser/ui/views/frame/native_untitled_frame.h"
 #include "radium/browser/ui/views/frame/native_untitled_frame_factory.h"
 #include "radium/browser/ui/views/frame/untitled_widget_non_client_frame_view.h"
@@ -15,8 +15,11 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/widget/widget_delegate.h"
 
-UntitledWidget::UntitledWidget()
-    : title_bar_background_height_(
+UntitledWidget::UntitledWidget(UntitledWidgetDelegate* delegate,
+                               Profile* profile)
+    : delegate_(delegate),
+      profile_(profile),
+      title_bar_background_height_(
           RadiumLayoutProvider::Get()->GetDistanceMetric(
               DISTANCE_UNTITLED_WIDGET_TITLE_BAR_HEIGHT)) {
   set_is_secondary_widget(false);
@@ -43,12 +46,16 @@ views::Widget::InitParams UntitledWidget::GetUntitledWidgetParams() {
 }
 
 const ui::ThemeProvider* UntitledWidget::GetThemeProvider() const {
-  if (!theme_provider_) {
-    theme_provider_ = std::make_unique<RadiumThemeProvider>();
-  }
-
-  return theme_provider_.get();
+  return &ThemeService::GetThemeProviderForProfile(profile_);
 }
+
+ui::ColorProviderKey::ThemeInitializerSupplier* UntitledWidget::GetCustomTheme()
+    const {
+  // return ThemeService::GetThemeSupplierForProfile(nullptr);
+  return nullptr;
+}
+
+void UntitledWidget::OnNativeThemeUpdated(ui::NativeTheme* observed_theme) {}
 
 BEGIN_METADATA(UntitledWidget)
 ADD_PROPERTY_METADATA(int, TitleBarBackgroundHeight)

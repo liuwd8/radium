@@ -1,0 +1,26 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("themes") {
+  public = [
+    "radium_theme_provider.h",
+    "theme_service.h",
+    "theme_service_factory.h",
+  ]
+
+  sources = [
+    "radium_theme_provider.cc",
+    "theme_service.cc",
+    "theme_service_factory.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//components/pref_registry",
+    "//radium/app/theme:theme_resources",
+    "//radium/browser/profiles",
+    "//ui/color:color_headers",
+    "//ui/gfx",
+  ]
+}

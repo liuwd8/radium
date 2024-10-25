@@ -11,16 +11,26 @@
 #include "ui/views/widget/widget.h"
 
 class NativeUntitledFrame;
+class Profile;
+class UntitledWidgetDelegate;
 
 class UntitledWidget : public views::Widget {
   METADATA_HEADER(UntitledWidget, views::Widget)
 
  public:
-  explicit UntitledWidget();
+  explicit UntitledWidget(UntitledWidgetDelegate* delegate, Profile* profile);
   UntitledWidget(const UntitledWidget&) = delete;
   UntitledWidget& operator=(const UntitledWidget&) = delete;
 
   ~UntitledWidget() override;
+
+#if BUILDFLAG(IS_LINUX)
+  // Returns whether the frame is in a tiled state.
+  bool tiled() const { return tiled_; }
+  void set_tiled(bool tiled) { tiled_ = tiled; }
+#endif
+
+  UntitledWidgetDelegate* delegate() const { return delegate_; }
 
   // Set the background color and height of the title bar. Note that you cannot
   // set the background color directly in the external view. Otherwise, it will
@@ -41,21 +51,19 @@ class UntitledWidget : public views::Widget {
 
   gfx::Point GetThemeOffsetFromBrowserView() const;
 
-#if BUILDFLAG(IS_LINUX)
-  // Returns whether the frame is in a tiled state.
-  bool tiled() const { return tiled_; }
-  void set_tiled(bool tiled) { tiled_ = tiled; }
-#endif
-
   views::Widget::InitParams GetUntitledWidgetParams();
 
  protected:
   // views::Widget:
   const ui::ThemeProvider* GetThemeProvider() const override;
+  ui::ColorProviderKey::ThemeInitializerSupplier* GetCustomTheme()
+      const override;
+  void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;
 
  private:
+  raw_ptr<UntitledWidgetDelegate> delegate_;
+  raw_ptr<Profile> profile_;
   raw_ptr<NativeUntitledFrame> native_untitled_frame_;
-  mutable std::unique_ptr<ui::ThemeProvider> theme_provider_;
 
 #if BUILDFLAG(IS_LINUX)
   bool tiled_ = false;

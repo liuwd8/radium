@@ -2,15 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "radium/browser/theme/radium_theme_provider.h"
+#include "radium/browser/themes/radium_theme_provider.h"
 
 #include "base/containers/flat_tree.h"
 #include "radium/grit/theme_resources_map.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "ui/base/resource/resource_scale_factor.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/image/image_skia.h"
 
-RadiumThemeProvider::RadiumThemeProvider() = default;
+RadiumThemeProvider::RadiumThemeProvider(bool incognito)
+    : incognito_(incognito) {}
+
 RadiumThemeProvider::~RadiumThemeProvider() = default;
 
 gfx::ImageSkia* RadiumThemeProvider::GetImageSkiaNamed(int id) const {
@@ -31,7 +34,11 @@ int RadiumThemeProvider::GetDisplayProperty(int id) const {
 }
 
 bool RadiumThemeProvider::ShouldUseNativeFrame() const {
+#if BUILDFLAG(IS_WIN)
+  return true;
+#else
   return false;
+#endif
 }
 
 bool RadiumThemeProvider::HasCustomImage(int id) const {
@@ -43,7 +50,8 @@ bool RadiumThemeProvider::HasCustomImage(int id) const {
 base::RefCountedMemory* RadiumThemeProvider::GetRawData(
     int id,
     ui::ResourceScaleFactor scale_factor) const {
-  return nullptr;
+  return ui::ResourceBundle::GetSharedInstance().LoadDataResourceBytesForScale(
+      id, scale_factor);
 }
 
 gfx::Image RadiumThemeProvider::GetImageNamed(int id) const {

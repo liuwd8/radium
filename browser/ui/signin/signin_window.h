@@ -5,6 +5,8 @@
 #ifndef RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_
 #define RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_
 
+class Profile;
+
 class SigninWindow {
  public:
   explicit SigninWindow();
@@ -13,7 +15,7 @@ class SigninWindow {
 
   ~SigninWindow();
 
-  static void Show();
+  static void Show(Profile* profile);
 };
 
 #endif  // RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_

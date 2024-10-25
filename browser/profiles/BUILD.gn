@@ -32,3 +32,14 @@ source_set("profiles") {
     "//radium/common:constants",
   ]
 }
+
+source_set("profiles_extra_parts_impl") {
+  public = [ "radium_browser_main_extra_parts_profiles.h" ]
+
+  sources = [ "radium_browser_main_extra_parts_profiles.cc" ]
+
+  deps = [
+    "//base",
+    "//radium/browser/themes",
+  ]
+}

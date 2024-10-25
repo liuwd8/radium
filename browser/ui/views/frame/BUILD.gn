@@ -5,6 +5,11 @@
 import("//build/config/ui.gni")
 
 source_set("frame") {
+  public = [
+    "untitled_widget.h",
+    "untitled_widget_delegate.h",
+  ]
+
   sources = [
     "native_untitled_frame.h",
     "native_untitled_frame_factory.h",
@@ -12,7 +17,7 @@ source_set("frame") {
     "opaque_frame_view.h",
     "untitled_desktop_window_tree_host.h",
     "untitled_widget.cc",
-    "untitled_widget.h",
+    "untitled_widget_delegate.cc",
     "untitled_widget_non_client_frame_view.cc",
     "untitled_widget_non_client_frame_view.h",
     "untitled_widget_non_client_frame_view_factory_views.cc",

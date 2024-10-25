@@ -13,6 +13,7 @@
 #include "radium/browser/net/profile_network_context_service.h"
 #include "radium/browser/net/profile_network_context_service_factory.h"
 #include "radium/browser/net/system_network_context_manager.h"
+#include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
 #include "radium/browser/radium_browser_main_parts.h"
 
 #if BUILDFLAG(IS_LINUX)
@@ -59,6 +60,8 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   main_parts->AddParts(std::make_unique<ChromeBrowserMainExtraPartsViews>());
 #endif
 #endif
+
+  main_parts->AddParts(std::make_unique<RadiumBrowserMainExtraPartsProfiles>());
 
 #if BUILDFLAG(IS_LINUX)
   main_parts->AddParts(std::make_unique<RadiumBrowserMainExtraPartsLinux>());

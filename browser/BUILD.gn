@@ -51,8 +51,6 @@ static_library("browser") {
     "radium_resource_bundle_helper.h",
     "ssl/ssl_config_service_manager.cc",
     "ssl/ssl_config_service_manager.h",
-    "theme/radium_theme_provider.cc",
-    "theme/radium_theme_provider.h",
   ]
 
   deps = [
@@ -72,6 +70,8 @@ static_library("browser") {
     "//radium/browser/metrics",
     "//radium/browser/prefs",
     "//radium/browser/profiles",
+    "//radium/browser/profiles:profiles_extra_parts_impl",
+    "//radium/browser/themes",
     "//radium/browser/ui",
     "//services/cert_verifier:lib",
     "//services/network/public/cpp",

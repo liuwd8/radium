@@ -41,7 +41,7 @@ StartupProfileInfo CreateInitialProfile(
 
   StartupProfileInfo profile_info;
   profile_info.profile = profile_manager->GetProfile(
-      profiles::GetDefaultProfileDir(user_data_dir));
+      profiles::GetDefaultProfileDir(user_data_dir), true);
   profile_info.mode = StartupProfileMode::kBrowserWindow;
   return profile_info;
 }

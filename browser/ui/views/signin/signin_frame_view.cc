@@ -13,10 +13,11 @@
 #include "ui/views/background.h"
 #include "ui/views/widget/widget.h"
 
-void SigninWindow::Show() {
-  auto* widget = new UntitledWidget();
+void SigninWindow::Show(Profile* profile) {
+  auto* delegate = new SigninFrameView();
+  auto* widget = new UntitledWidget(delegate, profile);
   views::Widget::InitParams params = widget->GetUntitledWidgetParams();
-  params.delegate = new SigninFrameView();
+  params.delegate = delegate;
 #if BUILDFLAG(IS_LINUX)
   params.wm_class_name = "radium";
   params.wm_class_class = "radium";
@@ -32,6 +33,7 @@ SigninFrameView::SigninFrameView()
     : keep_alive_(KeepAliveOrigin::USER_MANAGER_VIEW,
                   KeepAliveRestartOption::DISABLED) {
   SetHasWindowSizeControls(true);
+  SetTitle(u"SigninFrameView");
 }
 
 SigninFrameView::~SigninFrameView() = default;

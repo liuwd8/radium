@@ -6,10 +6,10 @@
 #define RADIUM_BROWSER_UI_VIEWS_SIGNIN_SIGNIN_FRAME_VIEW_H_
 
 #include "components/keep_alive_registry/scoped_keep_alive.h"
-#include "ui/views/widget/widget_delegate.h"
+#include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 
-class SigninFrameView : public views::WidgetDelegateView {
-  METADATA_HEADER(SigninFrameView, views::WidgetDelegateView)
+class SigninFrameView : public UntitledWidgetDelegateView {
+  METADATA_HEADER(SigninFrameView, UntitledWidgetDelegateView)
 
  public:
   explicit SigninFrameView();

@@ -13,6 +13,6 @@ bool StartupBrowserCreator::Start(const base::CommandLine& cmd_line,
                                   const base::FilePath& cur_dir,
                                   StartupProfileInfo profile_info,
                                   const Profiles& last_opened_profiles) {
-  SigninWindow::Show();
+  SigninWindow::Show(profile_info.profile);
   return true;
 }

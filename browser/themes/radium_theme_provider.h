@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef RADIUM_BROWSER_THEME_RADIUM_THEME_PROVIDER_H_
-#define RADIUM_BROWSER_THEME_RADIUM_THEME_PROVIDER_H_
+#ifndef RADIUM_BROWSER_THEMES_RADIUM_THEME_PROVIDER_H_
+#define RADIUM_BROWSER_THEMES_RADIUM_THEME_PROVIDER_H_
 
 #include "ui/base/theme_provider.h"
 
@@ -14,7 +14,7 @@ class Image;
 
 class RadiumThemeProvider : public ui::ThemeProvider {
  public:
-  explicit RadiumThemeProvider();
+  explicit RadiumThemeProvider(bool incognito);
   RadiumThemeProvider(const RadiumThemeProvider&) = delete;
   RadiumThemeProvider& operator=(const RadiumThemeProvider&) = delete;
 
@@ -33,6 +33,8 @@ class RadiumThemeProvider : public ui::ThemeProvider {
  private:
   // Returns a cross platform image for an id.
   gfx::Image GetImageNamed(int id) const;
+
+  bool incognito_;
 };
 
-#endif  // RADIUM_BROWSER_THEME_RADIUM_THEME_PROVIDER_H_
+#endif  // RADIUM_BROWSER_THEMES_RADIUM_THEME_PROVIDER_H_
