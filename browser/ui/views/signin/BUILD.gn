@@ -8,7 +8,9 @@ source_set("signin") {
   sources = [ "signin_frame_view.cc" ]
 
   deps = [
+    "//components/qr_code_generator:bitmap_generator",
     "//radium/browser/ui/views/frame",
     "//ui/views",
+    "//ui/views/window/vector_icons",
   ]
 }

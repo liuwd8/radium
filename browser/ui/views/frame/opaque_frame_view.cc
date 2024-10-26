@@ -9,6 +9,7 @@
 #include "base/i18n/rtl.h"
 #include "base/trace_event/trace_event.h"
 #include "radium/browser/ui/views/frame/untitled_widget.h"
+#include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "radium/browser/ui/views/frame/untitled_widget_non_client_frame_view.h"
 #include "ui/base/hit_test.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
@@ -69,12 +70,19 @@ int OpaqueFrameView::NonClientHitTest(const gfx::Point& point) {
     return HTNOWHERE;
   }
 
-  int frame_component = GetWidget()->client_view()->NonClientHitTest(point);
+  int delegate_component =
+      untitled_widget()->delegate()->NonClientHitTest(point);
+  if (delegate_component != HTNOWHERE) {
+    return delegate_component;
+  }
+
+  int frame_component =
+      untitled_widget()->client_view()->NonClientHitTest(point);
   if (frame_component != HTNOWHERE) {
     return frame_component;
   }
 
-  views::WidgetDelegate* delegate = GetWidget()->widget_delegate();
+  views::WidgetDelegate* delegate = untitled_widget()->widget_delegate();
   if (!delegate) {
     LOG(WARNING) << "delegate is null, returning safe default.";
     return HTCAPTION;
