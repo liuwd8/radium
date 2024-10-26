@@ -20,6 +20,7 @@ const base::FilePath::CharType kNetworkPersistentStateFilename[] =
     FPL("Network Persistent State");
 const base::FilePath::CharType kSCTAuditingPendingReportsFileName[] =
     FPL("SCT Auditing Pending Reports");
+const base::FilePath::CharType kSystemProfileDir[] = FPL("System Profile");
 const base::FilePath::CharType kTransportSecurityPersisterFilename[] =
     FPL("TransportSecurity");
 const base::FilePath::CharType kTrustTokenFilename[] = FPL("Trust Tokens");

@@ -108,6 +108,10 @@ const PrefService* Profile::GetPrefs() const {
   return prefs_.get();
 }
 
+base::FilePath Profile::GetBaseName() const {
+  return path_.BaseName();
+}
+
 bool Profile::IsRegularProfile() const {
   return profile_metrics::GetBrowserProfileType(this) ==
          profile_metrics::BrowserProfileType::kRegular;

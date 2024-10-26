@@ -16,6 +16,7 @@
 #include "components/os_crypt/async/browser/secret_portal_key_provider.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
+#include "radium/browser/devtools/remote_debugging_server.h"
 #include "radium/browser/global_features.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/net/system_network_context_manager.h"
@@ -115,6 +116,14 @@ void BrowserProcess::PreCreateThreads() {
   }
 }
 
+void BrowserProcess::CreateDevToolsProtocolHandler() {
+  // StartupBrowserCreator::LaunchBrowser can be run multiple times when browser
+  // is started with several profiles or existing browser process is reused.
+  if (!remote_debugging_server_) {
+    remote_debugging_server_ = std::make_unique<RemoteDebuggingServer>();
+  }
+}
+
 void BrowserProcess::PreMainMessageLoopRun() {
   // OSCryptAsync provider configuration. If empty, this delegates all
   // encryption operations to OSCrypt.
@@ -156,6 +165,9 @@ void BrowserProcess::PreMainMessageLoopRun() {
 }
 
 void BrowserProcess::StartTearDown() {
+  // Debugger must be cleaned up before ProfileManager.
+  remote_debugging_server_.reset();
+
   // Need to clear profiles (download managers) before the IO thread.
   {
     TRACE_EVENT0("shutdown", "BrowserProcess::StartTearDown:ProfileManager");

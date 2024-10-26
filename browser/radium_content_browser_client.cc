@@ -6,9 +6,12 @@
 
 #include <memory>
 
+#include "base/version_info/version_info_values.h"
 #include "build/build_config.h"
+#include "components/embedder_support/user_agent_utils.h"
 #include "components/prefs/pref_service.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/devtools/radium_devtools_manager_delegate.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/net/profile_network_context_service.h"
 #include "radium/browser/net/profile_network_context_service_factory.h"
@@ -72,14 +75,18 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   return main_parts;
 }
 
+std::unique_ptr<content::DevToolsManagerDelegate>
+RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
+  return std::make_unique<RadiumDevToolsManagerDelegate>();
+}
+
 void RadiumContentBrowserClient::OnNetworkServiceCreated(
     network::mojom::NetworkService* network_service) {
   PrefService* local_state;
   if (BrowserProcess::Get()) {
     local_state = BrowserProcess::Get()->local_state();
   } else {
-    local_state =
-        nullptr;  // startup_data_.chrome_feature_list_creator()->local_state();
+    local_state = radium_feature_list_creator_->local_state();
   }
   DCHECK(local_state);
 
@@ -113,4 +120,12 @@ void RadiumContentBrowserClient::ConfigureNetworkContextParams(
     network_context_params->user_agent = GetUserAgentBasedOnPolicy(context);
     network_context_params->accept_language = GetApplicationLocale();
   }
+}
+
+std::string RadiumContentBrowserClient::GetProduct() {
+  return "Radium/" PRODUCT_VERSION;
+}
+
+std::string RadiumContentBrowserClient::GetUserAgent() {
+  return embedder_support::GetUserAgent();
 }

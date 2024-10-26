@@ -4,6 +4,9 @@
 
 #include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
 
+#include "radium/browser/content_settings/cookie_settings_factory.h"
+#include "radium/browser/content_settings/host_content_settings_map_factory.h"
+#include "radium/browser/net/profile_network_context_service_factory.h"
 #include "radium/browser/themes/theme_service_factory.h"
 
 RadiumBrowserMainExtraPartsProfiles::RadiumBrowserMainExtraPartsProfiles() =
@@ -13,6 +16,9 @@ RadiumBrowserMainExtraPartsProfiles::~RadiumBrowserMainExtraPartsProfiles() =
 
 void RadiumBrowserMainExtraPartsProfiles::
     EnsureBrowserContextKeyedServiceFactoriesBuilt() {
+  CookieSettingsFactory::GetInstance();
+  HostContentSettingsMapFactory::GetInstance();
+  ProfileNetworkContextServiceFactory::GetInstance();
   ThemeServiceFactory::GetInstance();
 }
 

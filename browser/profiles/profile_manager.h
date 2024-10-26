@@ -17,12 +17,29 @@ class ProfileManager {
  public:
   static std::unique_ptr<ProfileManager> Create();
 
+  // Get the `Profile` last used (the `Profile` which owns the most recently
+  // focused window) with this Chrome build. If no signed profile has been
+  // stored in Local State, hand back the Default profile.
+  // If the profile is going to be used to open a new window then consider using
+  // `GetLastUsedProfileAllowedByPolicy()` instead.
+  // Except in ChromeOS guest sessions, the returned profile is always a regular
+  // profile (non-OffTheRecord).
+  // WARNING: if the profile is not loaded, this function loads it
+  // synchronously, causing blocking file I/O. Use
+  // `GetLastUsedProfileIfLoaded()` to avoid loading the profile synchronously.
+  static Profile* GetLastUsedProfile();
+
   ProfileManager(const ProfileManager&) = delete;
   ProfileManager& operator=(const ProfileManager&) = delete;
 
   ~ProfileManager();
 
   const base::FilePath& user_data_dir() const { return user_data_dir_; }
+
+  // Get the path of the last used profile, or if that's undefined, the default
+  // profile.
+  base::FilePath GetLastUsedProfileDir();
+  static base::FilePath GetLastUsedProfileBaseName();
 
   // Returns a profile for a specific profile directory within the user data
   // dir. This will return an existing profile it had already been created,
@@ -36,6 +53,12 @@ class ProfileManager {
   // fully initialized, return a pointer to the corresponding Profile object;
   // otherwise return null.
   Profile* GetProfileByPath(const base::FilePath& path) const;
+
+  // Sets the last-used profile to `last_active`, and also sets that profile's
+  // last-active time to now. If the profile has a primary account, this also
+  // sets its last-active time to now.
+  // Public so that `ProfileManagerAndroid` can call it.
+  void SetProfileAsLastUsed(Profile* last_active);
 
  protected:
   // Creates a new profile by calling into the profile's profile creation

@@ -27,6 +27,8 @@ class SigninFrameView : public UntitledWidgetDelegateView,
   ~SigninFrameView() override;
 
  private:
+  friend class SigninWindow;
+
   // UntitledWidgetDelegateView:
   int NonClientHitTest(const gfx::Point& point) override;
 

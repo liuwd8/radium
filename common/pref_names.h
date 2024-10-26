@@ -203,6 +203,9 @@ inline constexpr char kNtlmV2Enabled[] = "auth.ntlm_v2_enabled";
 inline constexpr char kPostQuantumKeyAgreementEnabled[] =
     "ssl.post_quantum_enabled";
 
+// Directory of the last profile used.
+inline constexpr char kProfileLastUsed[] = "profile.last_used";
+
 // Controls if the QUIC protocol is allowed.
 inline constexpr char kQuicAllowed[] = "net.quic_allowed";
 

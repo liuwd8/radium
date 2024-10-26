@@ -6,6 +6,9 @@
 
 #include <memory>
 
+#include "base/functional/bind.h"
+#include "base/location.h"
+#include "base/task/single_thread_task_runner.h"
 #include "base/types/expected.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
 #include "components/qr_code_generator/bitmap_generator.h"
@@ -51,6 +54,7 @@ std::unique_ptr<views::FrameCaptionButton> CreateFrameCaptionButton(
   button->SetImage(button->GetIcon(), views::FrameCaptionButton::Animate::kNo,
                    icon_image);
   button->GetViewAccessibility().SetName(u"haha");
+  button->SetPaintAsActive(true);
   return button;
 }
 

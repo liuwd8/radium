@@ -288,13 +288,17 @@ int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
   // running.
   browser_process_->PreMainMessageLoopRun();
 
-  // Desktop construction occurs here, (required before profile creation).
-  PreProfileInit();
-
 #if defined(USE_AURA)
   // Make sure aura::Env has been initialized.
   CHECK(aura::Env::GetInstance());
 #endif  // defined(USE_AURA)
+
+  // Desktop construction occurs here, (required before profile creation).
+  PreProfileInit();
+
+  // Needs to be done before PostProfileInit, to allow connecting DevTools
+  // before WebUI for the CrOS login that can be called inside PostProfileInit
+  BrowserProcess::Get()->CreateDevToolsProtocolHandler();
 
   StartupProfileInfo profile_info = CreateInitialProfile(
       base::FilePath(), *base::CommandLine::ForCurrentProcess());

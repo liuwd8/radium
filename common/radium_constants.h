@@ -20,6 +20,7 @@ extern const base::FilePath::CharType kMultiProfileDirPrefix[];
 extern const base::FilePath::CharType kNetworkDataDirname[];
 extern const base::FilePath::CharType kNetworkPersistentStateFilename[];
 extern const base::FilePath::CharType kSCTAuditingPendingReportsFileName[];
+extern const base::FilePath::CharType kSystemProfileDir[];
 extern const base::FilePath::CharType kTransportSecurityPersisterFilename[];
 extern const base::FilePath::CharType kTrustTokenFilename[];
 extern const base::FilePath::CharType kReportingAndNelStoreFilename[];

@@ -72,8 +72,8 @@ bool UntitledWidgetFrameViewLinux::ShouldDrawRestoredFrameShadow() const {
 void UntitledWidgetFrameViewLinux::PaintRestoredFrameBorder(
     gfx::Canvas* canvas) const {
   const bool tiled = untitled_widget()->tiled();
-  auto shadow_values =
-      tiled ? gfx::ShadowValues() : GetShadowValues(ShouldPaintAsActive());
+  const bool is_active = ShouldPaintAsActive();
+  auto shadow_values = tiled ? gfx::ShadowValues() : GetShadowValues(is_active);
 
   const auto* color_provider = GetColorProvider();
   SkRRect clip = GetRestoredClipRegion();
@@ -107,7 +107,7 @@ void UntitledWidgetFrameViewLinux::PaintRestoredFrameBorder(
 
   cc::PaintFlags flags;
   const SkColor frame_color = color_provider->GetColor(
-      ShouldPaintAsActive() ? ui::kColorFrameActive : ui::kColorFrameInactive);
+      is_active ? ui::kColorFrameActive : ui::kColorFrameInactive);
   const SkColor border_color =
       showing_shadow ? SK_ColorBLACK
                      : color_utils::PickContrastingColor(

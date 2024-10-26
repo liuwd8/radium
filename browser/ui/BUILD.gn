@@ -22,6 +22,7 @@ static_library("ui") {
     "//base",
     "//components/ui_devtools",
     "//radium/browser/ui/color",
+    "//radium/browser/ui/prefs:impl",
     "//radium/browser/ui/signin",
     "//third_party/inspector_protocol:crdtp",
   ]

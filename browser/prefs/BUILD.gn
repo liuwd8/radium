@@ -5,6 +5,9 @@ source_set("prefs") {
 
   deps = [
     "//base",
+    "//components/pref_registry",
     "//components/prefs",
+    "//components/proxy_config",
+    "//radium/browser/ui/prefs",
   ]
 }

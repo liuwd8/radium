@@ -5,6 +5,7 @@
 #ifndef RADIUM_BROWSER_PROFILES_PROFILES_STATE_H_
 #define RADIUM_BROWSER_PROFILES_PROFILES_STATE_H_
 
+class PrefRegistrySimple;
 class Profile;
 
 namespace base {
@@ -17,6 +18,13 @@ namespace profiles {
 // Returns the path to the default profile directory, based on the given
 // user data directory.
 base::FilePath GetDefaultProfileDir(const base::FilePath& user_data_dir);
+
+// Register multi-profile related preferences in Local State.
+void RegisterPrefs(PrefRegistrySimple* registry);
+
+// Sets the last used profile pref to |profile_dir|, unless |profile_dir| is the
+// System Profile directory, which is an invalid last used profile.
+void SetLastUsedProfile(const base::FilePath& profile_dir);
 
 // Returns true if the profile is a regular profile and specifically not an Ash
 // internal profile. Callers who do not care about checking for Ash internal

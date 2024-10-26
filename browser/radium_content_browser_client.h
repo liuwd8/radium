@@ -26,6 +26,8 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
   // content::ContentBrowserClient
   std::unique_ptr<content::BrowserMainParts> CreateBrowserMainParts(
       bool is_integration_test) override;
+  std::unique_ptr<content::DevToolsManagerDelegate>
+  CreateDevToolsManagerDelegate() override;
   void OnNetworkServiceCreated(
       network::mojom::NetworkService* network_service) override;
   void ConfigureNetworkContextParams(
@@ -35,6 +37,8 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       network::mojom::NetworkContextParams* network_context_params,
       cert_verifier::mojom::CertVerifierCreationParams*
           cert_verifier_creation_params) override;
+  std::string GetProduct() override;
+  std::string GetUserAgent() override;
 
   std::unique_ptr<RadiumFeatureListCreator> radium_feature_list_creator_;
 };

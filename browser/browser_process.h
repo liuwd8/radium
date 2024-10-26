@@ -16,6 +16,7 @@ class GpuModeManager;
 class PrefRegistrySimple;
 class PrefService;
 class RadiumFeatureListCreator;
+class RemoteDebuggingServer;
 class SystemNetworkContextManager;
 
 namespace os_crypt_async {
@@ -57,6 +58,8 @@ class BrowserProcess : public KeepAliveStateObserver {
   // requires all threads running.
   void PreMainMessageLoopRun();
 
+  void CreateDevToolsProtocolHandler();
+
   // Most cleanup is done by these functions, driven from
   // ChromeBrowserMain based on notifications from the content
   // framework, rather than in the destructor, so that we can
@@ -91,6 +94,10 @@ class BrowserProcess : public KeepAliveStateObserver {
       browser_policy_connector_;
 
   const std::unique_ptr<PrefService> local_state_;
+
+#if !BUILDFLAG(IS_ANDROID)
+  std::unique_ptr<RemoteDebuggingServer> remote_debugging_server_;
+#endif
 
 #if !BUILDFLAG(IS_ANDROID)
   // Called to signal the process' main message loop to exit.

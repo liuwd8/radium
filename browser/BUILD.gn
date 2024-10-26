@@ -54,6 +54,7 @@ static_library("browser") {
   ]
 
   deps = [
+    "//base/version_info",
     "//components/certificate_transparency",
     "//components/color",
     "//components/embedder_support",
@@ -67,6 +68,7 @@ static_library("browser") {
     "//content/public/common",
     "//radium/app/theme:theme_resources",
     "//radium/browser/content_settings",
+    "//radium/browser/devtools",
     "//radium/browser/metrics",
     "//radium/browser/prefs",
     "//radium/browser/profiles",

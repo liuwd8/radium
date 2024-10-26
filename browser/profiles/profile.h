@@ -64,6 +64,10 @@ class Profile : public content::BrowserContext {
   PrefService* GetPrefs();
   const PrefService* GetPrefs() const;
 
+  // Returns the base name of the profile, which is the profile directory name
+  // within the user data directory, e.g. "Default", "Profile 1", "Profile 2".
+  base::FilePath GetBaseName() const;
+
   // IsRegularProfile(), IsSystemProfile(), IsIncognitoProfile(), and
   // IsGuestSession() are mutually exclusive.
   // Note: IsGuestSession() is not mutually exclusive with the rest of the
