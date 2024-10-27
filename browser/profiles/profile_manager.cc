@@ -4,6 +4,7 @@
 
 #include "radium/browser/profiles/profile_manager.h"
 
+#include "absl/cleanup/cleanup.h"
 #include "base/memory/ptr_util.h"
 #include "base/path_service.h"
 #include "base/trace_event/trace_event.h"
@@ -15,6 +16,19 @@
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths.h"
+
+namespace {
+void RunCallbacks(std::vector<base::OnceCallback<void(Profile*)>>& callbacks,
+                  Profile* profile) {
+  for (base::OnceCallback<void(Profile*)>& callback : callbacks) {
+    std::move(callback).Run(profile);
+  }
+}
+
+}  // namespace
+
+ProfileManager::ProfileInfo::ProfileInfo() = default;
+ProfileManager::ProfileInfo::~ProfileInfo() = default;
 
 std::unique_ptr<ProfileManager> ProfileManager::Create() {
   base::FilePath user_data_dir;
@@ -76,9 +90,65 @@ Profile* ProfileManager::GetProfile(const base::FilePath& profile_dir,
                      base::Unretained(this)));
 }
 
+void ProfileManager::CreateProfileAsync(
+    const base::FilePath& profile_path,
+    base::OnceCallback<void(Profile*)> initialized_callback,
+    base::OnceCallback<void(Profile*)> created_callback) {
+  absl::Cleanup run_callback_on_return = [&]() {
+    if (!initialized_callback.is_null()) {
+      std::move(initialized_callback).Run(nullptr);
+    }
+  };
+
+  if (!CanCreateProfileAtPath(profile_path)) {
+    LOG(ERROR) << "Cannot create profile at path "
+               << profile_path.AsUTF8Unsafe();
+    return;
+  }
+
+  // Create the profile if needed and collect its ProfileInfo.
+  auto iter = profiles_info_.find(profile_path);
+  ProfileInfo* info = nullptr;
+  if (iter != profiles_info_.end()) {
+    info = iter->second.get();
+    // Profile has already been created. Run callback immediately.
+    if (info->created_ && !initialized_callback.is_null()) {
+      std::move(initialized_callback).Run(info->profile.get());
+      return;
+    }
+  } else {
+    // Initiate asynchronous creation process.
+    std::unique_ptr<Profile> profile = CreateProfileAsyncHelper(profile_path);
+    if (!profile) {
+      return;
+    }
+
+    auto iter_result =
+        profiles_info_.insert({profile_path, std::make_unique<ProfileInfo>()});
+    CHECK(iter_result.second);
+    info = iter_result.first->second.get();
+    info->profile = std::move(profile);
+  }
+
+  std::move(run_callback_on_return).Cancel();
+
+  // Profile is either already in the process of being created, or new.
+  // Add callback to the list.
+  if (!initialized_callback.is_null()) {
+    info->init_callbacks.push_back(std::move(initialized_callback));
+  }
+  if (!created_callback.is_null()) {
+    info->created_callbacks.push_back(std::move(created_callback));
+  }
+}
+
+bool ProfileManager::IsAllowedProfilePath(const base::FilePath& path) const {
+  return path.DirName() == user_data_dir();
+}
+
 Profile* ProfileManager::GetProfileByPath(const base::FilePath& path) const {
   auto it = profiles_info_.find(path);
-  return it != profiles_info_.end() ? it->second.get() : nullptr;
+  return it != profiles_info_.end() ? it->second->profile.get() : nullptr;
 }
 
 void ProfileManager::SetProfileAsLastUsed(Profile* last_active) {
@@ -95,14 +165,51 @@ void ProfileManager::SetProfileAsLastUsed(Profile* last_active) {
 
 std::unique_ptr<Profile> ProfileManager::CreateProfileHelper(
     const base::FilePath& path) {
-  return Profile::CreateProfile(path, nullptr,
-                                Profile::CreateMode::kSynchronous);
+  return Profile::CreateProfile(path, this, Profile::CreateMode::kSynchronous);
 }
 
 std::unique_ptr<Profile> ProfileManager::CreateProfileAsyncHelper(
     const base::FilePath& path) {
-  return Profile::CreateProfile(path, nullptr,
-                                Profile::CreateMode::kAsynchronous);
+  return Profile::CreateProfile(path, this, Profile::CreateMode::kAsynchronous);
+}
+
+void ProfileManager::OnProfileCreationStarted(Profile* profile,
+                                              Profile::CreateMode create_mode) {
+}
+
+void ProfileManager::OnProfileCreationFinished(Profile* profile,
+                                               Profile::CreateMode create_mode,
+                                               bool success,
+                                               bool is_new_profile) {
+  if (create_mode == Profile::CreateMode::kSynchronous) {
+    // Already initialized in OnProfileCreationStarted().
+    LOG(ERROR) << "Cannot create profile at path " << is_new_profile;
+    return;
+  }
+
+  auto iter = profiles_info_.find(profile->GetPath());
+  CHECK(iter != profiles_info_.end());
+  ProfileInfo* info = iter->second.get();
+
+  std::vector<base::OnceCallback<void(Profile*)>> created_callbacks;
+  info->created_callbacks.swap(created_callbacks);
+
+  std::vector<base::OnceCallback<void(Profile*)>> init_callbacks;
+  info->init_callbacks.swap(init_callbacks);
+
+  if (success) {
+    RunCallbacks(created_callbacks, profile);
+  }
+
+  // Perform initialization.
+  if (!success) {
+    profile = nullptr;
+    profiles_info_.erase(iter);
+  }
+
+  // Invoke INITIALIZED for all profiles.
+  // Profile might be null, meaning that the creation failed.
+  RunCallbacks(init_callbacks, profile);
 }
 
 Profile* ProfileManager::CreateAndInitializeProfile(
@@ -115,7 +222,18 @@ Profile* ProfileManager::CreateAndInitializeProfile(
   }
 
   Profile* profile_ptr = profile.get();
-  profiles_info_.insert(
-      std::make_pair(profile_ptr->GetPath(), std::move(profile)));
+  auto iter_result = profiles_info_.insert(
+      {profile_ptr->GetPath(), std::make_unique<ProfileInfo>()});
+  CHECK(iter_result.second);
+  iter_result.first->second->profile = std::move(profile);
   return profile_ptr;
+}
+
+bool ProfileManager::CanCreateProfileAtPath(const base::FilePath& path) const {
+  if (!IsAllowedProfilePath(path)) {
+    LOG(ERROR) << "Cannot create profile at path " << path.AsUTF8Unsafe();
+    return false;
+  }
+
+  return true;
 }

@@ -5,6 +5,8 @@
 #include "radium/browser/profiles/profile.h"
 
 #include "base/files/file_path.h"
+#include "base/files/file_util.h"
+#include "base/location.h"
 #include "base/task/thread_pool.h"
 #include "base/trace_event/trace_event.h"
 #include "components/keyed_service/core/simple_factory_key.h"
@@ -22,12 +24,23 @@
 std::unique_ptr<Profile> Profile::CreateProfile(const base::FilePath& path,
                                                 Delegate* delegate,
                                                 CreateMode create_mode) {
+  TRACE_EVENT1("browser,startup", "Profile::CreateProfile", "profile_path",
+               path.AsUTF8Unsafe());
+
   // Get sequenced task runner for making sure that file operations of
   // this profile are executed in expected order (what was previously assured by
   // the FILE thread).
   scoped_refptr<base::SequencedTaskRunner> io_task_runner =
       base::ThreadPool::CreateSequencedTaskRunner(
           {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
+
+  io_task_runner->PostTask(FROM_HERE, base::BindOnce(
+                                          [](const base::FilePath& path) {
+                                            if (!base::PathExists(path)) {
+                                              base::CreateDirectory(path);
+                                            }
+                                          },
+                                          path));
 
   std::unique_ptr<Profile> profile = base::WrapUnique(
       new Profile(path, delegate, create_mode, io_task_runner));
@@ -95,6 +108,8 @@ Profile::Profile(const base::FilePath& path,
 }
 
 Profile::~Profile() {
+  NotifyWillBeDestroyed();
+
   SimpleKeyMap::GetInstance()->Dissociate(this);
 }
 
@@ -152,6 +167,10 @@ bool Profile::ShouldRestoreOldSessionCookies() const {
 
 bool Profile::ShouldPersistSessionCookies() const {
   return true;
+}
+
+scoped_refptr<base::SequencedTaskRunner> Profile::GetIOTaskRunner() {
+  return io_task_runner_;
 }
 
 // content::BrowserContext implementation ------------------------------------
@@ -238,9 +257,11 @@ void Profile::LoadPrefsForNormalStartup(bool async_prefs) {
         base::MakeRefCounted<InMemoryPrefStore>());
   } else {
     pref_service_factory.set_user_prefs(base::MakeRefCounted<JsonPrefStore>(
-        path_.Append(FILE_PATH_LITERAL("Preferences"))));
+        path_.Append(FILE_PATH_LITERAL("Preferences")), nullptr,
+        io_task_runner_));
   }
 
+  pref_service_factory.set_async(async_prefs);
   prefs_ = pref_service_factory.Create(pref_registry);
 }
 

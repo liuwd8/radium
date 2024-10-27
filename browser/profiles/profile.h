@@ -27,7 +27,7 @@ class Profile : public content::BrowserContext {
 
   class Delegate {
    public:
-    virtual ~Delegate();
+    virtual ~Delegate() = default;
 
     // Called when creation of the profile is started.
     virtual void OnProfileCreationStarted(Profile* profile,
@@ -102,6 +102,8 @@ class Profile : public content::BrowserContext {
 
   bool ShouldRestoreOldSessionCookies() const;
   bool ShouldPersistSessionCookies() const;
+
+  scoped_refptr<base::SequencedTaskRunner> GetIOTaskRunner();
 
   // content::BrowserContext:
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(

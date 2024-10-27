@@ -9,12 +9,12 @@
 #include <vector>
 
 #include "base/files/file_path.h"
-#include "base/functional/callback_forward.h"
+#include "base/functional/callback.h"
+#include "radium/browser/profiles/profile.h"
 
-class Profile;
-
-class ProfileManager {
+class ProfileManager : public Profile::Delegate {
  public:
+  using ProfileLoadedCallback = base::OnceCallback<void(Profile*)>;
   static std::unique_ptr<ProfileManager> Create();
 
   // Get the `Profile` last used (the `Profile` which owns the most recently
@@ -32,7 +32,7 @@ class ProfileManager {
   ProfileManager(const ProfileManager&) = delete;
   ProfileManager& operator=(const ProfileManager&) = delete;
 
-  ~ProfileManager();
+  ~ProfileManager() override;
 
   const base::FilePath& user_data_dir() const { return user_data_dir_; }
 
@@ -49,10 +49,28 @@ class ProfileManager {
   // acceptable. Returns nullptr if loading the new profile fails.
   Profile* GetProfile(const base::FilePath& profile_dir, bool create = false);
 
+  // Creates or loads the profile located at |profile_path|.
+  // Should be called on the UI thread.
+  // Params:
+  // - `initialized_callback`: called when profile initialization is done, will
+  // return nullptr if failed. If the profile has already been fully loaded then
+  // this callback is called immediately.
+  // - `created_callback`: called when profile creation is done (default
+  // implementation to do nothing).
+  // Note: Refer to `Profile::CreateStatus` for the definition of CREATED and
+  // INITIALIZED profile creation status.
+  void CreateProfileAsync(
+      const base::FilePath& profile_path,
+      base::OnceCallback<void(Profile*)> initialized_callback,
+      base::OnceCallback<void(Profile*)> created_callback = {});
+
   // If a profile with the given path is currently managed by this object and
   // fully initialized, return a pointer to the corresponding Profile object;
   // otherwise return null.
   Profile* GetProfileByPath(const base::FilePath& path) const;
+
+  // Returns whether |path| is allowed for profile creation.
+  bool IsAllowedProfilePath(const base::FilePath& path) const;
 
   // Sets the last-used profile to `last_active`, and also sets that profile's
   // last-active time to now. If the profile has a primary account, this also
@@ -70,7 +88,34 @@ class ProfileManager {
   std::unique_ptr<Profile> CreateProfileAsyncHelper(const base::FilePath& path);
 
  private:
+  // This class contains information about profiles which are being loaded or
+  // were loaded.
+  struct ProfileInfo {
+    ProfileInfo();
+    ~ProfileInfo();
+
+    // For when the Profile is owned, via FromOwnedProfile() or
+    // TakeOwnershipOfProfile().
+    std::unique_ptr<Profile> profile;
+
+    // List of callbacks to run when profile initialization (success or fail) is
+    // done. Note, when profile is fully loaded this vector will be empty.
+    std::vector<ProfileLoadedCallback> init_callbacks;
+    // List of callbacks to run when profile is created. Note, when
+    // profile is fully loaded this vector will be empty.
+    std::vector<ProfileLoadedCallback> created_callbacks;
+
+    bool created_ = false;
+  };
+
   explicit ProfileManager(const base::FilePath& user_data_dir);
+
+  void OnProfileCreationStarted(Profile* profile,
+                                Profile::CreateMode create_mode) override;
+  void OnProfileCreationFinished(Profile* profile,
+                                 Profile::CreateMode create_mode,
+                                 bool success,
+                                 bool is_new_profile) override;
 
   // Synchronously creates and returns a profile. This handles both the full
   // creation and adds it to the set managed by this ProfileManager. Returns
@@ -80,13 +125,17 @@ class ProfileManager {
       base::OnceCallback<std::unique_ptr<Profile>(const base::FilePath&)>
           factory);
 
+  // Whether a new profile can be created at |path|.
+  bool CanCreateProfileAtPath(const base::FilePath& path) const;
+
   // The path to the user data directory (DIR_USER_DATA).
   const base::FilePath user_data_dir_;
 
   // Maps profile path to `ProfileInfo` (if profile has been loaded). Use
   // `RegisterProfile()` to add into this map. This map owns all loaded profile
   // objects in a running instance of Chrome.
-  using ProfilesInfoMap = std::map<base::FilePath, std::unique_ptr<Profile>>;
+  using ProfilesInfoMap =
+      std::map<base::FilePath, std::unique_ptr<ProfileInfo>>;
   ProfilesInfoMap profiles_info_;
 };
 
