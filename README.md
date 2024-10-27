@@ -18,8 +18,10 @@
 在拉取 Chromium 项目的基础上。拉取完成 Chromium 后, 应用 patches 下的 patch 文件到chromium 项目:
 
 ```
-radium/patches/*.patch
+git am --reject patches/*.patch
 ```
+
+如果patch 之后存在.reject 需要手动解决冲突
 
 在 .gclient 文件中加入
 
