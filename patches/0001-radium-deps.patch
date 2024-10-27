@@ -1,13 +1,13 @@
-From 026e673d97f097d8abec9039ebccaf88dec1ce7f Mon Sep 17 00:00:00 2001
+From 97e12d09884d73ca2ee42902ee2f32a19a9da408 Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 25 Oct 2024 10:17:11 +0800
 Subject: [PATCH] radium deps
 
 ---
  BUILD.gn                             |  4 ++++
- DEPS                                 |  1 +
+ DEPS                                 |  5 +++++
  tools/gritsettings/resource_ids.spec | 11 ++++++++++-
- 3 files changed, 15 insertions(+), 1 deletion(-)
+ 3 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
 index e58058a3448c5..0607f96b6449f 100644
@@ -25,7 +25,7 @@ index e58058a3448c5..0607f96b6449f 100644
  
  # All Rust targets. This is provided for convenience while developing Rust to
 diff --git a/DEPS b/DEPS
-index 1c09347866022..7c526f377bfcb 100644
+index 1c09347866022..83fe8e7286f1e 100644
 --- a/DEPS
 +++ b/DEPS
 @@ -50,6 +50,7 @@ gclient_gn_args = [
@@ -34,6 +34,17 @@ index 1c09347866022..7c526f377bfcb 100644
    'generate_location_tags',
 +  'checkout_radium',
  ]
+ 
+ 
+@@ -4664,6 +4665,10 @@ deps = {
+         'e4bd19f95afa6483a54906c2a3e5d329d2d81690',
+       'condition': 'checkout_src_internal',
+   },
++  'src/radium': {
++      'url': 'https://github.com/liuwd8/radium.git' + '@' + 'unmanaged',
++      'condition': 'checkout_radium',
++  },
+ }
  
  
 diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec

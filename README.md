@@ -6,12 +6,22 @@
 
 目前的 electron 在架构上太过繁重，且无法开启沙箱。 基于 Views + WebUI 我们可以完全打造支持各平台的应用。
 
-计划支持 Win/Mac/Linux/Android.
+计划支持 Win/Mac/Linux/Android. 目前仅支持了 Linux 平台.
+
+# 演示
+
+[演示视频（demo）](https://github.com/user-attachments/assets/0e8821fd-baff-4c87-ad90-b4f5966705ff)
 
 # 编译
 编译该项目需要先拉取 Chromium 项目。 Chromium 项目的文档请参考: https://www.chromium.org/developers/how-tos/get-the-code/
 
-在拉取 Chromium 项目的基础上。在 .gclient 文件中加入
+在拉取 Chromium 项目的基础上。拉取完成 Chromium 后, 应用 patches 下的 patch 文件到chromium 项目:
+
+```
+radium/patches/*.patch
+```
+
+在 .gclient 文件中加入
 
 ```
     "custom_vars": {
@@ -19,15 +29,7 @@
     },
 ```
 
-在这之后需要重新 `gclient sync`
-
-然后应用 patches 下的 patch 文件到chromium 项目:
-
-```
-radium/patches/*.patch
-```
-
-最后开始编译
+在这之后需要重新 `gclient sync`. 之后可以开始编译
 ```shell
 autoninja -C out/xxx radium
 ```
