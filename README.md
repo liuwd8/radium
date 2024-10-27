@@ -19,6 +19,8 @@
     },
 ```
 
+在这之后需要重新 `gclient sync`
+
 然后应用 patches 下的 patch 文件到chromium 项目:
 
 ```
