@@ -1,0 +1,67 @@
+From 026e673d97f097d8abec9039ebccaf88dec1ce7f Mon Sep 17 00:00:00 2001
+From: weidongliu <weidongliu@chromium.org>
+Date: Fri, 25 Oct 2024 10:17:11 +0800
+Subject: [PATCH] radium deps
+
+---
+ BUILD.gn                             |  4 ++++
+ DEPS                                 |  1 +
+ tools/gritsettings/resource_ids.spec | 11 ++++++++++-
+ 3 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index e58058a3448c5..0607f96b6449f 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -876,6 +876,10 @@ group("gn_all") {
+   if (checkout_src_internal) {
+     deps += [ "//internal:all" ]
+   }
++
++  if (checkout_radium) {
++    deps += [ "//radium:all" ]
++  }
+ }
+ 
+ # All Rust targets. This is provided for convenience while developing Rust to
+diff --git a/DEPS b/DEPS
+index 1c09347866022..7c526f377bfcb 100644
+--- a/DEPS
++++ b/DEPS
+@@ -50,6 +50,7 @@ gclient_gn_args = [
+   'cros_boards',
+   'cros_boards_with_qemu_images',
+   'generate_location_tags',
++  'checkout_radium',
+ ]
+ 
+ 
+diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
+index 89c76bad269ec..f54727c3b35a2 100644
+--- a/tools/gritsettings/resource_ids.spec
++++ b/tools/gritsettings/resource_ids.spec
+@@ -1376,11 +1376,20 @@
+   "<(SHARED_INTERMEDIATE_DIR)/third_party/blink/public/strings/permission_element_generated_strings.grd": {
+     "META": {"sizes": {"messages": [2000],}},
+     "messages": [10080],
+-  }
++  },
+ 
+   # END "everything else" section.
+   # Everything but chrome/, components/, content/, and ios/
+ 
+   # Thinking about appending to the end?
+   # Please read the header and find the right section above instead.
++
++  "radium/app/radium_strings.grd": {
++    "messages": [20000],
++  },
++
++  "radium/app/theme/theme_resources.grd": {
++    "structures": [20020],
++  },
++
+ }
+-- 
+2.34.1
+
