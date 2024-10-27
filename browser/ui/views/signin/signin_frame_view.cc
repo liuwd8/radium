@@ -60,9 +60,12 @@ std::unique_ptr<views::FrameCaptionButton> CreateFrameCaptionButton(
 
 }  // namespace
 
-void SigninWindow::Show(Profile* profile) {
+void SigninWindow::Show(Profile* profile, base::OnceClosure finish_callback) {
   auto* delegate = new SigninFrameView();
   auto* widget = new UntitledWidget(delegate, profile);
+
+  delegate->Init(widget, std::move(finish_callback));
+
   views::Widget::InitParams params = widget->GetUntitledWidgetParams();
   params.delegate = delegate;
 #if BUILDFLAG(IS_LINUX)
@@ -79,20 +82,28 @@ SigninFrameView::SigninFrameView()
     : keep_alive_(KeepAliveOrigin::USER_MANAGER_VIEW,
                   KeepAliveRestartOption::DISABLED) {
   SetTitle(u"SigninFrameView");
+}
 
+SigninFrameView::~SigninFrameView() = default;
+
+void SigninFrameView::Init(views::Widget* widget,
+                           base::OnceClosure finish_callback) {
   views::BoxLayout* layout_manager =
       SetLayoutManager(std::make_unique<views::BoxLayout>());
   layout_manager->SetOrientation(views::BoxLayout::Orientation::kVertical);
+  SetEventTargeter(std::make_unique<views::ViewTargeter>(this));
 
   views::Builder<views::View>(this)
       .SetPreferredSize(gfx::Size(280, 380))
       .AddChildren(
           views::Builder<views::BoxLayoutView>()
-              .CopyAddressTo(&title_bar_)
               .SetInsideBorderInsets(gfx::Insets::TLBR(0, 12, 0, 8))
               .SetPreferredSize(
                   gfx::Size(0, RadiumLayoutProvider::Get()->GetDistanceMetric(
                                    DISTANCE_UNTITLED_WIDGET_TITLE_BAR_HEIGHT)))
+              .CustomConfigure(base::BindOnce([](views::BoxLayoutView* view) {
+                views::SetHitTestComponent(view, HTCAPTION);
+              }))
               .AddChildren(
                   views::Builder<views::Label>()
                       .SetProperty(views::kBoxLayoutFlexKey,
@@ -111,7 +122,9 @@ SigninFrameView::SigninFrameView()
                           views::CaptionButtonIcon::CAPTION_BUTTON_ICON_CLOSE,
                           HTCLOSE, views::kWindowControlCloseIcon))
                       .SetPreferredSize(
-                          gfx::Size(views::GetCaptionButtonWidth(), 0))),
+                          gfx::Size(views::GetCaptionButtonWidth(), 0))
+                      .SetCallback(base::BindOnce(&views::Widget::Close,
+                                                  base::Unretained(widget)))),
           views::Builder<views::BoxLayoutView>()
               .SetOrientation(views::BoxLayout::Orientation::kVertical)
               .SetInsideBorderInsets(gfx::Insets::VH(30, 12))
@@ -143,7 +156,11 @@ SigninFrameView::SigninFrameView()
                                            views::BoxLayoutFlexSpecification())
                               .SetHorizontalAlignment(
                                   gfx::HorizontalAlignment::ALIGN_CENTER)
-                              .SetText(u"进入微信")),
+                              .SetText(u"进入微信")
+                              .SetCallback(std::move(finish_callback)
+                                               .Then(base::BindOnce(
+                                                   &views::Widget::Close,
+                                                   base::Unretained(widget))))),
                   views::Builder<views::BoxLayoutView>()
                       .SetBetweenChildSpacing(8)
                       .AddChildren(
@@ -157,12 +174,8 @@ SigninFrameView::SigninFrameView()
                               .SetTextStyle(views::style::STYLE_LINK))))
       .BuildChildren();
 
-  views::SetHitTestComponent(title_bar_, HTCAPTION);
-  SetEventTargeter(std::make_unique<views::ViewTargeter>(this));
   UpdateQRContent();
 }
-
-SigninFrameView::~SigninFrameView() = default;
 
 int SigninFrameView::NonClientHitTest(const gfx::Point& point) {
   return views::GetHitTestComponent(this, point);

@@ -18,4 +18,6 @@ void AddRadiumColorMixer(ui::ColorProvider* provider,
 
   mixer[kColorFrameTitleBarBackground] = {
       dark_mode ? SkColorSetRGB(0x2C, 0x2C, 0x2C) : SK_ColorWHITE};
+  mixer[kWechatSideMenuBackground] = {SkColorSetRGB(0xed, 0xed, 0xed)};
+  mixer[kColorHoverButtonBackgroundHovered] = {ui::kColorSysStateHoverOnSubtle};
 }

@@ -7,9 +7,24 @@
 
 #include "ui/views/layout/layout_provider.h"
 
+enum RadiumInsetsMetric {
+  // Padding around buttons on the bookmarks bar.
+  INSETS_BOOKMARKS_BAR_BUTTON = views::VIEWS_INSETS_END,
+  // Margins used by toasts.
+  INSETS_TOAST,
+  // Padding used in an omnibox pill button.
+  INSETS_OMNIBOX_PILL_BUTTON,
+  // Padding used in an page info hover button.
+  INSETS_PAGE_INFO_HOVER_BUTTON,
+};
+
 enum RadiumDistanceMetric {
   // 默认
   DISTANCE_UNTITLED_WIDGET_TITLE_BAR_HEIGHT = views::VIEWS_DISTANCE_END,
+  // Vertical spacing between a list of multiple controls in one column.
+  DISTANCE_CONTROL_LIST_VERTICAL,
+  // Horizontal spacing between icon and label in the rich hover button.
+  DISTANCE_RICH_HOVER_BUTTON_ICON_HORIZONTAL,
 };
 
 class RadiumLayoutProvider : public views::LayoutProvider {
@@ -23,6 +38,7 @@ class RadiumLayoutProvider : public views::LayoutProvider {
 
   ~RadiumLayoutProvider() override;
 
+  gfx::Insets GetInsetsMetric(int metric) const override;
   int GetDistanceMetric(int metric) const override;
 };
 

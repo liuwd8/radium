@@ -15,7 +15,10 @@
   /* color_provider_css_colors_test.ts. If changing the variable name, the */ \
   /* variable name in the test needs to be changed as well. */ \
   E_CPONLY(kColorFrameTitleBarBackground, kRadiumColorsStart, \
-           kRadiumColorsStart)
+           kRadiumColorsStart) \
+  E_CPONLY(kWechatSideMenuBackground) \
+    /* Hover Button colors */ \
+  E_CPONLY(kColorHoverButtonBackgroundHovered) \
 
 #define RADIUM_COLOR_IDS COMMON_RADIUM_COLOR_IDS
 

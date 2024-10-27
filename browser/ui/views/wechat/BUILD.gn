@@ -1,0 +1,23 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("wechat") {
+  public = [ "wechat_main_view.h" ]
+
+  sources = [
+    "search_textfield.cc",
+    "search_textfield.h",
+    "wechat_contact_view.cc",
+    "wechat_contact_view.h",
+    "wechat_main_view.cc",
+    "wechat_side_menu_view.cc",
+    "wechat_side_menu_view.h",
+  ]
+
+  deps = [
+    "//base",
+    "//radium/browser/ui/views/frame",
+    "//ui/views",
+  ]
+}

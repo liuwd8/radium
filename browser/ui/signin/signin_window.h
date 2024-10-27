@@ -5,6 +5,8 @@
 #ifndef RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_
 #define RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_
 
+#include "base/functional/callback_forward.h"
+
 class Profile;
 
 class SigninWindow {
@@ -15,7 +17,7 @@ class SigninWindow {
 
   ~SigninWindow();
 
-  static void Show(Profile* profile);
+  static void Show(Profile* profile, base::OnceClosure finish_callback);
 };
 
 #endif  // RADIUM_BROWSER_UI_SIGNIN_SIGNIN_WINDOW_H_

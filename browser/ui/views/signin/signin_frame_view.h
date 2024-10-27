@@ -26,6 +26,8 @@ class SigninFrameView : public UntitledWidgetDelegateView,
 
   ~SigninFrameView() override;
 
+  void Init(views::Widget* widget, base::OnceClosure finish_callback);
+
  private:
   friend class SigninWindow;
 
@@ -38,7 +40,6 @@ class SigninFrameView : public UntitledWidgetDelegateView,
 
   ScopedKeepAlive keep_alive_;
 
-  raw_ptr<views::View> title_bar_;
   raw_ptr<views::ImageView> qr_code_image_;
 };
 

@@ -40,7 +40,8 @@ class DesktopUntitledFrameAura : public views::DesktopNativeWidgetAura,
   raw_ptr<UntitledWidget> untitled_widget_ = nullptr;
 
   // Owned by the RootWindow.
-  raw_ptr<UntitledDesktopWindowTreeHost> browser_desktop_window_tree_host_;
+  raw_ptr<UntitledDesktopWindowTreeHost> browser_desktop_window_tree_host_ =
+      nullptr;
 
   std::unique_ptr<wm::VisibilityController> visibility_controller_;
 };

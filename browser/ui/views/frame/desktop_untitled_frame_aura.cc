@@ -22,6 +22,7 @@ DesktopUntitledFrameAura::DesktopUntitledFrameAura(
 DesktopUntitledFrameAura::~DesktopUntitledFrameAura() = default;
 
 void DesktopUntitledFrameAura::OnHostClosed() {
+  browser_desktop_window_tree_host_ = nullptr;
   aura::client::SetVisibilityClient(GetNativeView()->GetRootWindow(), nullptr);
   DesktopNativeWidgetAura::OnHostClosed();
 }

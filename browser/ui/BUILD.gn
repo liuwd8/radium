@@ -29,8 +29,16 @@ static_library("ui") {
 
   if (toolkit_views) {
     sources += [
+      "views/accessibility/non_accessible_image_view.cc",
+      "views/accessibility/non_accessible_image_view.h",
+      "views/controls/hover_button.cc",
+      "views/controls/hover_button.h",
+      "views/controls/rich_hover_button.cc",
+      "views/controls/rich_hover_button.h",
       "views/devtools_process_observer.cc",
       "views/devtools_process_observer.h",
+      "views/hover_button_controller.cc",
+      "views/hover_button_controller.h",
       "views/radium_browser_main_extra_parts_views.cc",
       "views/radium_browser_main_extra_parts_views.h",
       "views/radium_constrained_window_views_client.cc",
@@ -46,6 +54,7 @@ static_library("ui") {
     deps += [
       "//components/constrained_window",
       "//components/ui_devtools/views",
+      "//radium/browser/ui/wechat",
       "//ui/views",
       "//ui/views:buildflags",
     ]
