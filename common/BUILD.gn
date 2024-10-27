@@ -38,6 +38,7 @@ static_library("common_lib") {
     ":constants",
     ":url_constants",
     "//base",
+    "//components/crash/core/common",
     "//content/public/common",
     "//radium/common/profiler",
   ]
