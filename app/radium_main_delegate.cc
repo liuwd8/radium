@@ -11,6 +11,7 @@
 #include "base/path_service.h"
 #include "base/process/memory.h"
 #include "base/process/process.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/task/thread_pool/thread_pool_instance.h"
 #include "base/threading/hang_watcher.h"
 #include "components/content_settings/core/common/content_settings_pattern.h"
@@ -31,6 +32,7 @@
 #include "radium/common/logging_radium.h"
 #include "radium/common/profiler/unwind_util.h"
 #include "radium/common/radium_paths.h"
+#include "radium/common/radium_result_codes.h"
 #include "radium/common/webui_url_constants.h"
 #include "services/tracing/public/cpp/stack_sampling/tracing_sampler_profiler.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -38,6 +40,22 @@
 #include "ui/base/ui_base_switches.h"
 #include "ui/linux/display_server_utils.h"
 #include "ui/ozone/public/ozone_platform.h"
+
+#if BUILDFLAG(IS_WIN)
+#include <malloc.h>
+
+#include <algorithm>
+
+#include "base/base_switches.h"
+#include "base/files/important_file_writer_cleaner.h"
+#include "base/win/atl.h"
+#include "base/win/dark_mode_support.h"
+#include "base/win/resource_exhaustion.h"
+#include "radium/child/v8_crashpad_support_win.h"
+#include "sandbox/win/src/sandbox.h"
+#include "sandbox/win/src/sandbox_factory.h"
+#include "ui/base/resource/resource_bundle_win.h"
+#endif
 
 const char* const RadiumMainDelegate::kNonWildcardDomainNonPortSchemes[] = {
     radium::kRadiumUIScheme,
@@ -219,10 +237,41 @@ RadiumMainDelegate::RadiumMainDelegate(const StartupTimestamps& timestamps) {
 RadiumMainDelegate::~RadiumMainDelegate() = default;
 
 std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  // The DevTools remote debugging pipe file descriptors need to be checked
+  // before any other files are opened, see https://crbug.com/1423048.
+  const bool is_browser = !command_line.HasSwitch(switches::kProcessType);
+
+#if BUILDFLAG(IS_WIN)
+  // Browser should not be sandboxed.
+  if (is_browser && IsSandboxedProcess()) {
+    return radium::RESULT_CODE_INVALID_SANDBOX_STATE;
+  }
+#endif
+
   content::Profiling::ProcessStarted();
 
   // Setup tracing sampler profiler as early as possible at startup if needed.
   SetupTracing();
+
+#if BUILDFLAG(IS_WIN)
+  v8_crashpad_support::SetUp();
+#endif
+
+#if BUILDFLAG(IS_WIN)
+  // Must do this before any other usage of command line!
+  if (HasDeprecatedArguments(command_line.GetCommandLineString())) {
+    return 1;
+  }
+
+  // HandleVerifier detects and reports incorrect handle manipulations. It
+  // tracks handle operations on builds that support DCHECK only.
+#if !DCHECK_IS_ON()
+  base::win::DisableHandleVerifier();
+#endif
+
+#endif  // BUILDFLAG(IS_WIN)
 
   radium::RegisterPathProvider();
 

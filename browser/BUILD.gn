@@ -78,6 +78,7 @@ static_library("browser") {
     "//services/cert_verifier:lib",
     "//services/network/public/cpp",
     "//services/network/public/mojom",
+    "//services/strings",
   ]
 
   if (use_aura) {
@@ -98,6 +99,18 @@ static_library("browser") {
     sources += [
       "radium_browser_main_parts_posix.cc",
       "radium_browser_main_parts_posix.h",
+    ]
+  } else {
+    sources += [
+      "net/radium_mojo_proxy_resolver_win.cc",
+      "net/radium_mojo_proxy_resolver_win.h",
+      "radium_browser_main_parts_win.cc",
+      "radium_browser_main_parts_win.h",
+    ]
+
+    deps += [
+      "//components/os_crypt/async/browser:dpapi_key_provider",
+      "//radium/browser/win",
     ]
   }
 

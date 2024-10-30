@@ -16,8 +16,7 @@ namespace profiles {
 
 base::FilePath GetDefaultProfileDir(const base::FilePath& user_data_dir) {
   base::FilePath default_profile_dir(user_data_dir);
-  default_profile_dir =
-      default_profile_dir.AppendASCII(radium::kInitialProfile);
+  default_profile_dir = default_profile_dir.Append(radium::kInitialProfile);
   return default_profile_dir;
 }
 

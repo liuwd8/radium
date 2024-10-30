@@ -31,6 +31,11 @@ class UntitledWidget : public views::Widget {
 #endif
 
   UntitledWidgetDelegate* delegate() const { return delegate_; }
+  bool ShouldBrowserCustomDrawTitlebar() const { return true; }
+
+#if BUILDFLAG(IS_WIN)
+  int GetGlassHeight() const { return 0; }
+#endif
 
   // Set the background color and height of the title bar. Note that you cannot
   // set the background color directly in the external view. Otherwise, it will

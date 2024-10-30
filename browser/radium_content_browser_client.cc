@@ -18,8 +18,11 @@
 #include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
 #include "radium/browser/radium_browser_main_parts.h"
+#include "radium/browser/ui/views/radium_browser_main_extra_parts_views.h"
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_WIN)
+#include "radium/browser/radium_browser_main_parts_win.h"
+#elif BUILDFLAG(IS_LINUX)
 #include "radium/browser/radium_browser_main_extra_parts_linux.h"
 #include "radium/browser/radium_browser_main_parts_linux.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views_linux.h"
@@ -41,7 +44,10 @@ RadiumContentBrowserClient::radium_feature_list_creator() const {
 std::unique_ptr<content::BrowserMainParts>
 RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   std::unique_ptr<RadiumBrowserMainParts> main_parts =
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_WIN)
+      std::make_unique<RadiumBrowserMainPartsWin>(
+          radium_feature_list_creator_.get());
+#elif BUILDFLAG(IS_LINUX)
       std::make_unique<RadiumBrowserMainPartsLinux>(
           radium_feature_list_creator_.get());
 #else
@@ -60,7 +66,7 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   main_parts->AddParts(
       std::make_unique<RadiumBrowserMainExtraPartsViewsLinux>());
 #else
-  main_parts->AddParts(std::make_unique<ChromeBrowserMainExtraPartsViews>());
+  main_parts->AddParts(std::make_unique<RadiumBrowserMainExtraPartsViews>());
 #endif
 #endif
 

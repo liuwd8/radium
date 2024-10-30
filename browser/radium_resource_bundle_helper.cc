@@ -47,7 +47,7 @@ std::string InitResourceBundleAndDetermineLocale(PrefService* local_state) {
 #endif
 
   TRACE_EVENT0("startup",
-               "ChromeBrowserMainParts::InitResourceBundleAndDetermineLocale");
+               "RadiumBrowserMainParts::InitResourceBundleAndDetermineLocale");
   // On a POSIX OS other than ChromeOS, the parameter that is passed to the
   // method InitSharedInstance is ignored.
   std::string actual_locale = ui::ResourceBundle::InitSharedInstanceWithLocale(
@@ -84,7 +84,7 @@ std::string InitResourceBundleAndDetermineLocale(PrefService* local_state) {
   // First run prefs needs data from the ResourceBundle, so load it now.
   {
     TRACE_EVENT0("startup",
-                 "ChromeBrowserMainParts::InitResourceBundleAndDetermineLocale:"
+                 "RadiumBrowserMainParts::InitResourceBundleAndDetermineLocale:"
                  ":AddDataPack");
     base::FilePath resources_pack_path;
     base::PathService::Get(radium::FILE_RESOURCES_PACK, &resources_pack_path);

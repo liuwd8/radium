@@ -38,10 +38,29 @@ executable("radium_exe") {
 
   data = [ "$root_out_dir/radium_resources.pak" ]
   data_deps = []
+  defines = []
 
   if (is_win) {
-    sources += [ "app/radium_exe_main_win.cc" ]
-    deps += [ ":radium_dll" ]
+    sources += [
+      "app/delay_load_failure_hook_win.cc",
+      "app/delay_load_failure_hook_win.h",
+      "app/main_dll_loader_win.cc",
+      "app/main_dll_loader_win.h",
+      "app/radium_exe_main_win.cc",
+    ]
+
+    deps += [
+      ":radium_dll",
+      "//content:sandbox_helper_win",
+      "//content/public/common:static_switches",
+      "//radium/common:constants",
+      "//radium/common/win:delay_load_failure_support",
+
+      # "//radium/radium_elf",
+      "//sandbox",
+      "//sandbox/policy",
+      "//sandbox/policy/mojom",
+    ]
 
     if (win_console_app) {
       defines += [ "WIN_CONSOLE_APP" ]
@@ -50,6 +69,24 @@ executable("radium_exe") {
       # has been requested.
       configs -= [ "//build/config/win:console" ]
       configs += [ "//build/config/win:windowed" ]
+    }
+
+    configs += [
+      "//build/config/win:delayloads",
+      "//build/config/win:delayloads_not_for_child_dll",
+    ]
+
+    if (current_cpu == "x86") {
+      # Set the initial stack size to 0.5MiB, instead of the 1.5MiB needed by
+      # Chrome's main thread. This saves significant memory on threads (like
+      # those in the Windows thread pool, and others) whose stack size we can
+      # only control through this setting. Because Chrome's main thread needs
+      # a minimum 1.5 MiB stack, the main thread (in 32-bit builds only) uses
+      # fibers to switch to a 1.5 MiB stack before running any other code.
+      ldflags = [ "/STACK:0x80000" ]
+    } else {
+      # Increase the initial stack size. The default is 1MB, this is 8MB.
+      ldflags = [ "/STACK:0x800000" ]
     }
   } else if (use_aura) {
     sources += [ "app/radium_exe_main_aura.cc" ]
@@ -68,13 +105,8 @@ executable("radium_exe") {
       ":dependencies",
       "//content/public/app",
       "//radium/common",
+      "//radium/common:version_header",
     ]
-
-    # These files are used by the installer so we need a public dep.
-    public_deps += [ ":packed_resources" ]
-
-    # The step's output are needed at runtime, so we also need a data_dep.
-    data_deps += [ ":packed_resources" ]
 
     if (use_ozone) {
       deps += [ "//ui/ozone" ]
@@ -83,11 +115,40 @@ executable("radium_exe") {
       }
     }
   }
+
+  # These files are used by the installer so we need a public dep.
+  public_deps += [ ":packed_resources" ]
+
+  # The step's output are needed at runtime, so we also need a data_dep.
+  data_deps += [ ":packed_resources" ]
 }
 
 if (is_win) {
   shared_library("radium_dll") {
-    deps = [ ":dependencies" ]
+    configs += [ "//build/config/compiler:wexit_time_destructors" ]
+    configs -= [ "//build/config/compiler:thinlto_optimize_default" ]
+    configs += [ "//build/config/compiler:thinlto_optimize_max" ]
+
+    output_name = "radium"
+
+    sources = [
+      "//base/win/dllmain.cc",
+      "app/radium_main.cc",
+      "app/radium_main_delegate.cc",
+      "app/radium_main_delegate.h",
+      "app/startup_timestamps.h",
+    ]
+
+    deps = [
+      ":dependencies",
+      "//components/crash/core/app",
+      "//components/crash/core/app:crash_export_thunks",
+      "//components/crash/core/common:crash_key",
+      "//content/public/app",
+      "//radium/child",
+    ]
+
+    configs += [ "//build/config/win:delayloads" ]
   }
 }
 
@@ -98,6 +159,7 @@ group("dependencies") {
     "//components/memory_system",
     "//components/startup_metric_utils",
     "//radium/browser",
+    "//radium/common",
     "//radium/renderer",
   ]
 }

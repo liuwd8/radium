@@ -10,6 +10,13 @@
 
 namespace radium {
 
+extern const char kRadiumVersion[];
+
+// directory names
+#if BUILDFLAG(IS_WIN)
+const wchar_t kUserDataDirname[] = L"User Data";
+#endif
+
 extern const base::FilePath::CharType kCacheDirname[];
 extern const base::FilePath::CharType kCookieFilename[];
 extern const base::FilePath::CharType kGCMStoreDirname[];

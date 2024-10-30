@@ -35,6 +35,13 @@ source_set("frame") {
       "untitled_widget_frame_view_linux.cc",
       "untitled_widget_frame_view_linux.h",
     ]
+  } else if (is_win) {
+    sources += [
+      "untitled_desktop_window_tree_host_win.cc",
+      "untitled_desktop_window_tree_host_win.h",
+      "untitled_widget_frame_view_win.cc",
+      "untitled_widget_frame_view_win.h",
+    ]
   }
 
   if (use_aura) {

@@ -61,6 +61,8 @@ static_library("ui") {
 
     if (is_linux) {
       sources += [ "views/radium_views_delegate_linux.cc" ]
+    } else if (is_win) {
+      sources += [ "views/radium_views_delegate_win.cc" ]
     }
 
     if (is_win || is_linux) {

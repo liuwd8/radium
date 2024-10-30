@@ -9,8 +9,10 @@ source_set("color") {
   ]
 
   sources = [
+    "native_radium_color_mixer.h",
     "radium_color_mixer.cc",
     "radium_color_mixers.cc",
+    "radium_color_mixers.h",
   ]
 
   deps = [
@@ -18,4 +20,13 @@ source_set("color") {
     "//ui/color:color",
     "//ui/color:mixers",
   ]
+
+  if (is_win) {
+    sources += [ "win/native_radium_color_mixer_win.cc" ]
+
+    deps += [
+      "//ui/color:accent_color_observer",
+      "//ui/native_theme",
+    ]
+  }
 }

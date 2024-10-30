@@ -7,9 +7,16 @@
 
 #include <string_view>
 
+#include "base/containers/span.h"
+#include "base/strings/cstring_view.h"
+
 namespace radium {
 
 inline constexpr char kRadiumUIScheme[] = "weixin";
+
+// Gets the URL strings of "debug" pages which are dangerous and not for general
+// consumption.
+base::span<const base::cstring_view> RadiumDebugURLs();
 
 }  // namespace radium
 

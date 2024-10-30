@@ -4,6 +4,7 @@
 
 #include "radium/browser/browser_prefs.h"
 
+#include "components/policy/core/common/policy_pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/proxy_config/pref_proxy_config_tracker_impl.h"
 #include "radium/browser/browser_process.h"
@@ -12,6 +13,10 @@
 #include "radium/browser/profiles/profiles_state.h"
 #include "radium/browser/ssl/ssl_config_service_manager.h"
 #include "radium/common/pref_names.h"
+
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC)
+#include "components/os_crypt/sync/os_crypt.h"  // nogncheck
+#endif
 
 void RegisterLocalState(PrefRegistrySimple* registry) {
   BrowserProcess::RegisterPrefs(registry);
@@ -23,4 +28,10 @@ void RegisterLocalState(PrefRegistrySimple* registry) {
 
   registry->RegisterFilePathPref(prefs::kDiskCacheDir, base::FilePath());
   registry->RegisterIntegerPref(prefs::kDiskCacheSize, 0);
+
+#if BUILDFLAG(IS_WIN)
+  OSCrypt::RegisterLocalPrefs(registry);
+  registry->RegisterBooleanPref(
+      policy::policy_prefs::kNativeWindowOcclusionEnabled, true);
+#endif
 }

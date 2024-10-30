@@ -1,0 +1,14 @@
+# Copyright 2017 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/win/message_compiler.gni")
+
+source_set("delay_load_failure_support") {
+  sources = [
+    "delay_load_failure_support.cc",
+    "delay_load_failure_support.h",
+  ]
+  configs += [ "//build/config/compiler:wexit_time_destructors" ]
+  deps = [ "//base" ]
+}

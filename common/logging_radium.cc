@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "radium/common/logging_radium.h"
+
 #include <string_view>
 
 #include "base/base_switches.h"
@@ -16,8 +18,16 @@
 #include "base/path_service.h"
 #include "base/strings/string_number_conversions.h"
 #include "content/public/common/content_switches.h"
-#include "radium/common/logging_radium.h"
 #include "radium/common/radium_paths.h"
+
+#if BUILDFLAG(IS_WIN)
+#include <windows.h>
+
+#include "base/logging_win.h"
+#include "base/win/scoped_handle.h"
+#include "base/win/win_util.h"
+#include "sandbox/policy/switches.h"
+#endif
 
 namespace logging {
 namespace {
@@ -64,6 +74,29 @@ void SuppressDialogs() {
   dialogs_are_suppressed_ = true;
 }
 
+#if BUILDFLAG(IS_WIN)
+base::win::ScopedHandle GetLogInheritedHandle(
+    const base::CommandLine& command_line) {
+  auto handle_str = command_line.GetSwitchValueNative(switches::kLogFile);
+  uint32_t handle_value = 0;
+  if (!base::StringToUint(handle_str, &handle_value)) {
+    return base::win::ScopedHandle();
+  }
+  // Duplicate the handle from the command line so that different things can
+  // init logging. This means the handle from the parent is never closed, but
+  // there will only be one of these in the process.
+  HANDLE log_handle = nullptr;
+  if (!::DuplicateHandle(GetCurrentProcess(),
+                         base::win::Uint32ToHandle(handle_value),
+                         GetCurrentProcess(), &log_handle, 0,
+                         /*bInheritHandle=*/FALSE, DUPLICATE_SAME_ACCESS)) {
+    return base::win::ScopedHandle();
+  }
+  // Transfer ownership to the caller.
+  return base::win::ScopedHandle(log_handle);
+}
+#endif
+
 base::FilePath GetLogFileName(const base::CommandLine& command_line) {
   // Try the command line.
   auto filename = command_line.GetSwitchValueNative(switches::kLogFile);
@@ -103,6 +136,64 @@ base::FilePath GetLogFileName(const base::CommandLine& command_line) {
   }
 }
 
+// `filename_is_handle`, will be set to `true` if the log-file switch contains
+// an inherited handle value rather than a filepath, and `false` otherwise.
+LoggingDestination LoggingDestFromCommandLine(
+    const base::CommandLine& command_line,
+    bool& filename_is_handle) {
+  filename_is_handle = false;
+#if defined(NDEBUG)
+  // In Release builds, log only to the log file.
+  const LoggingDestination kDefaultLoggingMode = LOG_TO_FILE;
+#else
+  // In Debug builds log to all destinations, for ease of discovery.
+  const LoggingDestination kDefaultLoggingMode = LOG_TO_ALL;
+#endif
+
+  bool enable_logging = false;
+  const char* const kInvertLoggingSwitch = switches::kEnableLogging;
+
+  if (command_line.HasSwitch(kInvertLoggingSwitch)) {
+    enable_logging = !enable_logging;
+  }
+
+  if (!enable_logging) {
+    return LOG_NONE;
+  }
+  if (command_line.HasSwitch(switches::kEnableLogging)) {
+    // Let --enable-logging=stderr force only stderr, particularly useful for
+    // non-debug builds where otherwise you can't get logs to stderr at all.
+    std::string logging_destination =
+        command_line.GetSwitchValueASCII(switches::kEnableLogging);
+    if (logging_destination == "stderr") {
+      return LOG_TO_SYSTEM_DEBUG_LOG | LOG_TO_STDERR;
+    }
+#if BUILDFLAG(IS_WIN)
+    if (logging_destination == "handle" &&
+        command_line.HasSwitch(switches::kProcessType) &&
+        command_line.HasSwitch(switches::kLogFile)) {
+      // Child processes can log to a handle duplicated from the parent, and
+      // provided in the log-file switch value.
+      filename_is_handle = true;
+      return kDefaultLoggingMode | LOG_TO_FILE;
+    }
+#endif  // BUILDFLAG(IS_WIN)
+    if (logging_destination != "") {
+      // The browser process should not be called with --enable-logging=handle.
+      LOG(ERROR) << "Invalid logging destination: " << logging_destination;
+      return kDefaultLoggingMode;
+    }
+#if BUILDFLAG(IS_WIN)
+    if (command_line.HasSwitch(switches::kProcessType) &&
+        !command_line.HasSwitch(sandbox::policy::switches::kNoSandbox)) {
+      // Sandboxed processes cannot open log files so skip if provided.
+      return kDefaultLoggingMode & ~LOG_TO_FILE;
+    }
+#endif
+  }
+  return kDefaultLoggingMode;
+}
+
 }  // namespace
 
 void InitRadiumLogging(const base::CommandLine& command_line,
@@ -110,7 +201,8 @@ void InitRadiumLogging(const base::CommandLine& command_line,
   DCHECK(!radium_logging_initialized_)
       << "Attempted to initialize logging when it was already initialized.";
   bool filename_is_handle = false;
-  LoggingDestination logging_dest = LOG_TO_ALL;
+  LoggingDestination logging_dest =
+      LoggingDestFromCommandLine(command_line, filename_is_handle);
   LogLockingState log_locking_state = LOCK_LOG_FILE;
   base::FilePath log_path;
 
@@ -232,15 +324,15 @@ void InitRadiumLogging(const base::CommandLine& command_line,
     }
   }
 
-#if BUILDFLAG(IS_WIN)
-  // Enable trace control and transport through event tracing for Windows.
-  LogEventProvider::Initialize(kChromeTraceProviderName);
+  // #if BUILDFLAG(IS_WIN)
+  //   // Enable trace control and transport through event tracing for Windows.
+  //   LogEventProvider::Initialize(kChromeTraceProviderName);
 
-  // Enable logging to the Windows Event Log.
-  SetEventSource(base::WideToASCII(
-                     install_static::InstallDetails::Get().install_full_name()),
-                 BROWSER_CATEGORY, MSG_LOG_MESSAGE);
-#endif
+  //   // Enable logging to the Windows Event Log.
+  //   SetEventSource(base::WideToASCII(
+  //                      install_static::InstallDetails::Get().install_full_name()),
+  //                  BROWSER_CATEGORY, MSG_LOG_MESSAGE);
+  // #endif
 
   base::StatisticsRecorder::InitLogOnShutdown();
 

@@ -881,7 +881,7 @@ void SystemNetworkContextManager::ConfigureDefaultNetworkContextParams(
 #if BUILDFLAG(IS_WIN)
   if (command_line.HasSwitch(switches::kUseSystemProxyResolver)) {
     network_context_params->windows_system_proxy_resolver =
-        ChromeMojoProxyResolverWin::CreateWithSelfOwnedReceiver();
+        RadiumMojoProxyResolverWin::CreateWithSelfOwnedReceiver();
   }
 #endif  // BUILDFLAG(IS_WIN)
 

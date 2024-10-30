@@ -1,0 +1,46 @@
+; Copyright 2013 The Chromium Authors
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+LIBRARY  "radium_elf.dll"
+
+EXPORTS
+  ; When functions are added to this file, they must also be added to
+  ; radium_elf_x64.def and radium_elf_arm64.def
+
+  ; From components/crash/core/app/crash_export_stubs.cc
+  CrashForException_ExportThunk
+  DumpHungProcessWithPtype_ExportThunk
+  GetCrashpadDatabasePath_ExportThunk
+  ClearReportsBetween_ExportThunk
+  GetCrashReports_ExportThunk
+  InjectDumpForHungInput_ExportThunk
+  RequestSingleCrashUpload_ExportThunk
+  SetUploadConsent_ExportThunk
+
+  ; From radium/radium_elf/crash/crash_helper.cc
+  SetMetricsClientId
+
+  ; From radium/radium_elf/radium_elf_main.cc
+  DumpProcessWithoutCrash
+  GetUserDataDirectoryThunk
+  IsTemporaryUserDataDirectoryCreatedForHeadless
+  SignalChromeElf
+  SignalInitializeCrashReporting
+  IsExtensionPointDisableSet
+
+  ; From radium/install_static
+  GetInstallDetailsPayload
+  IsBrowserProcess
+
+  ; From radium/radium_elf/third_party_dlls/logs.cc
+  DrainLog
+  RegisterLogNotification
+  GetBlockedModulesCount
+  GetUniqueBlockedModulesCount
+
+  ; From radium/radium_elf/third_party_dlls/hook.cc
+  DisableHook
+  GetApplyHookResult
+
+  ; From radium/radium_elf/third_party_dlls/main.cc
+  IsThirdPartyInitialized

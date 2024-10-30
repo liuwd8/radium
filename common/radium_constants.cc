@@ -4,9 +4,18 @@
 
 #include "radium/common/radium_constants.h"
 
+#include "radium/common/radium_version.h"
+
 #define FPL FILE_PATH_LITERAL
 
 namespace radium {
+
+const char kRadiumVersion[] = RADIUM_VERSION_STRING;
+
+// directory names
+#if BUILDFLAG(IS_WIN)
+extern const wchar_t kUserDataDirname[];
+#endif
 
 const base::FilePath::CharType kCacheDirname[] = FPL("Cache");
 const base::FilePath::CharType kCookieFilename[] = FPL("Cookies");

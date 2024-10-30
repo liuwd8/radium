@@ -45,6 +45,7 @@
 #if BUILDFLAG(IS_WIN)
 #include "base/enterprise_util.h"
 #include "base/win/win_util.h"
+#include "radium/browser/win/parental_controls.h"
 #endif
 
 namespace {

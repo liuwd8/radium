@@ -25,6 +25,13 @@
 #include "radium/common/radium_result_codes.h"
 #include "ui/color/color_provider_manager.h"
 
+#if BUILDFLAG(IS_WIN)
+#include "base/trace_event/trace_event_etw_export_win.h"
+#include "base/win/win_util.h"
+#include "radium/browser/win/parental_controls.h"
+#include "ui/shell_dialogs/select_file_dialog.h"
+#endif  // BUILDFLAG(IS_WIN)
+
 #if defined(USE_AURA)
 #include "ui/aura/env.h"
 #endif
@@ -284,6 +291,12 @@ void RadiumBrowserMainParts::PostBrowserStart() {
 }
 
 int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
+#if BUILDFLAG(IS_WIN)
+  // Windows parental controls calls can be slow, so we do an early init here
+  // that calculates this value off of the UI thread.
+  InitializeWinParentalControls();
+#endif
+
   // Do any initializating in the browser process that requires all threads
   // running.
   browser_process_->PreMainMessageLoopRun();

@@ -69,7 +69,7 @@ base::FilePath ProfileManager::GetLastUsedProfileBaseName() {
     return last_used_profile_base_name;
   }
 
-  return base::FilePath::FromASCII(radium::kInitialProfile);
+  return base::FilePath(radium::kInitialProfile);
 }
 
 Profile* ProfileManager::GetProfile(const base::FilePath& profile_dir,
@@ -183,7 +183,6 @@ void ProfileManager::OnProfileCreationFinished(Profile* profile,
                                                bool is_new_profile) {
   if (create_mode == Profile::CreateMode::kSynchronous) {
     // Already initialized in OnProfileCreationStarted().
-    LOG(ERROR) << "Cannot create profile at path " << is_new_profile;
     return;
   }
 

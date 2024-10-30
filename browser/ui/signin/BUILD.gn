@@ -4,8 +4,11 @@
 
 import("//build/config/ui.gni")
 
-static_library("signin") {
-  public = [ "signin_window.h" ]
+source_set("signin") {
+  public = [
+    "signin_window.cc",
+    "signin_window.h",
+  ]
 
   if (toolkit_views) {
     deps = [ "//radium/browser/ui/views/signin" ]

@@ -1,0 +1,112 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+static_library("hook_util") {
+  sources = [
+    "hook_util/hook_util.cc",
+    "hook_util/hook_util.h",
+  ]
+  deps = [
+    "//base:base_static",  # pe_image
+  ]
+}
+
+# This target contains utility functions which must only depend on
+# kernel32 or ntdll. Please don't add dependencies on other system libraries.
+static_library("nt_registry") {
+  sources = [
+    "nt_registry/nt_registry.cc",
+    "nt_registry/nt_registry.h",
+    "nt_registry/nt_registry_functions.h",
+  ]
+
+  libs = [
+    "kernel32.lib",
+    "ntdll.lib",
+  ]
+}
+
+static_library("crash") {
+  sources = [
+    "../app/radium_crash_reporter_client_win.cc",
+    "../app/radium_crash_reporter_client_win.h",
+    "../common/radium_result_codes.h",
+    "crash/crash_helper.cc",
+    "crash/crash_helper.h",
+  ]
+  deps = [
+    ":constants",
+    ":hook_util",
+    "//base",  # This needs to go.  DEP of app, crash_keys, client.
+    "//base:base_static",  # pe_image
+    "//components/crash/core/app",
+    "//components/crash/core/common",  # crash_keys
+    "//components/version_info:channel",
+    "//content/public/common:result_codes",
+    "//third_party/crashpad/crashpad/client",  # DumpWithoutCrash
+
+    # "//radium/install_static:install_static_util",
+  ]
+}
+source_set("security") {
+  sources = [
+    "radium_elf_security.cc",
+    "radium_elf_security.h",
+  ]
+  deps = [
+    ":constants",
+    ":nt_registry",
+    "//base:base",
+
+    # "//radium/install_static:install_static_util",
+  ]
+}
+
+source_set("constants") {
+  sources = [
+    "blocklist_constants.cc",
+    "blocklist_constants.h",
+    "radium_elf_constants.cc",
+    "radium_elf_constants.h",
+  ]
+}
+
+shared_library("radium_elf") {
+  sources = [
+    "radium_elf_main.cc",
+    "radium_elf_main.h",
+  ]
+
+  if (target_cpu == "x86") {
+    sources += [ "radium_elf_x86.def" ]
+  } else if (target_cpu == "arm64") {
+    sources += [ "radium_elf_arm64.def" ]
+  } else {
+    sources += [ "radium_elf_x64.def" ]
+  }
+
+  deps = [
+    ":constants",
+    ":crash",
+    ":hook_util",
+    ":nt_registry",
+    ":security",
+    "//components/crash/core/app:crash_export_thunks",
+
+    # "//radium/install_static:install_static_util",
+  ]
+
+  configs += [ "//build/config/win:windowed" ]
+  configs -= [ "//build/config/win:console" ]
+
+  configs += [
+    "//build/config/win:delayloads",
+    "//build/config/win:delayloads_not_for_child_dll",
+  ]
+
+  if (current_cpu == "x86") {
+    # Don"t set an x64 base address (to avoid breaking HE-ASLR).
+    ldflags = [ "/BASE:0x01c20000" ]
+  }
+}

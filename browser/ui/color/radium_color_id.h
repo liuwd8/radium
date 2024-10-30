@@ -19,8 +19,30 @@
   E_CPONLY(kWechatSideMenuBackground) \
     /* Hover Button colors */ \
   E_CPONLY(kColorHoverButtonBackgroundHovered) \
+  /* Window control button background colors. */ \
+  E_CPONLY(kColorWindowControlButtonBackgroundActive) \
+  E_CPONLY(kColorWindowControlButtonBackgroundInactive) \
 
-#define RADIUM_COLOR_IDS COMMON_RADIUM_COLOR_IDS
+#if BUILDFLAG(IS_WIN)
+#define RADIUM_PLATFORM_SPECIFIC_COLOR_IDS \
+    /* The colors of the 1px border around the window on Windows 10. */ \
+    E_CPONLY(kColorAccentBorderActive) \
+    E_CPONLY(kColorAccentBorderInactive) \
+    /* Caption colors. */ \
+    E_CPONLY(kColorCaptionButtonForegroundActive) \
+    E_CPONLY(kColorCaptionButtonForegroundInactive) \
+    E_CPONLY(kColorCaptionCloseButtonBackgroundHovered) \
+    E_CPONLY(kColorCaptionCloseButtonForegroundHovered) \
+    E_CPONLY(kColorCaptionForegroundActive) \
+    E_CPONLY(kColorCaptionForegroundInactive) \
+    /* Tab search caption button colors. */ \
+    E_CPONLY(kColorTabSearchCaptionButtonFocusRing)
+#else
+#define CHROME_PLATFORM_SPECIFIC_COLOR_IDS
+#endif  // BUILDFLAG(IS_WIN)
+
+#define RADIUM_COLOR_IDS \
+    COMMON_RADIUM_COLOR_IDS RADIUM_PLATFORM_SPECIFIC_COLOR_IDS
 
 #include "ui/color/color_id_macros.inc"
 

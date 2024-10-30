@@ -25,8 +25,8 @@ class UntitledWidgetDelegate : public views::WidgetDelegate {
   virtual int NonClientHitTest(const gfx::Point& point);
 };
 
-class VIEWS_EXPORT UntitledWidgetDelegateView : public UntitledWidgetDelegate,
-                                                public views::View {
+class UntitledWidgetDelegateView : public UntitledWidgetDelegate,
+                                   public views::View {
   METADATA_HEADER(UntitledWidgetDelegateView, views::View)
 
  public:

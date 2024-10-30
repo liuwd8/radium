@@ -1,0 +1,47 @@
+# Copyright 2016 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/buildflag_header.gni")
+import("//build/config/chrome_build.gni")
+import("//testing/test.gni")
+
+if (is_win) {
+  # This file contains utility functions that only depend on kernel32.
+  # Please don't add dependencies on other system libraries.
+  static_library("install_static_util") {
+    deps = [
+      "//base/version_info:channel",
+      "//base/version_info:generate_version_info",
+      "//components/nacl/common:buildflags",
+    ]
+
+    public_deps = [
+      "//build:branding_buildflags",
+      "//radium/radium_elf:nt_registry",
+    ]
+
+    sources = [
+      "//base/compiler_specific.h",
+      "//base/win/win_handle_types.h",
+      "//base/win/win_handle_types_list.inc",
+      "//base/win/windows_types.h",
+      "install_constants.h",
+      "install_details.cc",
+      "install_details.h",
+      "install_modes.cc",
+      "install_modes.h",
+      "install_util.cc",
+      "install_util.h",
+      "user_data_dir.cc",
+      "user_data_dir.h",
+    ]
+
+    sources += [
+      "chromium_install_modes.cc",
+      "chromium_install_modes.h",
+    ]
+
+    libs = [ "kernel32.lib" ]
+  }
+}

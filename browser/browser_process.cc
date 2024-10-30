@@ -13,7 +13,6 @@
 #include "components/language/core/browser/pref_names.h"
 #include "components/os_crypt/async/browser/key_provider.h"
 #include "components/os_crypt/async/browser/os_crypt_async.h"
-#include "components/os_crypt/async/browser/secret_portal_key_provider.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 #include "radium/browser/devtools/remote_debugging_server.h"
@@ -22,6 +21,16 @@
 #include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/policy/radium_browser_policy_connector.h"
 #include "radium/common/pref_names.h"
+
+#if BUILDFLAG(IS_WIN)
+#include "base/win/windows_version.h"
+#include "components/app_launch_prefetch/app_launch_prefetch.h"
+#include "components/os_crypt/async/browser/dpapi_key_provider.h"
+#endif
+
+#if BUILDFLAG(IS_LINUX)
+#include "components/os_crypt/async/browser/secret_portal_key_provider.h"
+#endif
 
 namespace {
 BrowserProcess* g_browser_process = nullptr;
@@ -138,16 +147,16 @@ void BrowserProcess::PreMainMessageLoopRun() {
       /*precedence=*/10u,
       std::make_unique<os_crypt_async::DPAPIKeyProvider>(local_state())));
 
-  providers.emplace_back(std::make_pair(
-      // Note: 15 is chosen to be higher than the 10 precedence above for
-      // DPAPI. This ensures that when the the provider is enabled for
-      // encryption, the App-Bound encryption key is used and not the DPAPI
-      // one.
-      /*precedence=*/15u,
-      std::make_unique<os_crypt_async::AppBoundEncryptionProviderWin>(
-          local_state(),
-          base::FeatureList::IsEnabled(
-              features::kUseAppBoundEncryptionProviderForEncryption))));
+  // providers.emplace_back(std::make_pair(
+  //     // Note: 15 is chosen to be higher than the 10 precedence above for
+  //     // DPAPI. This ensures that when the the provider is enabled for
+  //     // encryption, the App-Bound encryption key is used and not the DPAPI
+  //     // one.
+  //     /*precedence=*/15u,
+  //     std::make_unique<os_crypt_async::AppBoundEncryptionProviderWin>(
+  //         local_state(),
+  //         base::FeatureList::IsEnabled(
+  //             features::kUseAppBoundEncryptionProviderForEncryption))));
 #endif  // BUILDFLAG(IS_WIN)
 
 #if BUILDFLAG(IS_LINUX)

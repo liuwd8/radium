@@ -8,6 +8,7 @@
 #include "base/debug/leak_annotations.h"
 #include "base/files/file_path.h"
 #include "base/path_service.h"
+#include "components/language/core/browser/pref_names.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
@@ -62,6 +63,8 @@ void RadiumFeatureListCreator::CreatePrefService() {
   pref_service_factory.set_user_prefs(local_state_pref_store);
 
   local_state_ = pref_service_factory.Create(pref_registry);
+
+  local_state_->SetString(language::prefs::kApplicationLocale, "zh-CN");
 }
 
 void RadiumFeatureListCreator::SetUpFieldTrials() {
