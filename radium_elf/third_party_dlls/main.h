@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,10 +10,10 @@
 //    for DllMain on Windows.
 //    https://msdn.microsoft.com/en-us/library/windows/desktop/dn633971.aspx
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_MAIN_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_MAIN_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_MAIN_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_MAIN_H_
 
-#include "chrome/chrome_elf/third_party_dlls/status_codes.h"
+#include "radium/radium_elf/third_party_dlls/status_codes.h"
 
 namespace third_party_dlls {
 
@@ -36,4 +36,4 @@ void AddStatusCodeForTesting(ThirdPartyStatus code);
 
 }  // namespace third_party_dlls
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_MAIN_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_MAIN_H_

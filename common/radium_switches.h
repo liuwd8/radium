@@ -22,6 +22,8 @@ inline constexpr char kSSLVersionTLSv12[] = "tls1.2";
 // TLS 1.3 mode for |kSSLVersionMax| and |kSSLVersionMin| switches.
 inline constexpr char kSSLVersionTLSv13[] = "tls1.3";
 
+inline constexpr char kUserDataDir[] = "user-data-dir";
+
 // Uses WinHttp to resolve proxies instead of using Chromium's normal proxy
 // resolution logic. This is only supported in Windows.
 //

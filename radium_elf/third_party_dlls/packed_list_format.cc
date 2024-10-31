@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "chrome/chrome_elf/third_party_dlls/packed_list_format.h"
+#include "radium/radium_elf/third_party_dlls/packed_list_format.h"
 
 #include <stddef.h>
 

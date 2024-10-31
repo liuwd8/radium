@@ -14,6 +14,29 @@ if (is_win && enable_resource_allowlist_generation) {
   _radium_resource_allowlist = "$target_gen_dir/chrome_resource_allowlist.txt"
 }
 
+if (is_win) {
+  action("reorder_imports") {
+    script = "//radium/tools/win/reorder-imports.py"
+
+    # See comment in radium_dll.gypi in the hardlink_to_output
+    # target for why this cannot be 'initial' like the DLL.
+    inputs = [ "$root_out_dir/initialexe/radium.exe" ]
+    outputs = [
+      "$root_out_dir/radium.exe",
+      "$root_out_dir/radium.exe.pdb",
+    ]
+    args = [
+      "-i",
+      rebase_path("$root_out_dir/initialexe", root_build_dir),
+      "-o",
+      rebase_path("$root_out_dir", root_build_dir),
+      "-a",
+      current_cpu,
+    ]
+    deps = [ ":radium_exe" ]
+  }
+}
+
 group("all") {
   deps = [ ":radium" ]
 }
@@ -23,13 +46,23 @@ group("radium") {
 
   if (is_android) {
     deps += [ "//radium/android:radium_apk" ]
+  } else if (is_win) {
+    public_deps = [ ":radium_exe" ]
+    data_deps = [ ":radium_exe" ]
+
+    public_deps += [ ":reorder_imports" ]
+    data_deps += [ ":reorder_imports" ]
   } else {
     deps += [ ":radium_exe" ]
   }
 }
 
 executable("radium_exe") {
-  output_name = "radium"
+  if (is_win) {
+    output_name = "initialexe/radium"
+  } else {
+    output_name = "radium"
+  }
 
   sources = []
 
@@ -51,15 +84,19 @@ executable("radium_exe") {
 
     deps += [
       ":radium_dll",
+      "//components/crash/core/app",
+      "//components/crash/core/app:run_as_crashpad_handler",
       "//content:sandbox_helper_win",
       "//content/public/common:static_switches",
+      "//radium/app:exit_code_watcher",
       "//radium/common:constants",
       "//radium/common/win:delay_load_failure_support",
-
-      # "//radium/radium_elf",
+      "//radium/install_static:secondary_module",
+      "//radium/radium_elf",
       "//sandbox",
       "//sandbox/policy",
       "//sandbox/policy/mojom",
+      "//third_party/crashpad/crashpad/util",
     ]
 
     if (win_console_app) {
@@ -124,6 +161,14 @@ executable("radium_exe") {
 }
 
 if (is_win) {
+  # This manifest matches what GYP produced. It may not even be necessary.
+  windows_manifest("radium_dll_manifest") {
+    sources = [
+      as_invoker_manifest,
+      common_controls_manifest,
+    ]
+  }
+
   shared_library("radium_dll") {
     configs += [ "//build/config/compiler:wexit_time_destructors" ]
     configs -= [ "//build/config/compiler:thinlto_optimize_default" ]
@@ -141,11 +186,13 @@ if (is_win) {
 
     deps = [
       ":dependencies",
+      ":radium_dll_manifest",
       "//components/crash/core/app",
       "//components/crash/core/app:crash_export_thunks",
       "//components/crash/core/common:crash_key",
       "//content/public/app",
       "//radium/child",
+      "//radium/radium_elf",
     ]
 
     configs += [ "//build/config/win:delayloads" ]

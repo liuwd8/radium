@@ -42,15 +42,18 @@ const wchar_t kFallbackHandler[] = L"fallback-handler";
 
 const wchar_t kProcessType[] = L"type";
 
-// Converts a process type specified as a string to the ProcessType enum.
-ProcessType GetProcessType(const std::wstring& process_type) {
-  if (process_type.empty()) {
-    return ProcessType::BROWSER_PROCESS;
-  }
-  if (process_type == kCrashpadHandler) {
-    return ProcessType::CRASHPAD_HANDLER_PROCESS;
-  }
-  return ProcessType::OTHER_PROCESS;
+namespace {
+
+void Trace(const wchar_t* format_string, ...) {
+  static const int kMaxLogBufferSize = 1024;
+  static wchar_t buffer[kMaxLogBufferSize] = {};
+
+  va_list args = {};
+
+  va_start(args, format_string);
+  vswprintf(buffer, kMaxLogBufferSize, format_string, args);
+  OutputDebugStringW(buffer);
+  va_end(args);
 }
 
 bool GetLanguageAndCodePageFromVersionResource(const char* version_resource,
@@ -133,6 +136,48 @@ bool GetValueFromVersionResource(const char* version_resource,
   return false;
 }
 
+// Converts a process type specified as a string to the ProcessType enum.
+ProcessType GetProcessType(const std::wstring& process_type) {
+  if (process_type.empty()) {
+    return ProcessType::BROWSER_PROCESS;
+  }
+  if (process_type == kCrashpadHandler) {
+    return ProcessType::CRASHPAD_HANDLER_PROCESS;
+  }
+  return ProcessType::OTHER_PROCESS;
+}
+
+bool DirectoryExists(const std::wstring& path) {
+  DWORD file_attributes = ::GetFileAttributes(path.c_str());
+  if (file_attributes == INVALID_FILE_ATTRIBUTES) {
+    return false;
+  }
+  return (file_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+// Returns the user's temporary directory, or an empty string in case of
+// failure.
+std::wstring GetTempDir() {
+  constexpr DWORD kBufferLength = MAX_PATH + 1U;
+  wchar_t temp_path[kBufferLength];
+  DWORD temp_path_len = ::GetTempPath(kBufferLength, temp_path);
+  if (temp_path_len == 0 || temp_path_len > kBufferLength) {
+    return {};
+  }
+
+  std::wstring temp_dir(temp_path, temp_path_len);
+
+  // Strip the trailing slashes if any to duplicate //base method behavior.
+  while (!temp_dir.empty() &&
+         (temp_dir.back() == '\\' || temp_dir.back() == '/')) {
+    temp_dir.pop_back();
+  }
+
+  return temp_dir;
+}
+
+}  // namespace
+
 std::wstring GetCrashDumpLocation() {
   // In order to be able to start crash handling very early and in chrome_elf,
   // we cannot rely on chrome's PathService entries (for DIR_CRASH_DUMPS) being
@@ -180,6 +225,11 @@ bool IsProcessTypeInitialized() {
 bool IsBrowserProcess() {
   assert(g_process_type != ProcessType::UNINITIALIZED);
   return g_process_type == ProcessType::BROWSER_PROCESS;
+}
+
+bool IsCrashpadHandlerProcess() {
+  assert(g_process_type != ProcessType::UNINITIALIZED);
+  return g_process_type == ProcessType::CRASHPAD_HANDLER_PROCESS;
 }
 
 void GetExecutableVersionDetails(const std::wstring& exe_path,
@@ -417,6 +467,101 @@ std::wstring GetCommandLineSwitchValue(const std::wstring& command_line,
   assert(!switch_name.empty());
   return GetCommandLineSwitch(command_line, switch_name)
       .value_or(std::wstring());
+}
+
+bool RecursiveDirectoryCreate(const std::wstring& full_path) {
+  // If the path exists, we've succeeded if it's a directory, failed otherwise.
+  const wchar_t* full_path_str = full_path.c_str();
+  DWORD file_attributes = ::GetFileAttributes(full_path_str);
+  if (file_attributes != INVALID_FILE_ATTRIBUTES) {
+    if ((file_attributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+      Trace(L"%hs( %ls directory exists )\n", __func__, full_path_str);
+      return true;
+    }
+    Trace(L"%hs( %ls directory conflicts with an existing file. )\n", __func__,
+          full_path_str);
+    return false;
+  }
+
+  // Invariant:  Path does not exist as file or directory.
+
+  // Attempt to create the parent recursively.  This will immediately return
+  // true if it already exists, otherwise will create all required parent
+  // directories starting with the highest-level missing parent.
+  std::wstring parent_path;
+  std::size_t pos = full_path.find_last_of(L"/\\");
+  if (pos != std::wstring::npos) {
+    parent_path = full_path.substr(0, pos);
+    if (!RecursiveDirectoryCreate(parent_path)) {
+      Trace(L"Failed to create one of the parent directories");
+      return false;
+    }
+  }
+  if (!::CreateDirectory(full_path_str, nullptr)) {
+    DWORD error_code = ::GetLastError();
+    if (error_code == ERROR_ALREADY_EXISTS && DirectoryExists(full_path_str)) {
+      // This error code ERROR_ALREADY_EXISTS doesn't indicate whether we
+      // were racing with someone creating the same directory, or a file
+      // with the same path.  If the directory exists, we lost the
+      // race to create the same directory.
+      return true;
+    } else {
+      Trace(L"Failed to create directory %ls, last error is %d\n",
+            full_path_str, error_code);
+      return false;
+    }
+  }
+  return true;
+}
+
+std::wstring CreateUniqueTempDirectory(std::wstring_view prefix) {
+  std::wstring temp_dir = GetTempDir();
+  if (temp_dir.empty()) {
+    Trace(L"Failed to retrieve temporary directory");
+    return {};
+  }
+
+  // The following code uses std::to_wstring() which is banned in Chrome,
+  // however, since the //base alternative is not available here, we use it as
+  // the last resort. Please DO NOT copy/paste this code outside install_static!
+  temp_dir.push_back(L'\\');
+  temp_dir.append(prefix);
+  temp_dir.append(kProductPathName, kProductPathNameLength);
+  temp_dir.append(std::to_wstring(::GetCurrentProcessId()));
+  temp_dir.append(std::to_wstring(::GetTickCount()));
+  size_t temp_dir_length = temp_dir.length();
+
+  // Try to create a new temporary directory. If the one exists, keep trying
+  // adding a randomized suffix to the path until we reach some limit.
+  for (int count = 0; count < 50; ++count) {
+    if (::CreateDirectory(temp_dir.c_str(), /*lpSecurityAttributes*/ nullptr)) {
+      return temp_dir;
+    }
+
+    // Seed the rand() once.
+    [[maybe_unused]] static bool once = []() {
+      srand(::GetTickCount());
+      return true;
+    }();
+
+    temp_dir.erase(temp_dir_length);
+    temp_dir.append(std::to_wstring(rand()));
+  }
+
+  Trace(L"Failed to create unique temporary directory %ls", temp_dir.c_str());
+
+  return {};
+}
+
+// This function takes these inputs rather than accessing the module's
+// InstallDetails instance since it is used to bootstrap InstallDetails.
+DetermineChannelResult DetermineChannel(const InstallConstants& mode,
+                                        bool system_level,
+                                        const wchar_t* channel_override,
+                                        std::wstring* update_ap,
+                                        std::wstring* update_cohort_name) {
+  return {std::wstring(), ChannelOrigin::kInstallMode,
+          /*is_extended_stable=*/false};
 }
 
 }  // namespace install_static

@@ -1,9 +1,9 @@
-// Copyright 2019 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_
 
 #include <string>
 
@@ -15,4 +15,4 @@ bool DllMatch(const std::string& module_name);
 
 }  // namespace third_party_dlls
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HARDCODED_BLOCKLIST_H_

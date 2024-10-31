@@ -9,14 +9,12 @@
 #include <assert.h>
 
 #include "radium/install_static/install_util.h"
+#include "radium/install_static/product_install_details.h"
 #include "radium/install_static/user_data_dir.h"
 #include "radium/radium_elf/crash/crash_helper.h"
-
-// #include "radium/radium_elf/radium_elf_security.h"
-// #include "radium/radium_elf/third_party_dlls/beacon.h"
-// #include "radium/radium_elf/third_party_dlls/main.h"
-// #include "radium/install_static/install_details.h"
-// #include "radium/install_static/product_install_details.h"
+#include "radium/radium_elf/radium_elf_security.h"
+#include "radium/radium_elf/third_party_dlls/beacon.h"
+#include "radium/radium_elf/third_party_dlls/main.h"
 
 // This function is exported from the DLL so that it can be called by WinMain
 // after startup has completed in the browser process. For non-browser processes
@@ -31,7 +29,7 @@ void SignalInitializeCrashReporting() {
 }
 
 void SignalRadiumElf() {
-  // third_party_dlls::ResetBeacon();
+  third_party_dlls::ResetBeacon();
 }
 
 bool GetUserDataDirectoryThunk(wchar_t* user_data_dir,

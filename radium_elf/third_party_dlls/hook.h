@@ -1,15 +1,15 @@
-// Copyright 2018 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HOOK_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HOOK_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HOOK_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HOOK_H_
 
 #include <windows.h>
 
 #include <string>
 
-#include "chrome/chrome_elf/third_party_dlls/status_codes.h"
+#include "radium/radium_elf/third_party_dlls/status_codes.h"
 
 namespace third_party_dlls {
 
@@ -27,4 +27,4 @@ bool GetDataFromImageForTesting(PVOID mapped_image,
 
 }  // namespace third_party_dlls
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_HOOK_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_HOOK_H_

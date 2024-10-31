@@ -8,8 +8,8 @@
 // 2. The APIs exported by chrome_elf.dll to share logs of module load attempts.
 // 3. The API used to disable the NtMapViewOfSection hook.
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_
 
 #include <windows.h>
 
@@ -101,4 +101,4 @@ extern "C" void DisableHook();
 // code on failure.
 extern "C" int32_t GetApplyHookResult();
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PUBLIC_API_H_

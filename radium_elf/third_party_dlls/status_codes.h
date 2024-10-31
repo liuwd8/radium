@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_
 
 #include <stddef.h>
 
@@ -56,4 +56,4 @@ void ConvertBufferToStatusCodes(const std::vector<uint8_t>& buffer,
 
 }  // namespace third_party_dlls
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_STATUS_CODES_H_

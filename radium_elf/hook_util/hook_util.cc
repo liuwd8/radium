@@ -200,17 +200,20 @@ DWORD RemoveIATHook(void* intercept_function,
 
 namespace elf_hook {
 
+struct IATHook::IATHookData {
+  void* intercept_function_ = nullptr;
+  void* original_function_ = nullptr;
+  IMAGE_THUNK_DATA* iat_thunk_ = nullptr;
+};
+
 //------------------------------------------------------------------------------
 // Import Address Table hooking support
 //------------------------------------------------------------------------------
 
-IATHook::IATHook()
-    : intercept_function_(nullptr),
-      original_function_(nullptr),
-      iat_thunk_(nullptr) {}
+IATHook::IATHook() : data_(std::make_unique<IATHookData>()) {}
 
 IATHook::~IATHook() {
-  if (intercept_function_) {
+  if (data_->intercept_function_) {
     if (Unhook() != NO_ERROR) {
 #ifdef _DEBUG
       assert(false);
@@ -230,31 +233,33 @@ DWORD IATHook::Hook(HMODULE module,
   }
 
   // Only hook once per object, to ensure unhook.
-  if (intercept_function_ || original_function_ || iat_thunk_) {
+  if (data_->intercept_function_ || data_->original_function_ ||
+      data_->iat_thunk_) {
     return ERROR_SHARING_VIOLATION;
   }
 
-  DWORD winerror = ApplyIATHook(module, imported_from_module, function_name,
-                                new_function, &original_function_, &iat_thunk_);
+  DWORD winerror =
+      ApplyIATHook(module, imported_from_module, function_name, new_function,
+                   &data_->original_function_, &data_->iat_thunk_);
   if (winerror == NO_ERROR) {
-    intercept_function_ = new_function;
+    data_->intercept_function_ = new_function;
   }
 
   return winerror;
 }
 
 DWORD IATHook::Unhook() {
-  if (intercept_function_ == nullptr || original_function_ == nullptr ||
-      iat_thunk_ == nullptr) {
+  if (data_->intercept_function_ == nullptr ||
+      data_->original_function_ == nullptr || data_->iat_thunk_ == nullptr) {
     return ERROR_INVALID_PARAMETER;
   }
 
-  DWORD winerror =
-      RemoveIATHook(intercept_function_, original_function_, iat_thunk_);
+  DWORD winerror = RemoveIATHook(data_->intercept_function_,
+                                 data_->original_function_, data_->iat_thunk_);
 
-  intercept_function_ = nullptr;
-  original_function_ = nullptr;
-  iat_thunk_ = nullptr;
+  data_->intercept_function_ = nullptr;
+  data_->original_function_ = nullptr;
+  data_->iat_thunk_ = nullptr;
 
   return winerror;
 }

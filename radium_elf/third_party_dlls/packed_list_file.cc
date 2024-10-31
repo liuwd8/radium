@@ -1,4 +1,4 @@
-// Copyright 2017 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,7 @@
 #pragma allow_unsafe_buffers
 #endif
 
-#include "chrome/chrome_elf/third_party_dlls/packed_list_file.h"
+#include "radium/radium_elf/third_party_dlls/packed_list_file.h"
 
 #include <windows.h>
 
@@ -17,9 +17,9 @@
 #include <algorithm>
 #include <limits>
 
-#include "chrome/chrome_elf/nt_registry/nt_registry.h"
-#include "chrome/chrome_elf/third_party_dlls/packed_list_format.h"
-#include "chrome/install_static/install_util.h"
+#include "radium/install_static/install_util.h"
+#include "radium/radium_elf/nt_registry/nt_registry.h"
+#include "radium/radium_elf/third_party_dlls/packed_list_format.h"
 
 namespace third_party_dlls {
 namespace {

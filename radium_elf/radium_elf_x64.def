@@ -24,7 +24,7 @@ EXPORTS
   DumpProcessWithoutCrash
   GetUserDataDirectoryThunk
   IsTemporaryUserDataDirectoryCreatedForHeadless
-  SignalChromeElf
+  SignalRadiumElf
   SignalInitializeCrashReporting
   IsExtensionPointDisableSet
 

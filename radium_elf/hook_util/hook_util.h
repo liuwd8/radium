@@ -7,6 +7,8 @@
 
 #include <windows.h>
 
+#include <memory>
+
 namespace elf_hook {
 
 //------------------------------------------------------------------------------
@@ -44,9 +46,9 @@ class IATHook {
   DWORD Unhook();
 
  private:
-  void* intercept_function_;
-  void* original_function_;
-  IMAGE_THUNK_DATA* iat_thunk_;
+  struct IATHookData;
+
+  std::unique_ptr<IATHookData> data_;
 };
 
 }  // namespace elf_hook

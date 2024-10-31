@@ -7,15 +7,15 @@
 //    to chrome_elf.dll across restarts.
 // 2. The APIs exported by chrome_elf.dll to share logs of module load attempts.
 
-#ifndef CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_
-#define CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_
+#ifndef RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_
+#define RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_
 
 #include <stdint.h>
 
 #include <array>
 #include <string>
 
-#include "chrome/chrome_elf/sha1/sha1.h"
+#include "radium/radium_elf/sha1/sha1.h"
 
 namespace third_party_dlls {
 
@@ -82,4 +82,4 @@ static_assert(sizeof(PackedListModule) == 44,
 
 }  // namespace third_party_dlls
 
-#endif  // CHROME_CHROME_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_
+#endif  // RADIUM_RADIUM_ELF_THIRD_PARTY_DLLS_PACKED_LIST_FORMAT_H_

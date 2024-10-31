@@ -18,6 +18,7 @@
 #include "base/debug/handle_hooks_win.h"
 #include "base/win/current_module.h"
 #include "base/win/win_util.h"
+#include "radium/radium_elf/radium_elf_main.h"
 
 #define DLLEXPORT __declspec(dllexport)
 #endif  // BUILDFLAG(IS_WIN)
@@ -67,6 +68,10 @@ int RadiumMain(int argc, const char** argv) {
   base::win::SetAbortBehaviorForCrashReporting();
   params.instance = instance;
   params.sandbox_info = sandbox_info;
+
+  // Pass chrome_elf's copy of DumpProcessWithoutCrash resolved via load-time
+  // dynamic linking.
+  base::debug::SetDumpWithoutCrashingFunction(&DumpProcessWithoutCrash);
 
   base::CommandLine::Init(0, nullptr);
 #else

@@ -1,4 +1,4 @@
-// Copyright 2019 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,7 +7,7 @@
 #pragma allow_unsafe_buffers
 #endif
 
-#include "chrome/chrome_elf/third_party_dlls/hardcoded_blocklist.h"
+#include "radium/radium_elf/third_party_dlls/hardcoded_blocklist.h"
 
 namespace third_party_dlls {
 

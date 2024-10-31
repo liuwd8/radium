@@ -4,7 +4,7 @@
 
 #include "radium/radium_elf/radium_elf_constants.h"
 
-const wchar_t kWerDll[] = L"chrome_wer.dll";
+const wchar_t kWerDll[] = L"radium_wer.dll";
 
 namespace elf_sec {
 

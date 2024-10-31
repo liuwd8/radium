@@ -7,17 +7,18 @@
 #include <stdlib.h>
 
 #include "radium/app/radium_dll_resource.h"
+#include "radium/install_static/install_constants.h"
 #include "radium/install_static/install_modes.h"
 
 namespace install_static {
 
 const wchar_t kCompanyPathName[] = L"";
 
-const wchar_t kProductPathName[] = L"Chromium";
+const wchar_t kProductPathName[] = L"Radium";
 
 const size_t kProductPathNameLength = _countof(kProductPathName) - 1;
 
-const char kSafeBrowsingName[] = "chromium";
+const char kSafeBrowsingName[] = "radium";
 
 const InstallConstants kInstallModes[] = {
     // The primary (and only) install mode for Chromium.
@@ -31,14 +32,14 @@ const InstallConstants kInstallModes[] = {
         .logo_suffix = L"",  // No logo suffix for the primary install mode.
         .app_guid =
             L"",  // Empty app_guid since no integration with Google Update.
-        .base_app_name = L"Chromium",              // A distinct base_app_name.
-        .base_app_id = L"Chromium",                // A distinct base_app_id.
-        .browser_prog_id_prefix = L"ChromiumHTM",  // Browser ProgID prefix.
+        .base_app_name = L"Radium",              // A distinct base_app_name.
+        .base_app_id = L"Radium",                // A distinct base_app_id.
+        .browser_prog_id_prefix = L"RadiumHTM",  // Browser ProgID prefix.
         .browser_prog_id_description =
-            L"Chromium HTML Document",         // Browser ProgID description.
-        .pdf_prog_id_prefix = L"ChromiumPDF",  // PDF ProgID prefix.
+            L"Radium HTML Document",         // Browser ProgID description.
+        .pdf_prog_id_prefix = L"RadiumPDF",  // PDF ProgID prefix.
         .pdf_prog_id_description =
-            L"Chromium PDF Document",  // PDF ProgID description.
+            L"Radium PDF Document",  // PDF ProgID description.
         .active_setup_guid =
             L"{7D2B3E1D-D096-4594-9D8F-A6667F12E0AC}",  // Active Setup GUID.
         .legacy_command_execute_clsid =
@@ -77,13 +78,7 @@ const InstallConstants kInstallModes[] = {
         .supports_system_level = true,  // Supports system-level installs.
         .supports_set_as_default_browser =
             true,  // Supports in-product set as default browser UX.
-        .app_icon_resource_index =
-            icon_resources::kApplicationIndex,  // App icon resource index.
         .app_icon_resource_id = IDR_MAINFRAME,  // App icon resource id.
-        .html_doc_icon_resource_index =
-            icon_resources::kHtmlDocIndex,  // HTML doc icon resource index.
-        .pdf_doc_icon_resource_index =
-            icon_resources::kPDFDocIndex,  // PDF doc icon resource index.
         .sandbox_sid_prefix =
             L"S-1-15-2-3251537155-1984446955-2931258699-841473695-1938553385-"
             L"924012148-",  // App container sid prefix for sandbox.

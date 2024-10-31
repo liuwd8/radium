@@ -10,7 +10,9 @@
 
 #include <optional>
 
+#include "radium/install_static/install_details.h"
 #include "radium/install_static/install_util.h"
+#include "radium/install_static/policy_path_parser.h"
 #include "radium/radium_elf/nt_registry/nt_registry.h"
 
 namespace install_static {
@@ -20,6 +22,8 @@ namespace {
 std::wstring* g_user_data_dir;
 std::wstring* g_invalid_user_data_dir;
 bool g_temp_user_data_dir_created_for_headless = false;
+
+const wchar_t kUserDataDirSwitch[] = L"user-data-dir";
 
 // Retrieves a registry policy for the user data directory from the registry, if
 // one is set. If there's none set in either HKLM or HKCU, |user_data_dir| will

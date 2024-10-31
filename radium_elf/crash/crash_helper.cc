@@ -79,7 +79,7 @@ bool InitializeCrashReporting() {
   g_crash_reports = new std::vector<crash_reporter::Report>;
   g_set_unhandled_exception_filter = new elf_hook::IATHook();
 
-  ChromeCrashReporterClient::InitializeCrashReportingForProcess();
+  RadiumCrashReporterClient::InitializeCrashReportingForProcess();
 
   g_crash_helper_enabled = true;
   return true;

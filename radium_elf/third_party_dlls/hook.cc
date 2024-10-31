@@ -1,31 +1,31 @@
-// Copyright 2018 The Chromium Authors
+// Copyright 2024 The Radium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "chrome/chrome_elf/third_party_dlls/hook.h"
+#include "radium/radium_elf/third_party_dlls/hook.h"
 
 #include <windows.h>
+#include <winternl.h>
 
 #include <assert.h>
 #include <ntstatus.h>
 #include <psapi.h>
-#include <winternl.h>
 
 #include <atomic>
 #include <limits>
 #include <string>
 
 #include "base/compiler_specific.h"
-#include "chrome/chrome_elf/crash/crash_helper.h"
-#include "chrome/chrome_elf/hook_util/hook_util.h"
-#include "chrome/chrome_elf/pe_image_safe/pe_image_safe.h"
-#include "chrome/chrome_elf/sha1/sha1.h"
-#include "chrome/chrome_elf/third_party_dlls/hardcoded_blocklist.h"
-#include "chrome/chrome_elf/third_party_dlls/logs.h"
-#include "chrome/chrome_elf/third_party_dlls/main.h"
-#include "chrome/chrome_elf/third_party_dlls/packed_list_file.h"
-#include "chrome/chrome_elf/third_party_dlls/packed_list_format.h"
-#include "chrome/chrome_elf/third_party_dlls/public_api.h"
+#include "radium/radium_elf/crash/crash_helper.h"
+#include "radium/radium_elf/hook_util/hook_util.h"
+#include "radium/radium_elf/pe_image_safe/pe_image_safe.h"
+#include "radium/radium_elf/sha1/sha1.h"
+#include "radium/radium_elf/third_party_dlls/hardcoded_blocklist.h"
+#include "radium/radium_elf/third_party_dlls/logs.h"
+#include "radium/radium_elf/third_party_dlls/main.h"
+#include "radium/radium_elf/third_party_dlls/packed_list_file.h"
+#include "radium/radium_elf/third_party_dlls/packed_list_format.h"
+#include "radium/radium_elf/third_party_dlls/public_api.h"
 #include "sandbox/win/src/service_resolver.h"
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx

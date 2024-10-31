@@ -40,3 +40,13 @@ action("generate_xtb_file") {
            rebase_path("translations"),
          ] + grit_args + xtb_locales
 }
+
+if (is_win) {
+  source_set("exit_code_watcher") {
+    sources = [
+      "exit_code_watcher_win.cc",
+      "exit_code_watcher_win.h",
+    ]
+    public_deps = [ "//base:base" ]
+  }
+}

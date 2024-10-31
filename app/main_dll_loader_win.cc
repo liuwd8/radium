@@ -166,11 +166,9 @@ int MainDllLoader::Launch(HINSTANCE instance,
     // the sandbox info, otherwise they'll be treated as brokers (as if they
     // were the browser).
     content::InitializeSandboxInfo(
-        &sandbox_info,
-        // IsExtensionPointDisableSet()
-        //                    ? sandbox::MITIGATION_EXTENSION_POINT_DISABLE
-        //                    :
-        0);
+        &sandbox_info, IsExtensionPointDisableSet()
+                           ? sandbox::MITIGATION_EXTENSION_POINT_DISABLE
+                           : 0);
   }
 
   base::TimeTicks preread_begin_ticks;
@@ -204,17 +202,18 @@ int MainDllLoader::Launch(HINSTANCE instance,
 }
 
 void MainDllLoader::RelaunchRadiumWithNewCommandLineIfNeeded() {
-  // The relaunch-if-needed behavior is a NOP for processes other than the
-  // browser process, so early out here.
-  if (!dll_ || !process_type_.empty()) {
-    return;
-  }
+  // // The relaunch-if-needed behavior is a NOP for processes other than the
+  // // browser process, so early out here.
+  // if (!dll_ || !process_type_.empty()) {
+  //   return;
+  // }
 
-  RelaunchRadiumWithNewCommandLineIfNeededFunc relaunch_function =
-      reinterpret_cast<RelaunchRadiumWithNewCommandLineIfNeededFunc>(
-          ::GetProcAddress(dll_, "RelaunchRadiumWithNewCommandLineIfNeeded"));
-  CHECK(relaunch_function);
-  relaunch_function();
+  // RelaunchRadiumWithNewCommandLineIfNeededFunc relaunch_function =
+  //     reinterpret_cast<RelaunchRadiumWithNewCommandLineIfNeededFunc>(
+  //         ::GetProcAddress(dll_,
+  //         "RelaunchRadiumWithNewCommandLineIfNeeded"));
+  // CHECK(relaunch_function);
+  // relaunch_function();
 }
 
 //=============================================================================

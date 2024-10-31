@@ -33,6 +33,10 @@ if (is_win) {
       "install_modes.h",
       "install_util.cc",
       "install_util.h",
+      "policy_path_parser.cc",
+      "policy_path_parser.h",
+      "product_install_details.cc",
+      "product_install_details.h",
       "user_data_dir.cc",
       "user_data_dir.h",
     ]
@@ -42,6 +46,31 @@ if (is_win) {
       "chromium_install_modes.h",
     ]
 
+    # raw_ptr check
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+
     libs = [ "kernel32.lib" ]
+  }
+
+  # A source set for use by the module in a process that creates the
+  # process-wide InstallDetails instance (i.e., chrome_elf.dll).
+  source_set("primary_module") {
+    sources = [ "get_install_details_payload.cc" ]
+    deps = [ ":install_static_util" ]
+
+    # raw_ptr check
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+
+  # A source set for use by modules in a process that fetch the process-wide
+  # InstallDetails instance from the primary module by way of
+  # GetInstallDetailsPayload (i.e., chrome.exe and chrome.dll).
+  source_set("secondary_module") {
+    sources = [
+      "initialize_from_primary_module.cc",
+      "initialize_from_primary_module.h",
+    ]
+    deps = [ ":install_static_util" ]
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 }

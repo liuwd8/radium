@@ -17,39 +17,46 @@
 #include "base/process/process.h"
 #include "base/strings/string_number_conversions_win.h"
 #include "base/strings/string_util_win.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/win/current_module.h"
 #include "base/win/win_util.h"
 #include "base/win/windows_version.h"
 #include "build/build_config.h"
+#include "components/crash/core/app/crash_switches.h"
+#include "components/crash/core/app/fallback_crash_handling_win.h"
+#include "components/crash/core/app/run_as_crashpad_handler_win.h"
 #include "content/public/common/content_switches.h"
+#include "radium/app/delay_load_failure_hook_win.h"
+#include "radium/app/exit_code_watcher_win.h"
 #include "radium/app/main_dll_loader_win.h"
-// #include "radium/radium_elf/radium_elf_main.h"
+#include "radium/common/radium_switches.h"
+#include "radium/install_static/initialize_from_primary_module.h"
+#include "radium/install_static/install_util.h"
+#include "radium/radium_elf/radium_elf_main.h"
+#include "third_party/crashpad/crashpad/util/win/initial_client_data.h"
 
 namespace {
-// // Sets the current working directory for the process to the directory
-// holding
-// // the executable if this is the browser process. This avoids leaking a
-// handle
-// // to an arbitrary directory to child processes (e.g., the crashpad handler
-// // process) created before MainDllLoader changes the current working
-// directory
-// // to the browser's version directory.
-// void SetCwdForBrowserProcess() {
-//   if (!::IsBrowserProcess()) {
-//     return;
-//   }
+// Sets the current working directory for the process to the directory holding
+// the executable if this is the browser process. This avoids leaking a handle
+// to an arbitrary directory to child processes (e.g., the crashpad handler
+// process) created before MainDllLoader changes the current working directory
+// to the browser's version directory.
+void SetCwdForBrowserProcess() {
+  if (!::IsBrowserProcess()) {
+    return;
+  }
 
-//   std::array<wchar_t, MAX_PATH + 1> buffer;
-//   buffer[0] = L'\0';
-//   DWORD length = ::GetModuleFileName(nullptr, &buffer[0], buffer.size());
-//   if (!length || length >= buffer.size()) {
-//     return;
-//   }
+  std::array<wchar_t, MAX_PATH + 1> buffer;
+  buffer[0] = L'\0';
+  DWORD length = ::GetModuleFileName(nullptr, &buffer[0], buffer.size());
+  if (!length || length >= buffer.size()) {
+    return;
+  }
 
-//   base::SetCurrentDirectory(
-//       base::FilePath(base::FilePath::StringPieceType(&buffer[0], length))
-//           .DirName());
-// }
+  base::SetCurrentDirectory(
+      base::FilePath(base::FilePath::StringPieceType(&buffer[0], length))
+          .DirName());
+}
 
 // Returns true if the child process |command_line| contains a /prefetch:#
 // argument where # is in [1, 8] prior to Win11 and [1,16] for it and later.
@@ -74,6 +81,21 @@ bool HasValidWindowsPrefetchArgument(const base::CommandLine& command_line) {
                (base::win::GetVersion() < base::win::Version::WIN11 ? 8 : 16);
   }
   return false;
+}
+
+int RunFallbackCrashHandler(const base::CommandLine& cmd_line) {
+  // Retrieve the product & version details we need to report the crash
+  // correctly.
+  wchar_t exe_file[MAX_PATH] = {};
+  CHECK(::GetModuleFileName(nullptr, exe_file, std::size(exe_file)));
+
+  std::wstring product_name, version, channel_name, special_build;
+  install_static::GetExecutableVersionDetails(exe_file, &product_name, &version,
+                                              &special_build, &channel_name);
+
+  return crash_reporter::RunAsFallbackCrashHandler(
+      cmd_line, base::WideToUTF8(product_name), base::WideToUTF8(version),
+      base::WideToUTF8(channel_name));
 }
 
 }  // namespace
@@ -125,11 +147,12 @@ int main() {
   // If we are already a fiber then continue normal execution.
 #endif  // defined(ARCH_CPU_32_BITS)
 
-  // SetCwdForBrowserProcess();
-  // SignalInitializeCrashReporting();
-  // if (IsBrowserProcess()) {
-  //   chrome::DisableDelayLoadFailureHooksForMainExecutable();
-  // }
+  SetCwdForBrowserProcess();
+  install_static::InitializeFromPrimaryModule();
+  SignalInitializeCrashReporting();
+  if (IsBrowserProcess()) {
+    radium::DisableDelayLoadFailureHooksForMainExecutable();
+  }
 
   // Done here to ensure that OOMs that happen early in process initialization
   // are correctly signaled to the OS.
@@ -166,10 +189,57 @@ int main() {
   DCHECK(process_type.empty() ||
          HasValidWindowsPrefetchArgument(*command_line));
 
+  if (process_type == crash_reporter::switches::kCrashpadHandler) {
+    // Check if we should monitor the exit code of this process
+    std::unique_ptr<ExitCodeWatcher> exit_code_watcher;
+
+    crash_reporter::SetupFallbackCrashHandling(*command_line);
+    // no-periodic-tasks is specified for self monitoring crashpad instances.
+    // This is to ensure we are a crashpad process monitoring the browser
+    // process and not another crashpad process.
+    if (!command_line->HasSwitch("no-periodic-tasks")) {
+      // Retrieve the client process from the command line
+      crashpad::InitialClientData initial_client_data;
+      if (initial_client_data.InitializeFromString(
+              command_line->GetSwitchValueASCII("initial-client-data"))) {
+        // Setup exit code watcher to monitor the parent process
+        HANDLE duplicate_handle = INVALID_HANDLE_VALUE;
+        if (DuplicateHandle(
+                ::GetCurrentProcess(), initial_client_data.client_process(),
+                ::GetCurrentProcess(), &duplicate_handle,
+                PROCESS_QUERY_INFORMATION, FALSE, DUPLICATE_SAME_ACCESS)) {
+          base::Process parent_process(duplicate_handle);
+          exit_code_watcher = std::make_unique<ExitCodeWatcher>();
+          if (exit_code_watcher->Initialize(std::move(parent_process))) {
+            exit_code_watcher->StartWatching();
+          }
+        }
+      }
+    }
+
+    // The handler process must always be passed the user data dir on the
+    // command line.
+    DCHECK(command_line->HasSwitch(switches::kUserDataDir));
+
+    base::FilePath user_data_dir =
+        command_line->GetSwitchValuePath(switches::kUserDataDir);
+    int crashpad_status = crash_reporter::RunAsCrashpadHandler(
+        *base::CommandLine::ForCurrentProcess(), user_data_dir,
+        switches::kProcessType, switches::kUserDataDir);
+    if (crashpad_status != 0 && exit_code_watcher) {
+      // Crashpad failed to initialize, explicitly stop the exit code watcher
+      // so the crashpad-handler process can exit with an error
+      exit_code_watcher->StopWatching();
+    }
+    return crashpad_status;
+  } else if (process_type == crash_reporter::switches::kFallbackCrashHandler) {
+    return RunFallbackCrashHandler(*command_line);
+  }
+
   const base::TimeTicks exe_entry_point_ticks = base::TimeTicks::Now();
 
-  // // Signal Chrome Elf that Chrome has begun to start.
-  // SignalRadiumElf();
+  // Signal Chrome Elf that Chrome has begun to start.
+  SignalRadiumElf();
 
   // The exit manager is in charge of calling the dtors of singletons.
   base::AtExitManager exit_manager;
