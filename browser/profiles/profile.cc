@@ -9,6 +9,9 @@
 #include "base/location.h"
 #include "base/task/thread_pool.h"
 #include "base/trace_event/trace_event.h"
+#include "components/keyed_service/content/browser_context_dependency_manager.h"
+#include "components/keyed_service/core/dependency_manager.h"
+#include "components/keyed_service/core/simple_dependency_manager.h"
 #include "components/keyed_service/core/simple_factory_key.h"
 #include "components/keyed_service/core/simple_key_map.h"
 #include "components/prefs/in_memory_pref_store.h"
@@ -110,7 +113,19 @@ Profile::Profile(const base::FilePath& path,
 Profile::~Profile() {
   NotifyWillBeDestroyed();
 
+  // The SimpleDependencyManager should always be passed after the
+  // BrowserContextDependencyManager. This is because the KeyedService instances
+  // in the BrowserContextDependencyManager's dependency graph can depend on the
+  // ones in the SimpleDependencyManager's graph.
+  DependencyManager::PerformInterlockedTwoPhaseShutdown(
+      BrowserContextDependencyManager::GetInstance(), this,
+      SimpleDependencyManager::GetInstance(), key_.get());
+
   SimpleKeyMap::GetInstance()->Dissociate(this);
+
+  // This must be called before ProfileIOData::ShutdownOnUIThread but after
+  // other profile-related destroy notifications are dispatched.
+  ShutdownStoragePartitions();
 }
 
 PrefService* Profile::GetPrefs() {
