@@ -10,12 +10,15 @@ This project is based on the Chromium open source project. Use //content + //ui 
 
 Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms are supported.
 
-# 演示
+# Demo
 
+## Linux Demo
 [Linux Demo](https://github.com/user-attachments/assets/0e8821fd-baff-4c87-ad90-b4f5966705ff)
 
+## Mac Demo
 [Mac Demo](https://github.com/user-attachments/assets/85761526-2f84-4d03-b59c-ed0528e30c26)
 
+## Win Demo (with dark mode)
 [Win Demo](https://github.com/user-attachments/assets/c6e4b644-0c83-4357-9549-af80179efe57)
 
 [Win Demo(dark mode)](https://github.com/user-attachments/assets/1f734f61-6508-4359-92a8-fbd9b1de216c)
