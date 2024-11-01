@@ -206,7 +206,7 @@ template("radium_paks") {
     output_dir = "${invoker.output_dir}/radium_locales"
 
     if (is_mac) {
-      output_locales = locales_as_apple_outputs
+      output_locales = support_locales_as_apple_outputs
     } else {
       output_locales = support_locales
     }

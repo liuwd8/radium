@@ -56,7 +56,7 @@ process_version("version_header") {
 
   sources = [
     "//chrome/VERSION",
-    branding_file_path,
+    "//radium/BRANDING",
   ]
 
   template_file = "radium_version.h.in"
@@ -111,9 +111,11 @@ static_library("url_constants") {
 
 static_library("constants") {
   sources = [
+    "pref_names.h",
     "radium_paths.cc",
     "radium_paths.h",
     "radium_paths_internal.h",
+    "radium_result_codes.h",
   ]
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
 
@@ -121,6 +123,7 @@ static_library("constants") {
     ":non_code_constants",
     ":radium_features",
     "//base",
+    "//build:branding_buildflags",
     "//components/policy/core/common:policy_path_constants",
   ]
 
@@ -130,5 +133,9 @@ static_library("constants") {
 
   if (is_linux) {
     sources += [ "radium_paths_linux.cc" ]
+  }
+
+  if (is_mac) {
+    sources += [ "radium_paths_mac.mm" ]
   }
 }

@@ -43,6 +43,17 @@ class UntitledWidgetNonClientFrameView : public views::NonClientFrameView {
   // Computes the height of the top area of the frame.
   virtual int GetTopAreaHeight() const;
 
+  // Returns whether the caption buttons are drawn at the leading edge (i.e. the
+  // left in LTR mode, or the right in RTL mode).
+  virtual bool CaptionButtonsOnLeadingEdge() const;
+
+  // Creates an inset from the caption button size which controls for which edge
+  // the captions buttons exists on. Used to position the tab strip region view
+  // and the caption button placeholder container. Returns the distance from the
+  // leading edge of the frame to the first tab in the tabstrip not including
+  // the corner radius.
+  virtual gfx::Insets GetCaptionButtonInsets() const;
+
   // Returns the color of the browser frame, which is also the color of the
   // tabstrip background.
   virtual SkColor GetFrameColor(BrowserFrameActiveState active_state) const;

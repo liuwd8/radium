@@ -123,6 +123,22 @@ static_library("browser") {
     ]
   }
 
+  if (is_mac) {
+    sources += [
+      "mac/exception_processor.h",
+      "mac/exception_processor.mm",
+      "platform_util_mac.mm",
+      "radium_browser_application_mac.h",
+      "radium_browser_application_mac.mm",
+      "radium_browser_main_extra_parts_mac.h",
+      "radium_browser_main_extra_parts_mac.mm",
+      "radium_browser_main_parts_mac.h",
+      "radium_browser_main_parts_mac.mm",
+    ]
+
+    deps += [ "//ui/display" ]
+  }
+
   if (use_ozone) {
     sources += [
       "radium_browser_main_extra_parts_ozone.cc",

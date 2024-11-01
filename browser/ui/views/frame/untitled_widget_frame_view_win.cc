@@ -10,6 +10,7 @@
 #include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "radium/browser/ui/views/frame/untitled_widget_non_client_frame_view.h"
 #include "ui/base/hit_test.h"
+#include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/base/win/hwnd_metrics.h"
 #include "ui/display/win/dpi.h"
 #include "ui/display/win/screen_win.h"
@@ -184,3 +185,6 @@ int UntitledWidgetFrameViewWin::FrameBorderThickness() const {
              ? 0
              : display::win::ScreenWin::GetSystemMetricsInDIP(SM_CXSIZEFRAME);
 }
+
+BEGIN_METADATA(UntitledWidgetFrameViewWin)
+END_METADATA

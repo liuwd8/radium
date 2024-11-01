@@ -1,14 +1,26 @@
-From 97e12d09884d73ca2ee42902ee2f32a19a9da408 Mon Sep 17 00:00:00 2001
+From dbccb2fdb27c42c22c5e3808dcc661bb2f35aa2b Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 25 Oct 2024 10:17:11 +0800
 Subject: [PATCH] radium deps
 
 ---
+ .gn                                  |  2 ++
  BUILD.gn                             |  4 ++++
  DEPS                                 |  5 +++++
  tools/gritsettings/resource_ids.spec | 11 ++++++++++-
- 3 files changed, 19 insertions(+), 1 deletion(-)
+ 4 files changed, 21 insertions(+), 1 deletion(-)
 
+diff --git a/.gn b/.gn
+index 44a11ec90ec9b..065c6b451efc0 100644
+--- a/.gn
++++ b/.gn
+@@ -172,4 +172,6 @@ exec_script_whitelist =
+ 
+       "//tools/grit/grit_rule.gni",
+       "//tools/gritsettings/BUILD.gn",
++
++      "//radium/build/branding.gni",
+     ]
 diff --git a/BUILD.gn b/BUILD.gn
 index e58058a3448c5..0607f96b6449f 100644
 --- a/BUILD.gn
@@ -25,7 +37,7 @@ index e58058a3448c5..0607f96b6449f 100644
  
  # All Rust targets. This is provided for convenience while developing Rust to
 diff --git a/DEPS b/DEPS
-index 1c09347866022..83fe8e7286f1e 100644
+index 31a1336660348..f26a31226312d 100644
 --- a/DEPS
 +++ b/DEPS
 @@ -50,6 +50,7 @@ gclient_gn_args = [
@@ -36,7 +48,7 @@ index 1c09347866022..83fe8e7286f1e 100644
  ]
  
  
-@@ -4664,6 +4665,10 @@ deps = {
+@@ -4665,6 +4666,10 @@ deps = {
          'e4bd19f95afa6483a54906c2a3e5d329d2d81690',
        'condition': 'checkout_src_internal',
    },
@@ -48,10 +60,10 @@ index 1c09347866022..83fe8e7286f1e 100644
  
  
 diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
-index 89c76bad269ec..f54727c3b35a2 100644
+index 8d8d50196d811..c727399fead85 100644
 --- a/tools/gritsettings/resource_ids.spec
 +++ b/tools/gritsettings/resource_ids.spec
-@@ -1376,11 +1376,20 @@
+@@ -1386,11 +1386,20 @@
    "<(SHARED_INTERMEDIATE_DIR)/third_party/blink/public/strings/permission_element_generated_strings.grd": {
      "META": {"sizes": {"messages": [2000],}},
      "messages": [10080],
@@ -74,5 +86,5 @@ index 89c76bad269ec..f54727c3b35a2 100644
 +
  }
 -- 
-2.34.1
+2.39.5 (Apple Git-154)
 

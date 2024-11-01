@@ -57,6 +57,13 @@
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
 
+#if BUILDFLAG(IS_MAC)
+#include "base/apple/foundation_util.h"
+#include "components/crash/core/common/objc_zombie.h"
+#include "radium/browser/radium_browser_application_mac.h"
+#include "ui/base/l10n/l10n_util_mac.h"
+#endif
+
 const char* const RadiumMainDelegate::kNonWildcardDomainNonPortSchemes[] = {
     radium::kRadiumUIScheme,
     content::kChromeDevToolsScheme,
@@ -250,6 +257,12 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
   }
 #endif
 
+#if BUILDFLAG(IS_MAC)
+  // Give the browser process a longer treadmill, since crashes
+  // there have more impact.
+  ObjcEvilDoers::ZombieEnable(true, is_browser ? 10000 : 1000);
+#endif
+
   content::Profiling::ProcessStarted();
 
   // Setup tracing sampler profiler as early as possible at startup if needed.
@@ -275,11 +288,13 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
 
   radium::RegisterPathProvider();
 
+#if !BUILDFLAG(IS_MAC)
   base::FilePath locales;
   base::PathService::Get(ui::DIR_LOCALES, &locales);
   base::PathService::Override(
       ui::DIR_LOCALES,
       locales.DirName().Append(FILE_PATH_LITERAL("radium_locales")));
+#endif
 
   ContentSettingsPattern::SetNonWildcardDomainNonPortSchemes(
       kNonWildcardDomainNonPortSchemes, kNonWildcardDomainNonPortSchemesSize);
@@ -422,6 +437,39 @@ void RadiumMainDelegate::PreSandboxStartup() {
 #endif  // BUILDFLAG(IS_ANDROID)
     CHECK(!loaded_locale.empty()) << "Locale could not be found for " << locale;
   }
+}
+
+std::optional<int> RadiumMainDelegate::PreBrowserMain() {
+  std::optional<int> exit_code = content::ContentMainDelegate::PreBrowserMain();
+  if (exit_code.has_value()) {
+    return exit_code;
+  }
+
+#if BUILDFLAG(IS_MAC)
+  // Tell Cocoa to finish its initialization, which we want to do manually
+  // instead of calling NSApplicationMain(). The primary reason is that NSAM()
+  // never returns, which would leave all the objects currently on the stack
+  // in scoped_ptrs hanging and never cleaned up. We then load the main nib
+  // directly. The main event loop is run from common code using the
+  // MessageLoop API, which works out ok for us because it's a wrapper around
+  // CFRunLoop.
+
+  // Initialize NSApplication using the custom subclass.
+  radium_browser_application_mac::RegisterBrowserCrApp();
+
+  if (l10n_util::GetLocaleOverride().empty()) {
+    // The browser process only wants to support the language Cocoa will use,
+    // so force the app locale to be overridden with that value. This must
+    // happen before the ResourceBundle is loaded, which happens in
+    // ChromeBrowserMainParts::PreEarlyInitialization().
+    // Don't do this if the locale is already set, which is done by integration
+    // tests to ensure tests always run with the same locale.
+    l10n_util::OverrideLocaleWithCocoaLocale();
+  }
+#endif
+
+  // Do not interrupt startup.
+  return std::nullopt;
 }
 
 void RadiumMainDelegate::SandboxInitialized(const std::string& process_type) {

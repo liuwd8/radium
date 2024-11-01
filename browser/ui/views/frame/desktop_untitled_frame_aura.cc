@@ -42,11 +42,6 @@ void DesktopUntitledFrameAura::InitNativeWidget(
   wm::SetChildWindowVisibilityChangesAnimated(GetNativeView()->GetRootWindow());
 }
 
-std::unique_ptr<views::NonClientFrameView>
-DesktopUntitledFrameAura::CreateNonClientFrameView() {
-  return UntitledWidgetNonClientFrameView::Create(untitled_widget_);
-}
-
 views::Widget::InitParams DesktopUntitledFrameAura::GetWidgetParams() {
   views::Widget::InitParams params(
       views::Widget::InitParams::NATIVE_WIDGET_OWNS_WIDGET);

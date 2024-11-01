@@ -32,6 +32,14 @@ int UntitledWidgetNonClientFrameView::GetTopAreaHeight() const {
   return untitled_widget_->GetTitleBarBackgroundHeight();
 }
 
+bool UntitledWidgetNonClientFrameView::CaptionButtonsOnLeadingEdge() const {
+  return false;
+}
+
+gfx::Insets UntitledWidgetNonClientFrameView::GetCaptionButtonInsets() const {
+  return gfx::Insets();
+}
+
 SkColor UntitledWidgetNonClientFrameView::GetFrameColor(
     BrowserFrameActiveState active_state) const {
   return GetColorProvider()->GetColor(ShouldPaintAsActive(active_state)

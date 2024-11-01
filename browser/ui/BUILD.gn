@@ -63,6 +63,14 @@ static_library("ui") {
       sources += [ "views/radium_views_delegate_linux.cc" ]
     } else if (is_win) {
       sources += [ "views/radium_views_delegate_win.cc" ]
+    } else if (is_mac) {
+      sources += [
+        "cocoa/l10n_util.h",
+        "cocoa/l10n_util.mm",
+        "views/radium_views_delegate_mac.cc",
+      ]
+
+      deps += [ "//content/public/browser" ]
     }
 
     if (is_win || is_linux) {

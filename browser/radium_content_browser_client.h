@@ -40,7 +40,18 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
   std::string GetProduct() override;
   std::string GetUserAgent() override;
 
+ private:
+  // Initializes `network_contexts_parent_directory_` and
+  // `safe_browsing_service_` on the UI thread.
+  void InitOnUIThread();
+
   std::unique_ptr<RadiumFeatureListCreator> radium_feature_list_creator_;
+
+  // Returned from GetNetworkContextsParentDirectory() but created on the UI
+  // thread because it needs to access the Local State prefs.
+  std::vector<base::FilePath> network_contexts_parent_directory_;
+
+  base::WeakPtrFactory<RadiumContentBrowserClient> weak_factory_{this};
 };
 
 #endif  // RADIUM_BROWSER_RADIUM_CONTENT_BROWSER_CLIENT_H_

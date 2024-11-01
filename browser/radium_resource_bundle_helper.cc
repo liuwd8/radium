@@ -31,15 +31,8 @@ std::string InitResourceBundleAndDetermineLocale(PrefService* local_state) {
 #endif
 
   std::string preferred_locale;
-#if BUILDFLAG(IS_MAC)
-  // TODO(markusheintz): Read preference pref::kApplicationLocale in order
-  // to enforce the application locale.
-  // Tests always get en-US.
-  preferred_locale = is_running_tests ? "en-US" : std::string();
-#else
   preferred_locale =
       local_state->GetString(language::prefs::kApplicationLocale);
-#endif
 
 #if BUILDFLAG(IS_CHROMEOS_ASH)
   ui::ResourceBundle::SetLottieParsingFunctions(

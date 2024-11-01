@@ -20,7 +20,6 @@ source_set("frame") {
     "untitled_widget_delegate.cc",
     "untitled_widget_non_client_frame_view.cc",
     "untitled_widget_non_client_frame_view.h",
-    "untitled_widget_non_client_frame_view_factory_views.cc",
   ]
 
   deps = [
@@ -42,12 +41,21 @@ source_set("frame") {
       "untitled_widget_frame_view_win.cc",
       "untitled_widget_frame_view_win.h",
     ]
+  } else if (is_mac) {
+    sources += [
+      "desktop_untitled_frame_mac.h",
+      "desktop_untitled_frame_mac.mm",
+      "untitled_widget_frame_view_mac.h",
+      "untitled_widget_frame_view_mac.mm",
+      "untitled_widget_non_client_frame_view_mac.mm",
+    ]
   }
 
   if (use_aura) {
     sources += [
       "desktop_untitled_frame_aura.cc",
       "desktop_untitled_frame_aura.h",
+      "untitled_widget_non_client_frame_view_factory_views.cc",
     ]
 
     deps += [ "//ui/aura" ]

@@ -8,6 +8,7 @@
 #include "radium/browser/ui/views/frame/opaque_frame_view.h"
 
 class UntitledWidgetFrameViewLinux : public OpaqueFrameView {
+  METADATA_HEADER(UntitledWidgetFrameViewLinux, OpaqueFrameView)
  public:
   explicit UntitledWidgetFrameViewLinux(UntitledWidget* untitled_widget);
   UntitledWidgetFrameViewLinux(const UntitledWidgetFrameViewLinux&) = delete;

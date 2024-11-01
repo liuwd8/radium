@@ -19,6 +19,22 @@ extern const wchar_t kUserDataDirname[];
 
 const base::FilePath::CharType kCacheDirname[] = FPL("Cache");
 const base::FilePath::CharType kCookieFilename[] = FPL("Cookies");
+
+#if BUILDFLAG(IS_MAC)
+const base::FilePath::CharType kBrowserProcessExecutableName[] =
+    FPL(PRODUCT_FULLNAME_STRING);
+const base::FilePath::CharType kHelperProcessExecutableName[] =
+    FPL(PRODUCT_FULLNAME_STRING " Helper");
+const base::FilePath::CharType kBrowserProcessExecutablePath[] =
+    FPL(PRODUCT_FULLNAME_STRING ".app/Contents/MacOS/" PRODUCT_FULLNAME_STRING);
+const base::FilePath::CharType kHelperProcessExecutablePath[] =
+    FPL(PRODUCT_FULLNAME_STRING
+        " Helper.app/Contents/MacOS/" PRODUCT_FULLNAME_STRING " Helper");
+const base::FilePath::CharType kFrameworkName[] =
+    FPL(PRODUCT_FULLNAME_STRING " Framework.framework");
+const char kMacHelperSuffixAlerts[] = " (Alerts)";
+#endif  // BUILDFLAG(IS_MAC)
+
 const base::FilePath::CharType kGCMStoreDirname[] = FPL("GCM Store");
 const base::FilePath::CharType kInitialProfile[] = FPL("Default");
 const base::FilePath::CharType kLocalStateFilename[] = FPL("Local State");

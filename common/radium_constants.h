@@ -19,6 +19,16 @@ const wchar_t kUserDataDirname[] = L"User Data";
 
 extern const base::FilePath::CharType kCacheDirname[];
 extern const base::FilePath::CharType kCookieFilename[];
+#if BUILDFLAG(IS_MAC)
+extern const base::FilePath::CharType kBrowserProcessExecutableName[];
+extern const base::FilePath::CharType kHelperProcessExecutableName[];
+extern const base::FilePath::CharType kBrowserProcessExecutablePath[];
+extern const base::FilePath::CharType kHelperProcessExecutablePath[];
+extern const base::FilePath::CharType kFrameworkName[];
+// Suffix added to the helper app name to display alert notifications. Must be
+// kept in sync with the value in alert_helper_params (//chrome/BUILD.gn).
+extern const char kMacHelperSuffixAlerts[];
+#endif
 extern const base::FilePath::CharType kGCMStoreDirname[];
 extern const base::FilePath::CharType kInitialProfile[];
 extern const base::FilePath::CharType kLocalStateFilename[];

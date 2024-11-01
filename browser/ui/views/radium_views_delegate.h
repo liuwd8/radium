@@ -7,6 +7,8 @@
 
 #include "ui/views/views_delegate.h"
 
+class ScopedKeepAlive;
+
 class RadiumViewsDelegate : public views::ViewsDelegate {
  public:
   explicit RadiumViewsDelegate();
@@ -28,14 +30,29 @@ class RadiumViewsDelegate : public views::ViewsDelegate {
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS_LACROS)
   bool WindowManagerProvidesTitleBar(bool maximized) override;
 #endif
+
+  void AddRef() override;
+  void ReleaseRef() override;
+  bool IsShuttingDown() const override;
   void OnBeforeWidgetInit(
       views::Widget::InitParams* params,
       views::internal::NativeWidgetDelegate* delegate) override;
+#if BUILDFLAG(IS_MAC)
+  ui::ContextFactory* GetContextFactory() override;
+#endif
 
  private:
   views::NativeWidget* CreateNativeWidget(
       views::Widget::InitParams* params,
       views::internal::NativeWidgetDelegate* delegate);
+
+  // |ChromeViewsDelegate| exposes a |RefCounted|-like interface, but //chrome
+  // uses |ScopedKeepAlive|s to manage lifetime. We manage an internal counter
+  // to do that translation.
+  unsigned int ref_count_ = 0u;
+
+  // Prevents BrowserProcess teardown while |ref_count_| is non-zero.
+  std::unique_ptr<ScopedKeepAlive> keep_alive_;
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_RADIUM_VIEWS_DELEGATE_H_

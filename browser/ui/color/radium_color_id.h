@@ -38,7 +38,7 @@
     /* Tab search caption button colors. */ \
     E_CPONLY(kColorTabSearchCaptionButtonFocusRing)
 #else
-#define CHROME_PLATFORM_SPECIFIC_COLOR_IDS
+#define RADIUM_PLATFORM_SPECIFIC_COLOR_IDS
 #endif  // BUILDFLAG(IS_WIN)
 
 #define RADIUM_COLOR_IDS \

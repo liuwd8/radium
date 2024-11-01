@@ -36,6 +36,12 @@ gfx::Point UntitledWidget::GetThemeOffsetFromBrowserView() const {
   return gfx::Point(-browser_view_origin.x(), 16 - browser_view_origin.y());
 }
 
+gfx::Insets UntitledWidget::GetCaptionButtonInsets() const {
+  return untitled_widget_non_client_frame_view_
+             ? untitled_widget_non_client_frame_view_->GetCaptionButtonInsets()
+             : gfx::Insets();
+}
+
 views::Widget::InitParams UntitledWidget::GetUntitledWidgetParams() {
   native_untitled_frame_ =
       NativeUntitledFrameFactory::CreateNativeUntitledFrame(this);
@@ -43,6 +49,14 @@ views::Widget::InitParams UntitledWidget::GetUntitledWidgetParams() {
   params.name = "UntitledWidget";
   params.headless_mode = false;
   return params;
+}
+
+std::unique_ptr<views::NonClientFrameView>
+UntitledWidget::CreateNonClientFrameView() {
+  std::unique_ptr<UntitledWidgetNonClientFrameView> non_client =
+      UntitledWidgetNonClientFrameView::Create(this);
+  untitled_widget_non_client_frame_view_ = non_client.get();
+  return non_client;
 }
 
 const ui::ThemeProvider* UntitledWidget::GetThemeProvider() const {

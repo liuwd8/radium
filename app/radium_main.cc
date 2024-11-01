@@ -10,6 +10,10 @@
 #include "radium/app/radium_main_delegate.h"
 #include "radium/common/radium_result_codes.h"
 
+#if BUILDFLAG(IS_MAC)
+#include "radium/app/radium_main_mac.h"
+#endif
+
 #if BUILDFLAG(IS_WIN)
 #include <timeapi.h>
 
@@ -81,6 +85,10 @@ int RadiumMain(int argc, const char** argv) {
 #endif  // BUILDFLAG(IS_WIN)
   [[maybe_unused]] base::CommandLine* command_line(
       base::CommandLine::ForCurrentProcess());
+
+#if BUILDFLAG(IS_MAC)
+  SetUpBundleOverrides();
+#endif
 
   // PoissonAllocationSampler's TLS slots need to be set up before
   // MainThreadStackSamplingProfiler (in RadiumMainDelegate::ThreadPoolCreated),

@@ -45,6 +45,7 @@ constexpr gfx::Size GetQRCodeImageSize() {
   return gfx::Size(kQRImageSizePx, kQRImageSizePx);
 }
 
+#if !BUILDFLAG(IS_MAC)
 std::unique_ptr<views::FrameCaptionButton> CreateFrameCaptionButton(
     views::CaptionButtonIcon icon_type,
     int ht_component,
@@ -57,7 +58,7 @@ std::unique_ptr<views::FrameCaptionButton> CreateFrameCaptionButton(
   button->SetPaintAsActive(true);
   return button;
 }
-
+#endif
 }  // namespace
 
 void SigninWindow::Show(Profile* profile, base::OnceClosure finish_callback) {
@@ -80,9 +81,7 @@ void SigninWindow::Show(Profile* profile, base::OnceClosure finish_callback) {
 
 SigninFrameView::SigninFrameView()
     : keep_alive_(KeepAliveOrigin::USER_MANAGER_VIEW,
-                  KeepAliveRestartOption::DISABLED) {
-  SetTitle(u"SigninFrameView");
-}
+                  KeepAliveRestartOption::DISABLED) {}
 
 SigninFrameView::~SigninFrameView() = default;
 
@@ -108,9 +107,10 @@ void SigninFrameView::Init(views::Widget* widget,
                   views::Builder<views::Label>()
                       .SetProperty(views::kBoxLayoutFlexKey,
                                    views::BoxLayoutFlexSpecification())
+                      .SetText(u"微信（开发版）")
+#if !BUILDFLAG(IS_MAC)
                       .SetHorizontalAlignment(
-                          gfx::HorizontalAlignment::ALIGN_LEFT)
-                      .SetText(u"微信（开发版）"),
+                          gfx::HorizontalAlignment::ALIGN_LEFT),
                   views::Builder<views::Button>(
                       CreateFrameCaptionButton(
                           views::CaptionButtonIcon::CAPTION_BUTTON_ICON_MENU,
@@ -125,6 +125,10 @@ void SigninFrameView::Init(views::Widget* widget,
                           gfx::Size(views::GetCaptionButtonWidth(), 0))
                       .SetCallback(base::BindOnce(&views::Widget::Close,
                                                   base::Unretained(widget)))),
+#else
+                      .SetHorizontalAlignment(
+                          gfx::HorizontalAlignment::ALIGN_CENTER)),
+#endif
           views::Builder<views::BoxLayoutView>()
               .SetOrientation(views::BoxLayout::Orientation::kVertical)
               .SetInsideBorderInsets(gfx::Insets::VH(30, 12))

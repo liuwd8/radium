@@ -11,6 +11,7 @@
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "radium/browser/ui/views/radium_layout_provider.h"
 #include "third_party/skia/include/core/SkRRect.h"
+#include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/geometry/skia_conversions.h"
 #include "ui/gfx/scoped_canvas.h"
@@ -165,3 +166,6 @@ float UntitledWidgetFrameViewLinux::GetRestoredCornerRadiusDip() const {
   return RadiumLayoutProvider::Get()->GetCornerRadiusMetric(
       views::Emphasis::kHigh);
 }
+
+BEGIN_METADATA(UntitledWidgetFrameViewLinux)
+END_METADATA

@@ -8,6 +8,7 @@
 #include "radium/browser/ui/views/frame/untitled_widget_non_client_frame_view.h"
 
 class UntitledWidgetFrameViewWin : public UntitledWidgetNonClientFrameView {
+  METADATA_HEADER(UntitledWidgetFrameViewWin, UntitledWidgetNonClientFrameView)
  public:
   explicit UntitledWidgetFrameViewWin(UntitledWidget* untitled_widget);
   UntitledWidgetFrameViewWin(const UntitledWidgetFrameViewWin&) = delete;

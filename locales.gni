@@ -6,3 +6,16 @@ support_locales = [
   "en-US",
   "zh-CN",
 ]
+
+if (is_apple) {
+  # Same as the locales list but in the format Mac expects for output files:
+  # it uses underscores instead of hyphens, and "en" instead of "en-US".
+  support_locales_as_apple_outputs = []
+  foreach(locale, support_locales) {
+    if (locale == "en-US") {
+      support_locales_as_apple_outputs += [ "en" ]
+    } else {
+      support_locales_as_apple_outputs += [ string_replace(locale, "-", "_") ]
+    }
+  }
+}

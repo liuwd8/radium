@@ -25,8 +25,6 @@ class DesktopUntitledFrameAura : public views::DesktopNativeWidgetAura,
   // views::DesktopNativeWidgetAura:
   void OnHostClosed() override;
   void InitNativeWidget(views::Widget::InitParams params) override;
-  std::unique_ptr<views::NonClientFrameView> CreateNonClientFrameView()
-      override;
 
   // NativeBrowserFrame:
   views::Widget::InitParams GetWidgetParams() override;

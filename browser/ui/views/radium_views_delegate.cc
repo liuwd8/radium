@@ -4,6 +4,10 @@
 
 #include "radium/browser/ui/views/radium_views_delegate.h"
 
+#include "components/keep_alive_registry/keep_alive_registry.h"
+#include "components/keep_alive_registry/keep_alive_types.h"
+#include "components/keep_alive_registry/scoped_keep_alive.h"
+
 RadiumViewsDelegate::RadiumViewsDelegate() = default;
 RadiumViewsDelegate::~RadiumViewsDelegate() = default;
 
@@ -19,6 +23,28 @@ bool RadiumViewsDelegate::GetSavedWindowPlacement(
     gfx::Rect* bounds,
     ui::mojom::WindowShowState* show_state) const {
   return false;
+}
+
+void RadiumViewsDelegate::AddRef() {
+  if (ref_count_ == 0u) {
+    keep_alive_ = std::make_unique<ScopedKeepAlive>(
+        KeepAliveOrigin::CHROME_VIEWS_DELEGATE,
+        KeepAliveRestartOption::DISABLED);
+  }
+
+  ++ref_count_;
+}
+
+void RadiumViewsDelegate::ReleaseRef() {
+  DCHECK_NE(0u, ref_count_);
+
+  if (--ref_count_ == 0u) {
+    keep_alive_.reset();
+  }
+}
+
+bool RadiumViewsDelegate::IsShuttingDown() const {
+  return KeepAliveRegistry::GetInstance()->IsShuttingDown();
 }
 
 void RadiumViewsDelegate::OnBeforeWidgetInit(

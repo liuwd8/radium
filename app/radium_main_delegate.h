@@ -30,6 +30,7 @@ class RadiumMainDelegate : public content::ContentMainDelegate {
  private:
   std::optional<int> BasicStartupComplete() override;
   void PreSandboxStartup() override;
+  std::optional<int> PreBrowserMain() override;
   void SandboxInitialized(const std::string& process_type) override;
   void ProcessExiting(const std::string& process_type) override;
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)

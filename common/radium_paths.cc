@@ -12,6 +12,11 @@
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
 
+#if BUILDFLAG(IS_MAC)
+#include "base/apple/bundle_locations.h"
+#include "base/apple/foundation_util.h"
+#endif
+
 namespace {
 
 #if BUILDFLAG(IS_LINUX)
@@ -33,7 +38,7 @@ bool GetComponentDirectory(base::FilePath* result) {
 #if BUILDFLAG(IS_MAC)
   // If called from Chrome, return the framework's Libraries directory.
   if (base::apple::AmIBundled()) {
-    *result = chrome::GetFrameworkBundlePath();
+    *result = radium::GetFrameworkBundlePath();
     DCHECK(!result->empty());
     *result = result->Append("Libraries");
     return true;

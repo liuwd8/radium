@@ -13,6 +13,7 @@
 class NativeUntitledFrame;
 class Profile;
 class UntitledWidgetDelegate;
+class UntitledWidgetNonClientFrameView;
 
 class UntitledWidget : public views::Widget {
   METADATA_HEADER(UntitledWidget, views::Widget)
@@ -55,11 +56,13 @@ class UntitledWidget : public views::Widget {
   }
 
   gfx::Point GetThemeOffsetFromBrowserView() const;
-
+  gfx::Insets GetCaptionButtonInsets() const;
   views::Widget::InitParams GetUntitledWidgetParams();
 
  protected:
   // views::Widget:
+  std::unique_ptr<views::NonClientFrameView> CreateNonClientFrameView()
+      override;
   const ui::ThemeProvider* GetThemeProvider() const override;
   ui::ColorProviderKey::ThemeInitializerSupplier* GetCustomTheme()
       const override;
@@ -69,6 +72,8 @@ class UntitledWidget : public views::Widget {
   raw_ptr<UntitledWidgetDelegate> delegate_;
   raw_ptr<Profile> profile_;
   raw_ptr<NativeUntitledFrame> native_untitled_frame_;
+  raw_ptr<UntitledWidgetNonClientFrameView>
+      untitled_widget_non_client_frame_view_;
 
 #if BUILDFLAG(IS_LINUX)
   bool tiled_ = false;
