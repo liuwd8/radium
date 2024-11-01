@@ -73,7 +73,10 @@ static_library("non_code_constants") {
   ]
   configs += [ "//build/config/compiler:wexit_time_destructors" ]
 
-  deps = [ "//base" ]
+  deps = [
+    ":version_header",
+    "//base",
+  ]
 
   public_deps = [ "//ui/base:buildflags" ]
 }

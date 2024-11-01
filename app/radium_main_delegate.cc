@@ -249,6 +249,7 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
   // The DevTools remote debugging pipe file descriptors need to be checked
   // before any other files are opened, see https://crbug.com/1423048.
   const bool is_browser = !command_line.HasSwitch(switches::kProcessType);
+  (void)is_browser;
 
 #if BUILDFLAG(IS_WIN)
   // Browser should not be sandboxed.
