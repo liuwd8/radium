@@ -485,13 +485,8 @@ bool PathProvider(int key, base::FilePath* result) {
     (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC))
     case radium::DIR_NATIVE_MESSAGING:
 #if BUILDFLAG(IS_MAC)
-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
-      cur = base::FilePath(
-          FILE_PATH_LITERAL("/Library/Google/Chrome/NativeMessagingHosts"));
-#else
       cur = base::FilePath(FILE_PATH_LITERAL(
-          "/Library/Application Support/Chromium/NativeMessagingHosts"));
-#endif
+          "/Library/Application Support/Radium/NativeMessagingHosts"));
 #else  // BUILDFLAG(IS_MAC)
 #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
       cur = base::FilePath(

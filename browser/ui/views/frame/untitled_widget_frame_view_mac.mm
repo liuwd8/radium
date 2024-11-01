@@ -67,14 +67,12 @@ gfx::Rect UntitledWidgetFrameViewMac::GetWindowBoundsForClientBounds(
 int UntitledWidgetFrameViewMac::NonClientHitTest(const gfx::Point& point) {
   int super_component =
       UntitledWidgetNonClientFrameView::NonClientHitTest(point);
-  LOG(ERROR) << super_component;
   if (super_component != HTNOWHERE) {
     return super_component;
   }
 
   int delegate_component =
       untitled_widget()->delegate()->NonClientHitTest(point);
-  LOG(ERROR) << delegate_component;
   if (delegate_component != HTNOWHERE) {
     return delegate_component;
   }

@@ -31,6 +31,7 @@
 #include "radium/browser/radium_resource_bundle_helper.h"
 #include "radium/common/logging_radium.h"
 #include "radium/common/profiler/unwind_util.h"
+#include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_result_codes.h"
 #include "radium/common/webui_url_constants.h"
@@ -185,12 +186,12 @@ void InitLogging(const std::string& process_type) {
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   logging::InitRadiumLogging(command_line, file_state);
-  // // Log the Chrome version for information. Do so at WARNING level as that's
-  // // the min level on ChromeOS.
-  // if (process_type.empty()) {
-  //   LOG(WARNING) << "This is Chrome version " << radium::kChromeVersion
-  //                << " (not a warning)";
-  // }
+  // Log the Chrome version for information. Do so at WARNING level as that's
+  // the min level on ChromeOS.
+  if (process_type.empty()) {
+    LOG(WARNING) << "This is Chromium version " << radium::kRadiumVersion
+                 << " (not a warning)";
+  }
 }
 #endif  // !BUILDFLAG(IS_ANDROID)
 
