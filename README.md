@@ -1,29 +1,36 @@
 # Radium
 
-这个项目是为了解决需要 webview 的跨平台场景。 Chromium Views + Chromium Content 提供整套能力。主要为了 WebUI 的大规模应用。
+This project is designed to solve cross-platform scenarios that require webview. Chromium Views + Chromium Content provide a complete set of capabilities. Mainly for large-scale application of WebUI.
 
-本项目基于 Chromium 开源项目。 使用 //content + //ui 和其他需要的组件。
+Official explanation about WebUI: https://chromium.googlesource.com/chromium/src/+/main/docs/webui_explainer.md
 
-目前的 electron 在架构上太过繁重，且无法开启沙箱。 基于 Views + WebUI 我们可以完全打造支持各平台的应用。
+This project is based on the Chromium open source project. Use //content + //ui and other required components.
 
-计划支持 Win/Mac/Linux/Android. 目前仅支持了 Linux 平台.
+# Supported Platforms
+
+Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms are supported.
 
 # 演示
 
-[演示视频（demo）](https://github.com/user-attachments/assets/0e8821fd-baff-4c87-ad90-b4f5966705ff)
+[Linux Demo](https://github.com/user-attachments/assets/0e8821fd-baff-4c87-ad90-b4f5966705ff)
+
+[Mac Demo](https://github.com/user-attachments/assets/85761526-2f84-4d03-b59c-ed0528e30c26)
+
+[Win Demo](https://github.com/user-attachments/assets/c6e4b644-0c83-4357-9549-af80179efe57)
+
+[Win Demo(dark mode)](https://github.com/user-attachments/assets/1f734f61-6508-4359-92a8-fbd9b1de216c)
 
 # 编译
-编译该项目需要先拉取 Chromium 项目。 Chromium 项目的文档请参考: https://www.chromium.org/developers/how-tos/get-the-code/
+To compile this project, you need to pull the Chromium project first. For the documentation of the Chromium project, please refer to: https://www.chromium.org/developers/how-tos/get-the-code/
 
-在拉取 Chromium 项目的基础上。拉取完成 Chromium 后, 应用 patches 下的 patch 文件到chromium 项目:
-
+After pulling Chromium, apply the patch file under patches to the chromium project:
 ```
 git am --reject patches/*.patch
 ```
 
-如果patch 之后存在.reject 需要手动解决冲突
+If there is a .reject after the patch, you need to manually resolve the conflict
 
-在 .gclient 文件中加入
+Add to the .gclient file
 
 ```
     "custom_vars": {
@@ -31,9 +38,9 @@ git am --reject patches/*.patch
     },
 ```
 
-在这之后需要重新 `gclient sync`. 之后可以开始编译
+After that you need to re-run `gclient sync`. Then you can start compiling
 ```shell
 autoninja -C out/xxx radium
 ```
 
-目前基于 chromium main branch。每周同步 chromium 仓库代码。
+Currently based on chromium main branch. Synchronize chromium repository code every week.
