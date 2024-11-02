@@ -40,6 +40,10 @@ inline constexpr char kAllowCrossOriginAuthPrompt[] =
 inline constexpr char kAmbientAuthenticationInPrivateModesEnabled[] =
     "auth.ambient_auth_in_private_modes";
 
+// A collection of position, size, and other data relating to app windows to
+// restore on startup.
+inline constexpr char kAppWindowPlacement[] = "browser.app_window_placement";
+
 // Allowlist containing servers Chrome is allowed to do Kerberos delegation
 // with. Note that this used to be `kAuthNegotiateDelegateWhitelist`, hence the
 // difference between the variable name and the string value.

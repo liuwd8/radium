@@ -28,6 +28,7 @@ void RegisterLocalState(PrefRegistrySimple* registry) {
 
   registry->RegisterFilePathPref(prefs::kDiskCacheDir, base::FilePath());
   registry->RegisterIntegerPref(prefs::kDiskCacheSize, 0);
+  registry->RegisterDictionaryPref(prefs::kAppWindowPlacement);
 
 #if BUILDFLAG(IS_WIN)
   OSCrypt::RegisterLocalPrefs(registry);

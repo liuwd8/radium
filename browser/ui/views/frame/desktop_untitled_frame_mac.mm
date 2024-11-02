@@ -49,6 +49,7 @@ void DesktopUntitledFrameMac::PopulateCreateWindowParams(
 
   params->window_class = remote_cocoa::mojom::WindowClass::kBrowser;
   params->style_mask |= NSWindowStyleMaskFullSizeContentView;
+  params->window_title_hidden = true;
 
   // Ensure tabstrip/profile button are visible.
   params->titlebar_appears_transparent = true;

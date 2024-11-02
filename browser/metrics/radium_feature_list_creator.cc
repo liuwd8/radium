@@ -48,7 +48,7 @@ void RadiumFeatureListCreator::CreatePrefService() {
   DCHECK(result);
 
   auto pref_registry = base::MakeRefCounted<PrefRegistrySimple>();
-  RegisterLocalState(pref_registry.get());
+  ::RegisterLocalState(pref_registry.get());
 
   browser_policy_connector_ =
       std::make_unique<policy::RadiumBrowserPolicyConnector>();
