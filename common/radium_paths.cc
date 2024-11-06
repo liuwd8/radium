@@ -12,9 +12,20 @@
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
 
+#if BUILDFLAG(IS_ANDROID)
+#include "base/android/path_utils.h"
+#include "base/base_paths_android.h"
+// ui/base must only be used on Android. See BUILD.gn for dependency info.
+#include "ui/base/ui_base_paths.h"  // nogncheck
+#endif
+
 #if BUILDFLAG(IS_MAC)
 #include "base/apple/bundle_locations.h"
 #include "base/apple/foundation_util.h"
+#endif
+
+#if BUILDFLAG(ENABLE_WIDEVINE)
+#include "third_party/widevine/cdm/widevine_cdm_common.h"  // nogncheck
 #endif
 
 namespace {
@@ -25,6 +36,14 @@ namespace {
 const base::FilePath::CharType kFilepathSinglePrefExtensions[] =
     FILE_PATH_LITERAL("/usr/share/radium/extensions");
 #endif
+
+#if BUILDFLAG(ENABLE_WIDEVINE)
+// The name of the hint file that tells the latest component updated Widevine
+// CDM directory. This file name should not be changed as otherwise existing
+// Widevine CDMs might not be loaded.
+const base::FilePath::CharType kComponentUpdatedWidevineCdmHint[] =
+    FILE_PATH_LITERAL("latest-component-updated-widevine-cdm");
+#endif  // BUILDFLAG(ENABLE_WIDEVINE)
 
 // Gets the path for internal plugins.
 bool GetInternalPluginsDirectory(base::FilePath* result) {

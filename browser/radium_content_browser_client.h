@@ -37,6 +37,12 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       network::mojom::NetworkContextParams* network_context_params,
       cert_verifier::mojom::CertVerifierCreationParams*
           cert_verifier_creation_params) override;
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+  void GetAdditionalMappedFilesForChildProcess(
+      const base::CommandLine& command_line,
+      int child_process_id,
+      content::PosixFileDescriptorInfo* mappings) override;
+#endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
   std::string GetProduct() override;
   std::string GetUserAgent() override;
 

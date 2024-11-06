@@ -1,0 +1,90 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/android/rules.gni")
+import("//build/toolchain/gcc_toolchain.gni")
+import("//radium/locales.gni")
+import("//radium/radium_paks.gni")
+import("//tools/resources/generate_resource_allowlist.gni")
+
+# This template instantiates targets responsible for generating pak
+# resources. The generated target names are derived from input variables.
+#
+# Variables:
+#    is_monochrome: If true, generate Monochrome targets rather than Chrome.
+#    is_trichrome: (Optional) Generate Trichrome targets that use monochrome
+#      library targets but don't include webview resources.
+#    is_bundle_module: (Optional) If true, generate targets for base bundle
+#      module.
+template("resource_packaging") {
+  _is_bundle_module =
+      defined(invoker.is_bundle_module) && invoker.is_bundle_module
+
+  _variant = "radium"
+  if (_is_bundle_module) {
+    _variant += "_bundle_module"
+  } else {
+    _variant += "_apk"
+  }
+
+  if (enable_resource_allowlist_generation) {
+    _lib = "libradium_inputs"
+    _resource_allowlist_target = "${_variant}_resource_allowlist"
+    _resource_allowlist_file =
+        "$target_gen_dir/${_variant}_resource_allowlist.txt"
+    _lib_path = "/lib.unstripped/" + _lib + shlib_extension
+
+    generate_resource_allowlist(_resource_allowlist_target) {
+      _fat_lib_toolchain = current_toolchain
+      deps = [ ":${_lib}($_fat_lib_toolchain)" ]
+
+      inputs = [ get_label_info(deps[0], "root_out_dir") + _lib_path ]
+      output = _resource_allowlist_file
+    }
+  }
+
+  radium_paks("${_variant}_paks") {
+    output_dir = "$target_gen_dir/${_variant}_paks"
+    deps = []
+
+    additional_extra_paks = []
+
+    if (enable_resource_allowlist_generation) {
+      repack_allowlist = _resource_allowlist_file
+      deps += [ ":${_resource_allowlist_target}" ]
+    }
+  }
+
+  android_assets("${_variant}_locale_pak_assets") {
+    disable_compression = true
+    renaming_sources = []
+    renaming_destinations = []
+
+    foreach(_locale, support_locales) {
+      renaming_sources +=
+          [ "$target_gen_dir/${_variant}_paks/radium_locales/$_locale.pak" ]
+      renaming_destinations += [ "locales/$_locale.pak" ]
+    }
+    treat_as_locale_paks = true
+
+    deps = [ ":${_variant}_paks" ]
+  }
+
+  # This target explicitly includes locale paks via deps.
+  android_assets(target_name) {
+    assert("${_variant}_pak_assets" == target_name)
+    sources = [ "$target_gen_dir/${_variant}_paks/radium_100_percent.pak" ]
+
+    renaming_sources =
+        [ "$target_gen_dir/${_variant}_paks/radium_resources.pak" ]
+    renaming_destinations = [ "resources.pak" ]
+
+    disable_compression = true
+
+    deps = [
+      ":${_variant}_locale_pak_assets",
+      ":${_variant}_paks",
+    ]
+  }
+}

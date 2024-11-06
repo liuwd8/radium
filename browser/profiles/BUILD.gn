@@ -41,6 +41,9 @@ source_set("profiles_extra_parts_impl") {
   deps = [
     "//base",
     "//radium/browser/content_settings",
-    "//radium/browser/themes",
   ]
+
+  if (!is_android) {
+    deps += [ "//radium/browser/themes" ]
+  }
 }

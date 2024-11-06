@@ -7,6 +7,7 @@
 #include "base/command_line.h"
 #include "base/features.h"
 #include "base/functional/overloaded.h"
+#include "base/i18n/rtl.h"
 #include "base/logging.h"
 #include "base/path_service.h"
 #include "base/process/memory.h"
@@ -65,6 +66,10 @@
 #include "ui/base/l10n/l10n_util_mac.h"
 #endif
 
+#if BUILDFLAG(IS_ANDROID)
+#include "radium/common/radium_descriptors.h"
+#endif
+
 const char* const RadiumMainDelegate::kNonWildcardDomainNonPortSchemes[] = {
     radium::kRadiumUIScheme,
     content::kChromeDevToolsScheme,
@@ -75,6 +80,16 @@ const size_t RadiumMainDelegate::kNonWildcardDomainNonPortSchemesSize =
     std::size(kNonWildcardDomainNonPortSchemes);
 
 namespace {
+
+#if BUILDFLAG(IS_ANDROID)
+
+// Use the LibunwindstackNativeUnwinderAndroid for only browser main thread, and
+// only on Android.
+BASE_FEATURE(kUseLibunwindstackNativeUnwinderAndroid,
+             "UseLibunwindstackNativeUnwinderAndroid",
+             base::FEATURE_ENABLED_BY_DEFAULT);
+
+#endif
 
 #if BUILDFLAG(IS_WIN)
 // Early versions of Chrome incorrectly registered a chromehtml: URL handler,
@@ -234,6 +249,11 @@ constexpr inline bool IsCanaryDev() {
 
 }  // namespace
 
+#if BUILDFLAG(IS_ANDROID)
+RadiumMainDelegate::RadiumMainDelegate()
+    : RadiumMainDelegate(StartupTimestamps{}) {}
+#endif
+
 RadiumMainDelegate::RadiumMainDelegate(const StartupTimestamps& timestamps) {
   // Record startup metrics in the browser process. For component builds, there
   // is no way to know the type of process (process command line is not yet
@@ -290,7 +310,7 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
 
   radium::RegisterPathProvider();
 
-#if !BUILDFLAG(IS_MAC)
+#if !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
   base::FilePath locales;
   base::PathService::Get(ui::DIR_LOCALES, &locales);
   base::PathService::Override(
@@ -699,8 +719,7 @@ void RadiumMainDelegate::SetupTracing() {
   // experimental libunwindstack unwinder.
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kProcessType) &&
-      chrome::android::IsJavaDrivenFeatureEnabled(
-          chrome::android::kUseLibunwindstackNativeUnwinderAndroid)) {
+      base::FeatureList::IsEnabled(kUseLibunwindstackNativeUnwinderAndroid)) {
     tracing_factory = base::BindRepeating(&CreateLibunwindstackUnwinderFactory);
     unwinder_type = tracing::TracingSamplerProfiler::UnwinderType::
         kLibunwindstackUnwinderAndroid;

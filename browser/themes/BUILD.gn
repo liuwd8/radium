@@ -20,6 +20,7 @@ source_set("themes") {
     "//components/pref_registry",
     "//radium/app/theme:theme_resources",
     "//radium/browser/profiles",
+    "//ui/base",
     "//ui/color:color_headers",
     "//ui/gfx",
   ]

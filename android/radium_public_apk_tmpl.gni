@@ -6,15 +6,25 @@ import("//base/android/resource_exclusions.gni")
 import("//build/config/android/rules.gni")
 import("//build/config/locales.gni")
 import("//components/crash/android/silent_java_assert_reporting.gni")
+import("//radium/android/radium_common_shared_library.gni")
 import("//radium/version.gni")
+
+declare_args() {
+  # Android package name to use when compiling the public chrome targets
+  # (chrome_public_apk, monochrome_public_apk, etc. as well as the
+  # *_bundle variants). This is particularly useful when using
+  # monochrome_public_apk for WebView development, as the OS only accepts
+  # WebView providers which declare one of a handful of package names. See
+  # https://chromium.googlesource.com/chromium/src/+/HEAD/android_webview/docs/build-instructions.md#Changing-package-name
+  # for details.
+  radium_public_manifest_package = "org.radium"
+  if (android_channel != "default") {
+    radium_public_manifest_package += "." + android_channel
+  }
+}
 
 default_radium_public_jinja_variables = [
   "channel=$android_channel",
-  "enable_cardboard=$enable_cardboard",
-  "enable_vr=$enable_vr",
-  "enable_openxr=$enable_openxr",
-  "enable_arcore=$enable_arcore",
-  "is_desktop_android=$is_desktop_android",
   "zygote_preload_class=org.chromium.content_public.app.ZygotePreload",
 ]
 
@@ -71,14 +81,20 @@ template("split_manifest_template") {
   }
 }
 
-template("radium_apk_tmpl") {
+template("radium_common_apk_or_module_tmpl") {
   _target_type = invoker.target_type
   assert(_target_type == "android_apk" ||
          _target_type == "android_app_bundle_module")
 
   _is_bundle = _target_type == "android_app_bundle_module"
 
-  _version_code = ""
+  _version_code = radium_version_code
+
+  if (defined(invoker.manifest_package)) {
+    _manifest_package = invoker.manifest_package
+  } else {
+    _manifest_package = radium_public_manifest_package
+  }
 
   _android_manifest = "$target_gen_dir/$target_name/AndroidManifest.xml"
   _split_android_manifest =
@@ -86,6 +102,8 @@ template("radium_apk_tmpl") {
   _android_manifest_target_name = "${target_name}__android_manifest"
   split_manifest_template(_android_manifest_target_name) {
     definitions_in_split = _is_bundle
+    split_input = "//radium/android/java/AndroidManifest_split.xml"
+    split_output = _split_android_manifest
     includes = []
     output = _android_manifest
     variables = default_radium_public_jinja_variables +
@@ -120,7 +138,7 @@ template("radium_apk_tmpl") {
       is_base_module = true
     }
 
-    product_config_java_packages = [ "com.liuwd8.radium.browser" ]
+    product_config_java_packages = [ "org.radium.Radium" ]
 
     # Chrome does not enable Strict Mode checks.
     disable_strict_mode_context = true
@@ -155,5 +173,146 @@ template("radium_apk_tmpl") {
     # Instead of manually filtering, unused resource removal would be better:
     # https://crbug.com/636448
     resource_exclusion_regex += "|${_material_package}/xml.*badge_"
+
+    # Chrome uses the window APIs directly instead of going through the
+    # androidx middleware.
+    # See //third_party/android_sdk/window_extensions/README.md
+    assert_no_deps = [
+      "//third_party/android_deps:org_jetbrains_kotlin_kotlin_parcelize_runtime",
+      "//third_party/androidx:androidx_window_window_java_java",
+    ]
+    if (defined(invoker.assert_no_deps)) {
+      assert_no_deps += invoker.assert_no_deps
+    }
+
+    data_deps = []
+    if (defined(invoker.data_deps)) {
+      data_deps += invoker.data_deps
+    }
+
+    deps = []
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    shared_libraries = [ "//radium/android:libradium" ]
+    srcjar_deps =
+        [ "//radium/android:libradium__jni_registration($default_toolchain)" ]
+
+    loadable_modules = []
+    if (android_64bit_target_cpu) {
+      secondary_abi_shared_libraries = []
+      secondary_abi_loadable_modules = []
+    }
+    if (defined(invoker.loadable_modules)) {
+      loadable_modules = invoker.loadable_modules
+    }
+    if (defined(invoker.shared_libraries)) {
+      shared_libraries += invoker.shared_libraries
+    }
+
+    if (defined(invoker.srcjar_deps)) {
+      srcjar_deps += invoker.srcjar_deps
+    }
+
+    # These go in trichrome library.
+    deps += [
+      "//gin:v8_snapshot_assets",
+      "//third_party/icu:icu_assets",
+    ]
+
+    # TODO(agrieve): This is excluded from trichrome in preparation for
+    # "synchronized proguarding", which we've since abandoned. Enable for
+    # trichrome, or just remove the version check altogether.
+    build_config_include_product_version_resource = true
+    deps += [ "//radium/android:product_version_resources" ]
+
+    if (_is_bundle) {
+      # Required to support macro resources.
+      # See https://crbug.com/1278419
+      deps += [ ":${target_name}__all_dfm_resources" ]
+    } else {
+      # For bundles, this exists in the "chrome" split.
+      deps += [ "//radium/android:radium_all_java" ]
+    }
+
+    asset_deps = [ "//radium/android:radium_public_non_pak_assets" ]
+    if (defined(invoker.asset_deps)) {
+      asset_deps += invoker.asset_deps
+    }
+
+    asset_deps += [ "//radium/android:radium_apk_pak_assets" ]
+
+    if (!is_java_debug) {
+      png_to_webp = true
+
+      # proguard_enabled = true
+      # proguard_configs = [ "//chrome/android/proguard/main.flags" ]
+      # if (defined(invoker.proguard_configs)) {
+      #   proguard_configs += invoker.proguard_configs
+      # }
+
+      # We only optimize resources for bundles since APKs are not shipped.
+      # Resources only live in the base module atm as such we only need to set
+      # these on the base module
+      if (_is_bundle) {
+        # Removes metadata needed for Resources.getIdentifier("resource_name").
+        strip_resource_names = true
+
+        # Shortens resource file names in apk eg: res/drawable/button.xml -> res/a.xml
+        short_resource_paths = true
+
+        # Removes unused resources from the apk. Only enabled on official builds
+        # since it adds a slow step and serializes the build graph causing fewer
+        # expensive tasks (eg: proguarding, resource optimization) to be run in
+        # parallel by adding dependencies between them (adds around 10-20
+        # seconds on my machine).
+        strip_unused_resources = is_official_build
+
+        # Resources config for blocklisting resource names from obfuscation
+        resources_config_paths = [ "//radium/android/aapt2.config" ]
+        if (defined(invoker.resources_config_paths)) {
+          resources_config_paths += invoker.resources_config_paths
+        }
+      }
+    }
+
+    if (defined(invoker.add_upstream_only_deps) &&
+        invoker.add_upstream_only_deps) {
+      if (!_is_bundle) {
+        deps += [
+          "//radium/android:delegate_public_impl_java",
+          "//radium/android:radium_all_java",
+        ]
+      }
+    }
+
+    forward_variables_from(invoker,
+                           "*",
+                           TESTONLY_AND_VISIBILITY + [
+                                 "additional_apks",
+                                 "assert_no_deps",
+                                 "data_deps",
+                                 "deps",
+                                 "loadable_modules",
+                                 "manifest_package",
+                                 "proguard_configs",
+                                 "resources_config_paths",
+                                 "secondary_abi_loadable_modules",
+                                 "secondary_abi_shared_libraries",
+                                 "shared_libraries",
+                                 "srcjar_deps",
+                                 "version_code",
+                                 "version_name",
+                               ])
+  }
+}
+
+# For creating chrome targets without internal customizations.
+template("radium_public_apk_or_module_tmpl") {
+  radium_common_apk_or_module_tmpl(target_name) {
+    add_upstream_only_deps = true
+    forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+    forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
   }
 }

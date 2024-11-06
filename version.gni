@@ -19,11 +19,8 @@ if (is_mac) {
   radium_dylib_version = "$radium_version_build.$radium_version_patch_hi" +
                          ".$radium_version_patch_lo"
 } else if (target_os == "android") {
-  forward_variables_from(_result,
-                         [
-                           "radium_version_code",
-                           "radium_32_version_code",
-                         ])
+  radium_version_code = chrome_version_code
+  radium_32_version_code = chrome_32_version_code
 
   radium_version_name = radium_version_full
 }

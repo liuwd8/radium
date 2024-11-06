@@ -7,6 +7,7 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/location.h"
+#include "base/no_destructor.h"
 #include "base/task/thread_pool.h"
 #include "base/trace_event/trace_event.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
@@ -23,6 +24,57 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui.h"
 #include "radium/browser/prefs/profile_prefs.h"
+#include "radium/browser/profiles/profiles_state.h"
+#include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
+
+namespace {
+
+#if BUILDFLAG(IS_ANDROID)
+struct StartupData {
+  static StartupData* Get() {
+    static base::NoDestructor<StartupData> g_startup_data;
+    return g_startup_data.get();
+  }
+
+  std::unique_ptr<SimpleFactoryKey> TakeProfileKey() { return std::move(key_); }
+
+  std::unique_ptr<PrefService> TakeProfilePrefService() {
+    return std::move(prefs_);
+  }
+
+  std::unique_ptr<SimpleFactoryKey> key_;
+  std::unique_ptr<PrefService> prefs_;
+};
+#endif
+
+}  // namespace
+
+#if BUILDFLAG(IS_ANDROID)
+// static
+void Profile::CreateProfilePrefService(base::PassKey<RadiumBrowserMainParts>,
+                                       const base::FilePath& user_data_dir) {
+  StartupData* data = StartupData::Get();
+  data->key_ = std::make_unique<SimpleFactoryKey>(
+      profiles::GetDefaultProfileDir(user_data_dir));
+  auto pref_registry = base::MakeRefCounted<user_prefs::PrefRegistrySyncable>();
+  prefs::RegisterProfilePrefs(pref_registry.get(), "");
+  RadiumBrowserMainExtraPartsProfiles::
+      EnsureBrowserContextKeyedServiceFactoriesBuilt();
+
+  const base::FilePath& path = data->key_->GetPath();
+  scoped_refptr<base::SequencedTaskRunner> io_task_runner =
+      base::ThreadPool::CreateSequencedTaskRunner(
+          {base::TaskShutdownBehavior::BLOCK_SHUTDOWN, base::MayBlock()});
+
+  PrefServiceFactory pref_service_factory;
+  pref_service_factory.set_user_prefs(base::MakeRefCounted<JsonPrefStore>(
+      path.Append(FILE_PATH_LITERAL("Preferences")), nullptr, io_task_runner));
+
+  pref_service_factory.set_async(false);
+  data->prefs_ = pref_service_factory.Create(pref_registry);
+}
+
+#endif
 
 std::unique_ptr<Profile> Profile::CreateProfile(const base::FilePath& path,
                                                 Delegate* delegate,
@@ -84,8 +136,8 @@ Profile::Profile(const base::FilePath& path,
   bool async_prefs = create_mode == CreateMode::kAsynchronous;
 
 #if BUILDFLAG(IS_ANDROID)
-  auto* startup_data = g_browser_process->startup_data();
-  DCHECK(startup_data && startup_data->GetProfileKey());
+  StartupData* startup_data = StartupData::Get();
+  DCHECK(startup_data && startup_data->key_);
   TakePrefsFromStartupData();
   async_prefs = false;
 #else
@@ -259,9 +311,21 @@ Profile::GetBrowsingDataRemoverDelegate() {
   return nullptr;
 }
 
+#if BUILDFLAG(IS_ANDROID)
+void Profile::TakePrefsFromStartupData() {
+  StartupData* startup_data = StartupData::Get();
+
+  // On Android, it is possible that the ProfileKey has been build before the
+  // ProfileImpl is created. The ownership of all these pre-created objects
+  // will be taken by ProfileImpl.
+  key_ = startup_data->TakeProfileKey();
+  prefs_ = startup_data->TakeProfilePrefService();
+}
+#endif
+
 void Profile::LoadPrefsForNormalStartup(bool async_prefs) {
   const base::FilePath& path = GetPath();
-  key_ = std::make_unique<SimpleFactoryKey>(path, path.empty());
+  key_ = std::make_unique<SimpleFactoryKey>(path, false);
 
   auto pref_registry = base::MakeRefCounted<user_prefs::PrefRegistrySyncable>();
   prefs::RegisterProfilePrefs(pref_registry.get(), "");

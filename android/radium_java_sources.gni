@@ -1,0 +1,12 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+radium_java_sources = [
+  "java/src/org/radium/Shell.java",
+  "java/src/org/radium/ShellManager.java",
+  "java/src/org/radium/ShellViewAndroidDelegate.java",
+  "java/src/org/radium/browser/EmptyActivity.java",
+  "java/src/org/radium/browser/RadiumShellActivity.java",
+  "java/src/org/radium/browser/mojo/RadiumInterfaceRegistrar.java",
+]

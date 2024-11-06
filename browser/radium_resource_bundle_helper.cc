@@ -13,6 +13,10 @@
 #include "radium/common/radium_paths.h"
 #include "ui/base/resource/resource_bundle.h"
 
+#if BUILDFLAG(IS_ANDROID)
+#include "ui/base/resource/resource_bundle_android.h"
+#endif
+
 namespace {
 
 // Initializes the shared instance of ResourceBundle and returns the application
@@ -45,34 +49,13 @@ std::string InitResourceBundleAndDetermineLocale(PrefService* local_state) {
   // method InitSharedInstance is ignored.
   std::string actual_locale = ui::ResourceBundle::InitSharedInstanceWithLocale(
       preferred_locale, nullptr,
+#if BUILDFLAG(IS_ANDROID)
+      ui::ResourceBundle::LOAD_COMMON_RESOURCES);
+#else
       ui::ResourceBundle::DO_NOT_LOAD_COMMON_RESOURCES);
+#endif  // BUILDFLAG(IS_WIN)
   CHECK(!actual_locale.empty())
       << "Locale could not be found for " << preferred_locale;
-  auto GetResourcesPakFilePath = [](const std::string& pak_name) {
-    base::FilePath path;
-    if (base::PathService::Get(base::DIR_ASSETS, &path)) {
-      return path.AppendASCII(pak_name.c_str());
-    }
-    // Return just the name of the pak file.
-#if BUILDFLAG(IS_WIN)
-    return base::FilePath(base::ASCIIToWide(pak_name));
-#else
-    return base::FilePath(pak_name.c_str());
-#endif  // BUILDFLAG(IS_WIN)
-  };
-
-  // Always load the 1x data pack first as the 2x data pack contains both 1x
-  // and 2x images. The 1x data pack only has 1x images, thus passes in an
-  // accurate scale factor to gfx::ImageSkia::AddRepresentation.
-  if (ui::IsScaleFactorSupported(ui::k100Percent)) {
-    ui::ResourceBundle::GetSharedInstance().AddDataPackFromPath(
-        GetResourcesPakFilePath("radium_100_percent.pak"), ui::k100Percent);
-  }
-
-  if (ui::IsScaleFactorSupported(ui::k200Percent)) {
-    ui::ResourceBundle::GetSharedInstance().AddOptionalDataPackFromPath(
-        GetResourcesPakFilePath("radium_200_percent.pak"), ui::k200Percent);
-  }
 
   // First run prefs needs data from the ResourceBundle, so load it now.
   {
@@ -106,6 +89,32 @@ std::string InitResourceBundleAndDetermineLocale(PrefService* local_state) {
           resources_pack_path, ui::kScaleFactorNone);
     }
 #else
+    auto GetResourcesPakFilePath = [](const std::string& pak_name) {
+      base::FilePath path;
+      if (base::PathService::Get(base::DIR_ASSETS, &path)) {
+        return path.AppendASCII(pak_name.c_str());
+      }
+      // Return just the name of the pak file.
+#if BUILDFLAG(IS_WIN)
+      return base::FilePath(base::ASCIIToWide(pak_name));
+#else
+      return base::FilePath(pak_name.c_str());
+#endif  // BUILDFLAG(IS_WIN)
+    };
+
+    // Always load the 1x data pack first as the 2x data pack contains both 1x
+    // and 2x images. The 1x data pack only has 1x images, thus passes in an
+    // accurate scale factor to gfx::ImageSkia::AddRepresentation.
+    if (ui::IsScaleFactorSupported(ui::k100Percent)) {
+      ui::ResourceBundle::GetSharedInstance().AddDataPackFromPath(
+          GetResourcesPakFilePath("radium_100_percent.pak"), ui::k100Percent);
+    }
+
+    if (ui::IsScaleFactorSupported(ui::k200Percent)) {
+      ui::ResourceBundle::GetSharedInstance().AddOptionalDataPackFromPath(
+          GetResourcesPakFilePath("radium_200_percent.pak"), ui::k200Percent);
+    }
+
     ui::ResourceBundle::GetSharedInstance().AddDataPackFromPath(
         resources_pack_path, ui::kScaleFactorNone);
 #endif  // BUILDFLAG(IS_ANDROID)

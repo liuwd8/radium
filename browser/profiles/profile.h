@@ -5,10 +5,12 @@
 #ifndef RADIUM_BROWSER_PROFILES_PROFILE_H_
 #define RADIUM_BROWSER_PROFILES_PROFILE_H_
 
+#include "base/types/pass_key.h"
 #include "content/public/browser/browser_context.h"
 
 class PrefService;
 class SimpleFactoryKey;
+class RadiumBrowserMainParts;
 
 namespace content {
 class WebUI;
@@ -39,6 +41,11 @@ class Profile : public content::BrowserContext {
                                            bool success,
                                            bool is_new_profile) = 0;
   };
+
+#if BUILDFLAG(IS_ANDROID)
+  static void CreateProfilePrefService(base::PassKey<RadiumBrowserMainParts>,
+                                       const base::FilePath& user_data_dir);
+#endif
 
   // Create a new profile given a path. If `create_mode` is kAsynchronous then
   // the profile is initialized asynchronously.
@@ -134,6 +141,12 @@ class Profile : public content::BrowserContext {
                    Delegate* delegate,
                    CreateMode create_mode,
                    scoped_refptr<base::SequencedTaskRunner> io_task_runner);
+
+#if BUILDFLAG(IS_ANDROID)
+  // Takes the ownership of the pre-created PrefService and other objects if
+  // they have been created.
+  void TakePrefsFromStartupData();
+#endif
 
   // Creates |prefs| from scratch in normal startup.
   void LoadPrefsForNormalStartup(bool async_prefs);

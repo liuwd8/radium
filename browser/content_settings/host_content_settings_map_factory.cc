@@ -17,12 +17,6 @@
 #include "radium/browser/profiles/profiles_state.h"
 #include "ui/webui/webui_allowlist_provider.h"
 
-#if BUILDFLAG(IS_ANDROID)
-#include "radium/browser/flags/android/radium_feature_list.h"
-#include "radium/browser/notifications/notification_channels_provider_android.h"
-#include "radium/browser/webapps/installable/installed_webapp_provider.h"
-#endif  // BUILDFLAG(IS_ANDROID)
-
 using content_settings::ProviderType;
 
 HostContentSettingsMapFactory::HostContentSettingsMapFactory()
@@ -82,26 +76,6 @@ HostContentSettingsMapFactory::BuildServiceInstanceFor(
       WebUIAllowlist::GetOrCreate(profile));
   settings_map->RegisterProvider(ProviderType::kWebuiAllowlistProvider,
                                  std::move(allowlist_provider));
-
-#if BUILDFLAG(IS_ANDROID)
-  if (!profile->IsOffTheRecord()) {
-    auto channels_provider =
-        std::make_unique<NotificationChannelsProviderAndroid>(
-            profile->GetPrefs());
-
-    channels_provider->Initialize(
-        settings_map->GetPrefProvider(),
-        TemplateURLServiceFactory::GetForProfile(profile));
-
-    settings_map->RegisterUserModifiableProvider(
-        ProviderType::kNotificationAndroidProvider,
-        std::move(channels_provider));
-
-    auto webapp_provider = std::make_unique<InstalledWebappProvider>();
-    settings_map->RegisterProvider(ProviderType::kInstalledWebappProvider,
-                                   std::move(webapp_provider));
-  }
-#endif  // defined (OS_ANDROID)
 
   return settings_map;
 }

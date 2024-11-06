@@ -66,7 +66,7 @@ if (!is_mac) {
     deps = []
 
     if (is_android) {
-      deps += [ "//radium/android:radium_apk" ]
+      deps += [ "//radium/android:radium_public_apk" ]
     } else if (is_win) {
       public_deps = [ ":radium_exe" ]
       data_deps = [ ":radium_exe" ]
@@ -77,7 +77,56 @@ if (!is_mac) {
       deps += [ ":radium_exe" ]
     }
   }
+}
 
+if (is_android) {
+  source_set("radium_android_core") {
+    sources = [
+      "app/android/radium_jni_onload.cc",
+      "app/android/radium_jni_onload.h",
+      "app/android/radium_main_delegate_android.cc",
+      "app/android/radium_main_delegate_android.h",
+      "app/radium_main_delegate.cc",
+      "app/radium_main_delegate.h",
+      "app/startup_timestamps.h",
+    ]
+
+    libs = [
+      "android",
+      "jnigraphics",
+    ]
+
+    public_deps = [ "//radium/browser" ]
+
+    deps = [
+      ":dependencies",
+      "//components/minidump_uploader",
+      "//components/safe_browsing:buildflags",
+      "//components/safe_browsing/android:safe_browsing_api_handler",
+      "//components/safe_browsing/android:safe_browsing_mobile",
+      "//components/stylus_handwriting/android",
+      "//content/public/app",
+      "//radium/common:version_header",
+      "//radium/renderer",
+    ]
+
+    # Explicit dependency required for JNI registration to be able to
+    # find the native side functions.
+    if (is_android && is_component_build) {
+      deps += [
+        "//components/viz/service",
+        "//device/gamepad",
+        "//ui/events/devices",
+      ]
+    }
+
+    if (is_android) {
+      deps += [ "//components/crash/android:crash_android" ]
+    }
+  }
+}
+
+if (!is_android && !is_mac) {
   executable("radium_exe") {
     if (is_win) {
       output_name = "initialexe/radium"

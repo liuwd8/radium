@@ -21,13 +21,17 @@ class RadiumMainDelegate : public content::ContentMainDelegate {
   static const char* const kNonWildcardDomainNonPortSchemes[];
   static const size_t kNonWildcardDomainNonPortSchemesSize;
 
+#if BUILDFLAG(IS_ANDROID)
+  RadiumMainDelegate();
+#endif
+
   explicit RadiumMainDelegate(const StartupTimestamps& timestamps);
   RadiumMainDelegate(const RadiumMainDelegate&) = delete;
   RadiumMainDelegate& operator=(const RadiumMainDelegate&) = delete;
 
   ~RadiumMainDelegate() override;
 
- private:
+ protected:
   std::optional<int> BasicStartupComplete() override;
   void PreSandboxStartup() override;
   std::optional<int> PreBrowserMain() override;

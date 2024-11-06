@@ -1,0 +1,31 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+static_library("android") {
+  public = [
+    "devtools_manager_delegate_android.h",
+    "metrics/uma_utils.h",
+    "mojo/radium_interface_registrar_android.h",
+    "shell_manager.h",
+  ]
+  sources = [
+    "devtools_manager_delegate_android.cc",
+    "metrics/uma_utils.cc",
+    "mojo/radium_interface_registrar_android.cc",
+    "shell.cc",
+    "shell.h",
+    "shell_manager.cc",
+    "shell_platform_delegate.cc",
+    "shell_platform_delegate.h",
+    "shell_platform_delegate_android.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//content/public/browser",
+    "//radium/android:jni_headers",
+    "//radium/browser/profiles",
+    "//ui/base",
+  ]
+}

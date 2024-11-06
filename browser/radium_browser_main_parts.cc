@@ -30,6 +30,9 @@
 #include "base/win/win_util.h"
 #include "radium/browser/win/parental_controls.h"
 #include "ui/shell_dialogs/select_file_dialog.h"
+#elif BUILDFLAG(IS_ANDROID)
+#include "radium/browser/android/shell.h"
+#include "radium/browser/android/shell_platform_delegate.h"
 #endif  // BUILDFLAG(IS_WIN)
 
 #if defined(USE_AURA)
@@ -116,6 +119,11 @@ int RadiumBrowserMainParts::PreEarlyInitialization() {
   if (!base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir_)) {
     return radium::RESULT_CODE_MISSING_DATA;
   }
+
+#if BUILDFLAG(IS_ANDROID)
+  Profile::CreateProfilePrefService(base::PassKey<RadiumBrowserMainParts>(),
+                                    user_data_dir_);
+#endif
 
   // Continue on and show error later (once UI has been initialized and main
   // message loop is running).
@@ -334,6 +342,8 @@ int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
         GetMainRunLoopInstance()->QuitWhenIdleClosure());
   }
   browser_creator_.reset();
+#else
+  Shell::Initialize(std::make_unique<ShellPlatformDelegate>());
 #endif  // !BUILDFLAG(IS_ANDROID)
 
   PostBrowserStart();

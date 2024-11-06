@@ -34,6 +34,14 @@
 #elif BUILDFLAG(IS_MAC)
 #include "radium/browser/radium_browser_main_extra_parts_mac.h"
 #include "radium/browser/radium_browser_main_parts_mac.h"
+#elif BUILDFLAG(IS_ANDROID)
+#include "components/crash/content/browser/child_exit_observer_android.h"
+#include "components/crash/content/browser/crash_memory_metrics_collector_android.h"
+#include "radium/browser/android/devtools_manager_delegate_android.h"
+#include "radium/browser/radium_browser_main_parts_android.h"
+#include "radium/common/radium_descriptors.h"
+#include "ui/base/resource/resource_bundle_android.h"
+#include "ui/base/ui_base_paths.h"
 #endif
 
 #if BUILDFLAG(IS_LINUX)
@@ -43,6 +51,17 @@
 #endif
 
 namespace {
+
+#if BUILDFLAG(IS_ANDROID)
+int GetCrashSignalFD(const base::CommandLine& command_line) {
+  return crashpad::CrashHandlerHost::Get()->GetDeathSignalSocket();
+}
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+int GetCrashSignalFD(const base::CommandLine& command_line) {
+  int fd;
+  return crash_reporter::GetHandlerSocket(&fd, nullptr) ? fd : -1;
+}
+#endif  // BUILDFLAG(IS_ANDROID)
 
 // A small ChromeBrowserMainExtraParts that invokes a callback when threads are
 // ready. Used to initialize ChromeContentBrowserClient data that needs the UI
@@ -86,6 +105,9 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
 #elif BUILDFLAG(IS_MAC)
       std::make_unique<RadiumBrowserMainPartsMac>(
           radium_feature_list_creator_.get());
+#elif BUILDFLAG(IS_ANDROID)
+      std::make_unique<RadiumBrowserMainPartsAndroid>(
+          radium_feature_list_creator_.get());
 #else
 #error "Unimplemented platform"
 #endif
@@ -128,7 +150,11 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
 
 std::unique_ptr<content::DevToolsManagerDelegate>
 RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
+#if BUILDFLAG(IS_ANDROID)
+  return std::make_unique<DevToolsManagerDelegateAndroid>();
+#else
   return std::make_unique<RadiumDevToolsManagerDelegate>();
+#endif
 }
 
 void RadiumContentBrowserClient::OnNetworkServiceCreated(
@@ -172,6 +198,70 @@ void RadiumContentBrowserClient::ConfigureNetworkContextParams(
     network_context_params->accept_language = GetApplicationLocale();
   }
 }
+
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+void RadiumContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
+    const base::CommandLine& command_line,
+    int child_process_id,
+    content::PosixFileDescriptorInfo* mappings) {
+#if BUILDFLAG(IS_ANDROID)
+  base::MemoryMappedFile::Region region;
+  int fd = ui::GetMainAndroidPackFd(&region);
+  mappings->ShareWithRegion(kAndroidUIResourcesPakDescriptor, fd, region);
+
+  // For Android: Native resources for DFMs should only be used by the browser
+  // process. Their file descriptors and memory mapped file regions are not
+  // passed to child processes.
+
+  fd = ui::GetCommonResourcesPackFd(&region);
+  mappings->ShareWithRegion(kAndroidChrome100PercentPakDescriptor, fd, region);
+
+  fd = ui::GetLocalePackFd(&region);
+  mappings->ShareWithRegion(kAndroidLocalePakDescriptor, fd, region);
+
+  // Optional secondary locale .pak file.
+  fd = ui::GetSecondaryLocalePackFd(&region);
+  if (fd != -1) {
+    mappings->ShareWithRegion(kAndroidSecondaryLocalePakDescriptor, fd, region);
+  }
+
+  base::FilePath app_data_path;
+  base::PathService::Get(base::DIR_ANDROID_APP_DATA, &app_data_path);
+  DCHECK(!app_data_path.empty());
+#endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+  int crash_signal_fd = GetCrashSignalFD(command_line);
+  if (crash_signal_fd >= 0) {
+    mappings->Share(kCrashDumpSignal, crash_signal_fd);
+  }
+#endif  // BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) ||
+        // BUILDFLAG(IS_CHROMEOS)
+
+#if BUILDFLAG(IS_CHROMEOS_LACROS)
+  // Map startup parameter files to child processes in Lacros.
+  // The FD numbers are passed via command line switches in
+  // |AppendExtraCommandLineSwitches|.
+  //
+  // NOTE: the Zygote process requires special handling.
+  // Serializing startup data early in the initialization
+  // process requires temporarily initializing Mojo. That's handled in the
+  // |LaunchZygoteHelper| function in |content_main_runner_impl.cc|. Here, we
+  // deal with all other type of processes.
+  std::string process_type =
+      command_line.GetSwitchValueASCII(switches::kProcessType);
+  if (process_type != switches::kZygoteProcess) {
+    base::ScopedFD cros_startup_fd =
+        chromeos::BrowserInitParams::CreateStartupData();
+    if (cros_startup_fd.is_valid()) {
+      constexpr int kStartupDataFD =
+          kCrosStartupDataDescriptor + base::GlobalDescriptors::kBaseDescriptor;
+      mappings->Transfer(kStartupDataFD, std::move(cros_startup_fd));
+    }
+  }
+#endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
+}
+#endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 
 std::string RadiumContentBrowserClient::GetProduct() {
   return "Radium/" PRODUCT_VERSION;

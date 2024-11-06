@@ -3,15 +3,242 @@
 # found in the LICENSE file.
 
 import("//build/config/android/abi.gni")
+import("//build/toolchain/gcc_toolchain.gni")
+import("//build/util/process_version.gni")
+import("//radium/android/radium_common_shared_library.gni")
+import("//radium/android/radium_java_resources.gni")
+import("//radium/android/radium_java_sources.gni")
 import("//radium/android/radium_public_apk_tmpl.gni")
+import("//radium/android/resource_packaging.gni")
+import("//radium/locales.gni")
 
-radium_apk_tmpl("radium_apk") {
+radium_public_apk_or_module_tmpl("radium_public_apk") {
   target_type = "android_apk"
-  apk_name = "ChromiumRadium"
+  apk_name = "Radium"
 
   if (android_64bit_target_cpu) {
     # Ensure 64-bit chrome does not depend on 32-bit things.
     assert_no_deps = [ "//build/config:toolchain_marker_" +
                        get_label_info(android_secondary_abi_toolchain, "name") ]
   }
+}
+
+assert(current_toolchain == default_toolchain)
+
+# Target for classes which should be in the base module, even when //chrome code
+# is in a DFM.
+android_library("base_module_java") {
+  sources = [
+    "java/src/org/radium/browser/RadiumApplication.java",
+    "java/src/org/radium/browser/metrics/UmaUtils.java",
+  ]
+
+  deps = [
+    "//base:base_java",
+    "//build/android:build_java",
+    "//components/embedder_support/android:application_java",
+    "//third_party/androidx:androidx_annotation_annotation_java",
+    "//third_party/jni_zero:jni_zero_java",
+    "//ui/android:ui_no_recycler_view_java",
+
+    # Deps needed for child processes.
+    "//base/version_info/android:version_constants_java",
+  ]
+
+  srcjar_deps = [
+    ":base_module_jni",
+    ":radium_product_config",
+  ]
+
+  # If this throws an error, try depending on
+  # //content/public/android:content_main_dex_java instead.
+  assert_no_deps = [ "//content/public/android:content_full_java" ]
+
+  # Add the actual implementation where necessary so that downstream targets
+  # can provide their own implementations.
+  jar_excluded_patterns = [ "*/ProductConfig.class" ]
+
+  resources_package = "org.radium.base"
+}
+
+# Resources which are needed in the base module manifest's application tag
+# should be added here. These are split out from chrome_app_java_resources
+# because //chrome resources may be included in a DFM instead of the base
+# module.
+android_resources("radium_base_module_resources") {
+  sources = [
+    "java/res_base/drawable-v26/ic_launcher.xml",
+    "java/res_base/drawable-v26/ic_launcher_round.xml",
+    "java/res_chromium_base/drawable/themed_app_icon.xml",
+    "java/res_chromium_base/mipmap-hdpi/app_icon.png",
+    "java/res_chromium_base/mipmap-hdpi/layered_app_icon.png",
+    "java/res_chromium_base/mipmap-hdpi/layered_app_icon_background.png",
+    "java/res_chromium_base/mipmap-mdpi/app_icon.png",
+    "java/res_chromium_base/mipmap-mdpi/layered_app_icon.png",
+    "java/res_chromium_base/mipmap-mdpi/layered_app_icon_background.png",
+    "java/res_chromium_base/mipmap-nodpi/layered_app_icon_foreground.xml",
+    "java/res_chromium_base/mipmap-xhdpi/app_icon.png",
+    "java/res_chromium_base/mipmap-xhdpi/layered_app_icon.png",
+    "java/res_chromium_base/mipmap-xhdpi/layered_app_icon_background.png",
+    "java/res_chromium_base/mipmap-xxhdpi/app_icon.png",
+    "java/res_chromium_base/mipmap-xxhdpi/layered_app_icon.png",
+    "java/res_chromium_base/mipmap-xxhdpi/layered_app_icon_background.png",
+    "java/res_chromium_base/mipmap-xxxhdpi/app_icon.png",
+    "java/res_chromium_base/mipmap-xxxhdpi/layered_app_icon.png",
+    "java/res_chromium_base/mipmap-xxxhdpi/layered_app_icon_background.png",
+    "java/res_chromium_base/values/channel_constants.xml",
+  ]
+}
+
+generate_ui_locale_resources("ui_locale_string_resources") {
+  ui_locales = support_locales
+}
+
+android_resources("radium_app_java_resources") {
+  sources = radium_java_resources
+
+  deps = [
+    ":radium_base_module_resources",
+    ":ui_locale_string_resources",
+    "//components/browser_ui/settings/android:java_resources",
+    "//components/browser_ui/styles/android:java_resources",
+    "//components/browser_ui/theme/android:java_resources",
+    "//components/browser_ui/widget/android:java_resources",
+    "//content/public/android:content_java_resources",
+  ]
+}
+
+android_library("radium_java") {
+  sources = radium_java_sources
+
+  deps = [
+    ":base_module_java",
+    ":radium_app_java_resources",
+    "//base:base_java",
+    "//components/android_autofill/browser:java",
+    "//components/embedder_support/android:content_view_java",
+    "//components/embedder_support/android:view_java",
+    "//content/public/android:content_java",
+    "//content/public/common:common_java",
+    "//mojo/public/java:bindings_java",
+    "//mojo/public/java:system_java",
+    "//mojo/public/java/system:system_impl_java",
+    "//mojo/public/mojom/base:base_java",
+    "//services/service_manager/public/java:service_manager_java",
+    "//services/service_manager/public/mojom:mojom_java",
+    "//third_party/androidx:androidx_activity_activity_java",
+    "//third_party/androidx:androidx_appcompat_appcompat_java",
+    "//third_party/blink/public:blink_headers_java",
+    "//third_party/blink/public/mojom:android_mojo_bindings_java",
+    "//third_party/blink/public/mojom:mojom_platform_java",
+    "//third_party/jni_zero:jni_zero_java",
+    "//ui/android:ui_no_recycler_view_java",
+    "//ui/base/cursor/mojom:cursor_type_java",
+    "//ui/base/ime/mojom:mojom_java",
+    "//ui/base/mojom:mojom_java",
+    "//ui/gfx/geometry/mojom:mojom_java",
+    "//url:gurl_java",
+  ]
+
+  srcjar_deps = [ ":radium_jni_headers" ]
+
+  resources_package = "org.radium"
+}
+
+java_group("delegate_public_impl_java") {
+}
+
+generate_product_config_srcjar("radium_product_config") {
+  java_package = "org.radium.Radium"
+}
+
+# This is a list of all chrome module java dependencies. New features should be
+# added to this list.
+java_group("radium_all_java") {
+  deps = [
+    ":radium_java",
+    "//base:base_java",
+
+    # ":radium_public_apk_template_resources",
+  ]
+}
+
+# jinja_template_resources("radium_public_apk_template_resources") {
+#   resources = [ "java/res_template/xml/launchershortcuts.xml" ]
+#   res_dir = "java/res_template"
+#   variables = [ "manifest_package=$radium_public_manifest_package" ]
+# }
+
+# Chrome APK's native library.
+template("libradium_impl") {
+  radium_common_shared_library(target_name) {
+    sources = [ "../browser/android/radium_entry_point.cc" ]
+    deps = [ "//base" ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    java_targets = [ "//radium/android:radium_public_apk" ]
+    forward_variables_from(invoker, "*", [ "deps" ])
+
+    # Webview's native side naturally will have more JNI present than the Java
+    # side. We can just remove any uncalled Java->Native methods.
+    remove_uncalled_jni = true
+  }
+}
+
+generate_jni("radium_jni_headers") {
+  sources = [
+    "java/src/org/radium/Shell.java",
+    "java/src/org/radium/ShellManager.java",
+    "java/src/org/radium/browser/mojo/RadiumInterfaceRegistrar.java",
+  ]
+
+  public_deps = [ ":base_module_jni" ]
+}
+
+generate_jni("base_module_jni") {
+  sources = [ "java/src/org/radium/browser/metrics/UmaUtils.java" ]
+}
+
+# This is a list of all base module jni headers. New features should add their
+# own jni target to this list.
+group("jni_headers") {
+  public_deps = [ ":radium_jni_headers" ]
+}
+
+libradium_impl("libradium") {
+  if (enable_resource_allowlist_generation) {
+    # Make sure allowlist_inputs is built first so when concurrent_links == 1
+    # it comes before the actual (very slow) link step.
+    deps = [ ":libradium_inputs" ]
+  }
+
+  # Java and native targets form two independent compile graphs. Deps from java targets
+  # onto native ones (or vice versa) are unnecessary and reduce parallelism.
+  # This prevents deps from native -> java.
+  assert_no_deps = [ "//build/android:build_java" ]
+}
+
+version_resource_dir = "$target_gen_dir/templates/radium_version_xml/res"
+version_resource_file = "$version_resource_dir/values/strings.xml"
+process_version("version_xml") {
+  process_only = true
+  template_file = "java/version_strings.xml.template"
+  sources = [ "//chrome/VERSION" ]
+  output = version_resource_file
+}
+
+android_resources("product_version_resources") {
+  sources = [ version_resource_file ]
+  deps = [ ":version_xml" ]
+}
+
+java_group("radium_public_non_pak_assets") {
+}
+
+# Resource packaging varies with Monochrome and bundles because the pak
+# resource allowlist is derived from the native library.
+resource_packaging("radium_apk_pak_assets") {
+  is_bundle_module = false
 }

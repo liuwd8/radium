@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2014 The Chromium Authors
+Use of this source code is governed by a BSD-style license that can be
+found in the LICENSE file.
+-->
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Application themes -->
+    <!-- On Android N, if the ChromeLauncherActivity is NoDisplay then
+         intents are not always immediately sent when Chrome is docked to
+         the top of the screen in multi-window mode. Use Translucent.NoTitleBar
+         for the theme instead. See crbug.com/645074. -->
+    <style name="LauncherTheme" parent="Theme.BrowserUI.Translucent.NoTitleBar" />
+
+    <style name="Base.V21.Theme.Chromium" parent="Theme.BrowserUI.DayNight">
+        <!-- Set android alert dialog attributes because the context menu dialog is
+             OS-dependent. -->
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.BrowserUI.AlertDialog</item>
+    </style>
+    <style name="Base.Theme.Chromium" parent="Base.V21.Theme.Chromium" />
+
+    <style name="Base.Theme.Chromium.WithWindowAnimation">
+        <item name="android:windowContentOverlay">@null</item>
+
+        <!-- Navigation Transitions, requires API level 21 -->
+        <item name="android:windowAllowEnterTransitionOverlap" tools:targetApi="21">false</item>
+        <item name="android:windowAllowReturnTransitionOverlap" tools:targetApi="21">true</item>
+        <item name="android:windowContentTransitions" tools:targetApi="21">true</item>
+        <item name="android:windowEnterTransition" tools:targetApi="21">@transition/fade</item>
+        <item name="android:windowExitTransition" tools:targetApi="21">@null</item>
+        <item name="android:windowSharedElementEnterTransition" tools:targetApi="21">@transition/move_image</item>
+        <item name="android:windowSharedElementExitTransition" tools:targetApi="21">@transition/move_image</item>
+    </style>
+
+    <style name="Theme.Chromium" parent="Base.Theme.Chromium" />
+    <style name="Theme.Chromium.WithWindowAnimation"
+        parent="Base.Theme.Chromium.WithWindowAnimation" />
+
+    <!-- Activity themes -->
+    <style name="Theme.Chromium.Activity" parent="Theme.Chromium.WithWindowAnimation" />
+        <!-- This is distinct from Theme.Chromium.Activity.Fullscreen.Transparent, which makes the
+         payment handler window overlap the bottom nav bar. -->
+    <style name="Base.Theme.Chromium.Activity.Fullscreen" parent="Theme.BrowserUI.DayNight" />
+        <style name="Base.V27.Theme.Chromium.Activity.Fullscreen"
+        parent="Base.Theme.Chromium.Activity.Fullscreen" />
+    <style name="Theme.Chromium.Activity.Fullscreen"
+        parent="Base.V27.Theme.Chromium.Activity.Fullscreen" />
+    <style name="Theme.Chromium.Activity.Fullscreen.Transparent">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+</resources>

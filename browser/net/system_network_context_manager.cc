@@ -194,7 +194,7 @@ network::mojom::HttpAuthDynamicParamsPtr CreateHttpAuthDynamicParams(
 
 #if BUILDFLAG(IS_ANDROID)
   auth_dynamic_params->android_negotiate_account_type =
-      local_state->GetString(prefs::kAuthAndroidNegotiateAccountType);
+      local_state->GetString(policy::key::kAuthAndroidNegotiateAccountType);
 #endif  // BUILDFLAG(IS_ANDROID)
 
 #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)
@@ -571,7 +571,7 @@ SystemNetworkContextManager::SystemNetworkContextManager(
 #endif  // BUILDFLAG(IS_POSIX)
 
 #if BUILDFLAG(IS_ANDROID)
-  pref_change_registrar_.Add(prefs::kAuthAndroidNegotiateAccountType,
+  pref_change_registrar_.Add(policy::key::kAuthAndroidNegotiateAccountType,
                              auth_pref_callback);
 #endif  // BUILDFLAG(IS_ANDROID)
 
@@ -656,7 +656,7 @@ void SystemNetworkContextManager::RegisterPrefs(PrefRegistrySimple* registry) {
 #endif  // BUILDFLAG(IS_POSIX)
 
 #if BUILDFLAG(IS_ANDROID)
-  registry->RegisterStringPref(prefs::kAuthAndroidNegotiateAccountType,
+  registry->RegisterStringPref(policy::key::kAuthAndroidNegotiateAccountType,
                                std::string());
 #endif  // BUILDFLAG(IS_ANDROID)
 

@@ -129,12 +129,12 @@ StubResolverConfigReader::StubResolverConfigReader(PrefService* local_state,
       base::BindOnce(&StubResolverConfigReader::OnParentalControlsDelayTimer,
                      base::Unretained(this)));
 
-#if BUILDFLAG(IS_ANDROID)
-  enterprise_util::AndroidEnterpriseInfo::GetInstance()
-      ->GetAndroidEnterpriseInfoState(base::BindOnce(
-          &StubResolverConfigReader::OnAndroidOwnedStateCheckComplete,
-          weak_factory_.GetWeakPtr()));
-#endif
+  // #if BUILDFLAG(IS_ANDROID)
+  //   enterprise_util::AndroidEnterpriseInfo::GetInstance()
+  //       ->GetAndroidEnterpriseInfoState(base::BindOnce(
+  //           &StubResolverConfigReader::OnAndroidOwnedStateCheckComplete,
+  //           weak_factory_.GetWeakPtr()));
+  // #endif
 }
 
 StubResolverConfigReader::~StubResolverConfigReader() = default;

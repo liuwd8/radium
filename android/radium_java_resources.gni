@@ -1,0 +1,16 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+radium_java_resources = [
+  "java/res/drawable/ic_refresh.png",
+  "java/res/drawable/progress.xml",
+  "java/res/layout/activity_empty.xml",
+  "java/res/layout/radium_shell_activity.xml",
+  "java/res/layout/shell_view.xml",
+  "java/res/transition/fade.xml",
+  "java/res/transition/move_image.xml",
+  "java/res/values-v27/styles.xml",
+  "java/res/values/strings.xml",
+  "java/res/values/styles.xml",
+]

@@ -76,27 +76,29 @@ if (!is_android) {
 }
 
 source_set("devtools") {
-  public = [
-    "radium_devtools_manager_delegate.h",
-    "remote_debugging_server.h",
-  ]
-
-  sources = [
-    "devtools_browser_context_manager.cc",
-    "devtools_browser_context_manager.h",
-    "radium_devtools_manager_delegate.cc",
-    "radium_devtools_session.cc",
-    "radium_devtools_session.h",
-    "remote_debugging_server.cc",
-  ]
+  public = []
+  sources = []
 
   deps = [
     "//content/public/browser",
     "//net",
-    "//ui/views/controls/webview",
   ]
 
   if (!is_android) {
+    public += [
+      "radium_devtools_manager_delegate.h",
+      "remote_debugging_server.h",
+    ]
+
+    sources += [
+      "devtools_browser_context_manager.cc",
+      "devtools_browser_context_manager.h",
+      "radium_devtools_manager_delegate.cc",
+      "radium_devtools_session.cc",
+      "radium_devtools_session.h",
+      "remote_debugging_server.cc",
+    ]
+
     deps += [
       ":protocol_generated_sources",
 
@@ -110,6 +112,7 @@ source_set("devtools") {
       # "//components/webapps/browser",
       "//third_party/blink/public/common",
       "//third_party/inspector_protocol:crdtp",
+      "//ui/views/controls/webview",
     ]
 
     # sources += [

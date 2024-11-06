@@ -63,10 +63,6 @@ void BrowserProcess::RegisterPrefs(PrefRegistrySimple* registry) {
 
   registry->RegisterBooleanPref(prefs::kAllowCrossOriginAuthPrompt, false);
 
-#if BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_ANDROID)
-  registry->RegisterBooleanPref(prefs::kEulaAccepted, false);
-#endif  // BUILDFLAG(IS_CHROMEOS_ASH) || BUILDFLAG(IS_ANDROID)
-
   registry->RegisterStringPref(language::prefs::kApplicationLocale,
                                std::string());
 #if BUILDFLAG(IS_CHROMEOS_ASH)
@@ -126,11 +122,14 @@ void BrowserProcess::PreCreateThreads() {
 }
 
 void BrowserProcess::CreateDevToolsProtocolHandler() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+#if !BUILDFLAG(IS_ANDROID)
   // StartupBrowserCreator::LaunchBrowser can be run multiple times when browser
   // is started with several profiles or existing browser process is reused.
   if (!remote_debugging_server_) {
     remote_debugging_server_ = std::make_unique<RemoteDebuggingServer>();
   }
+#endif
 }
 
 void BrowserProcess::PreMainMessageLoopRun() {
@@ -173,6 +172,7 @@ void BrowserProcess::PreMainMessageLoopRun() {
       std::make_unique<os_crypt_async::OSCryptAsync>(std::move(providers));
 }
 
+#if !BUILDFLAG(IS_ANDROID)
 void BrowserProcess::StartTearDown() {
   // Debugger must be cleaned up before ProfileManager.
   remote_debugging_server_.reset();
@@ -194,6 +194,7 @@ void BrowserProcess::StartTearDown() {
 }
 
 void BrowserProcess::PostDestroyThreads() {}
+#endif
 
 policy::RadiumBrowserPolicyConnector*
 BrowserProcess::browser_policy_connector() {

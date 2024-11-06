@@ -60,7 +60,6 @@ static_library("browser") {
     "//components/embedder_support",
     "//components/embedder_support:browser_util",
     "//components/embedder_support/origin_trials",
-    "//components/keep_alive_registry",
     "//components/net_log",
     "//components/os_crypt/async/browser",
     "//components/proxy_config",
@@ -73,13 +72,34 @@ static_library("browser") {
     "//radium/browser/prefs",
     "//radium/browser/profiles",
     "//radium/browser/profiles:profiles_extra_parts_impl",
-    "//radium/browser/themes",
     "//radium/browser/ui",
     "//services/cert_verifier:lib",
     "//services/network/public/cpp",
     "//services/network/public/mojom",
+    "//services/proxy_resolver:lib",
     "//services/strings",
   ]
+
+  if (is_android) {
+    sources += [
+      "radium_browser_main_parts_android.cc",
+      "radium_browser_main_parts_android.h",
+    ]
+
+    deps += [
+      "//components/android_autofill/browser:android",
+      "//components/android_autofill/browser:features",
+      "//components/crash/content/browser",
+      "//components/embedder_support/android:view",
+      "//radium/browser/android",
+    ]
+  } else {
+    deps += [
+      "//components/keep_alive_registry",
+      "//radium/browser/themes",
+      "//radium/browser/ui",
+    ]
+  }
 
   if (use_aura) {
     # Cross - platform Aura files.
