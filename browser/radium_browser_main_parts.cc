@@ -21,6 +21,7 @@
 #include "radium/browser/radium_browser_main_extra_parts.h"
 #include "radium/browser/ui/color/radium_color_mixers.h"
 #include "radium/browser/ui/startup/startup_browser_creator.h"
+#include "radium/browser/ui/webui/radium_web_ui_configs.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_result_codes.h"
 #include "ui/color/color_provider_manager.h"
@@ -323,6 +324,8 @@ int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {
 
   StartupProfileInfo profile_info = CreateInitialProfile(
       base::FilePath(), *base::CommandLine::ForCurrentProcess());
+
+  RegisterRadiumWebUIConfigs();
 
   PreBrowserStart();
 

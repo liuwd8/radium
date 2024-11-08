@@ -1,0 +1,15 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("gallery") {
+  public = [ "gallery_view.h" ]
+
+  sources = [ "gallery_view.cc" ]
+
+  deps = [
+    "//base",
+    "//radium/browser/ui/views/frame",
+    "//ui/views",
+  ]
+}

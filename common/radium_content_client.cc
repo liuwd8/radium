@@ -6,6 +6,7 @@
 
 #include "components/crash/core/common/crash_key.h"
 #include "config/gpu_util.h"
+#include "radium/common/webui_url_constants.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 
@@ -26,7 +27,11 @@ void RadiumContentClient::SetGpuInfo(const gpu::GPUInfo& gpu_info) {
   gpu::SetKeysForCrashLogging(gpu_info);
 }
 
-void RadiumContentClient::AddAdditionalSchemes(Schemes* schemes) {}
+void RadiumContentClient::AddAdditionalSchemes(Schemes* schemes) {
+  schemes->standard_schemes.push_back(radium::kRadiumUIScheme);
+  schemes->cors_enabled_schemes.push_back(radium::kRadiumUIScheme);
+  schemes->service_worker_schemes.push_back(radium::kRadiumUIScheme);
+}
 
 std::u16string RadiumContentClient::GetLocalizedString(int message_id) {
   return l10n_util::GetStringUTF16(message_id);

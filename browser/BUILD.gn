@@ -42,6 +42,8 @@ static_library("browser") {
     "net/system_network_context_manager.cc",
     "net/system_network_context_manager.h",
     "platform_util.h",
+    "radium_browser_interface_binders.cc",
+    "radium_browser_interface_binders.h",
     "radium_browser_main_extra_parts.h",
     "radium_browser_main_parts.cc",
     "radium_browser_main_parts.h",

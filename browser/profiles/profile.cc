@@ -21,11 +21,14 @@
 #include "components/profile_metrics/browser_profile_type.h"
 #include "components/sync_preferences/pref_service_syncable.h"
 #include "components/user_prefs/user_prefs.h"
+#include "content/browser/webui/url_data_manager_backend.h"
+#include "content/browser/webui/web_ui_data_source_impl.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_ui.h"
 #include "radium/browser/prefs/profile_prefs.h"
 #include "radium/browser/profiles/profiles_state.h"
 #include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
+#include "radium/common/webui_url_constants.h"
 
 namespace {
 
@@ -160,6 +163,12 @@ Profile::Profile(const base::FilePath& path,
     // Prefs were loaded synchronously so we can continue directly.
     OnPrefsLoaded(create_mode, true);
   }
+
+  auto* source = content::URLDataManagerBackend::GetForBrowserContext(this)
+                     ->GetDataSourceFromURL(GURL(radium::kRadiumUIResourceURL));
+  CHECK(source);
+  auto* webui_source = static_cast<content::WebUIDataSourceImpl*>(source);
+  webui_source->SetSupportedScheme(radium::kRadiumUIScheme);
 }
 
 Profile::~Profile() {

@@ -12,7 +12,16 @@
 
 namespace radium {
 
-inline constexpr char kRadiumUIScheme[] = "weixin";
+inline constexpr char kRadiumUIScheme[] = "radium";
+
+inline constexpr char kRadiumUIExampleHost[] = "example";
+inline constexpr char kRadiumUIExampleURL[] = "radium://example";
+inline constexpr char kRadiumUIFavicon2Host[] = "favicon2";
+inline constexpr char kRadiumUIFaviconHost[] = "favicon";
+inline constexpr char kRadiumUIResourceHost[] = "resources";
+inline constexpr char kRadiumUIResourceURL[] = "radium://resources";
+inline constexpr char kRadiumUIWebuiGalleryHost[] = "webui-gallery";
+inline constexpr char kRadiumUIWebuiGalleryURL[] = "radium://webui-gallery";
 
 // Gets the URL strings of "debug" pages which are dangerous and not for general
 // consumption.

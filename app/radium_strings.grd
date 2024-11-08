@@ -53,6 +53,20 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
           Radium Shortcut
         </message>
       </if>
+
+      <!-- SigninFrameView -->
+      <message name="IDS_SIGNIN_FRAME_TITLE" desc="The title of the SigninFrameView">
+          This is the C++ view
+      </message>
+      <message name="IDS_SIGNIN_CONFIRM_BUTTON" desc="The comfirm button of the SigninFrameView">
+          Enter
+      </message>
+      <message name="IDS_SIGNIN_CHANGE_ACCOUNT" desc="Click to switch account">
+          Switch Account
+      </message>
+      <message name="IDS_SIGNIN_HELP" desc="Help">
+          Help
+      </message>
     </messages>
   </release>
 </grit>

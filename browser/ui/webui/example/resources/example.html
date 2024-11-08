@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html dir="$i18n{textdirection}" lang="$i18n{language}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light dark">
+  <title>Example</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html {
+        background: var(--md-background-color);
+      }
+    }
+
+    body {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <link rel="stylesheet" href="://resources/css/md_colors.css">
+  <link rel="stylesheet" href="://resources/css/text_defaults_md.css">
+  <script type="module" src="app.js"></script>
+  <example-app></example-app>
+</body>
+
+</html>

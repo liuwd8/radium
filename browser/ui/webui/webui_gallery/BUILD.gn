@@ -1,0 +1,19 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("webui_gallery") {
+  public = [ "webui_gallery_ui.h" ]
+
+  sources = [ "webui_gallery_ui.cc" ]
+
+  deps = [
+    "resources",
+    "//base",
+    "//content/public/browser",
+    "//radium/common",
+
+    # Special case. Otherwise we shouldn't depend on any part of //chrome
+    "//chrome/browser/resources/side_panel/shared:resources",
+  ]
+}

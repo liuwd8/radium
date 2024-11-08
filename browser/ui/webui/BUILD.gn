@@ -1,0 +1,50 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("webui") {
+  public = [
+    "radium_web_ui_configs.h",
+    "radium_webui_config_map.h",
+  ]
+
+  sources = [
+    "radium_web_ui_configs.cc",
+    "radium_webui_config.cc",
+    "radium_webui_config.h",
+    "radium_webui_config_map.cc",
+    "webui_util.cc",
+    "webui_util.h",
+  ]
+
+  deps = [
+    "//content/public/browser",
+    "//radium/browser/ui/webui/example",
+    "//radium/common",
+  ]
+
+  if (!is_android) {
+    sources += [
+      "favicon_source.cc",
+      "favicon_source.h",
+    ]
+
+    deps += [
+      "//radium/browser/ui/webui/webui_gallery",
+      "//ui/web_dialogs",
+    ]
+  }
+}
+
+group("resources") {
+  public_deps = [ "example/resources" ]
+
+  if (!is_android) {
+    public_deps += [
+      "webui_gallery/resources",
+
+      # Special case. Otherwise we shouldn't depend on any part of //chrome
+      "//chrome/browser/resources/side_panel/shared:resources",
+    ]
+  }
+}

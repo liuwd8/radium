@@ -1,2 +1,4 @@
 /.vscode/
 *.code-workspace
+
+/browser/ui/webui/example/resources/tsconfig.json

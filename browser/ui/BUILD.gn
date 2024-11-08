@@ -24,6 +24,7 @@ static_library("ui") {
     "//radium/browser/ui/color",
     "//radium/browser/ui/prefs:impl",
     "//radium/browser/ui/signin",
+    "//radium/browser/ui/webui",
     "//third_party/inspector_protocol:crdtp",
   ]
 
@@ -54,7 +55,7 @@ static_library("ui") {
     deps += [
       "//components/constrained_window",
       "//components/ui_devtools/views",
-      "//radium/browser/ui/wechat",
+      "//radium/browser/ui/gallery",
       "//ui/views",
       "//ui/views:buildflags",
     ]

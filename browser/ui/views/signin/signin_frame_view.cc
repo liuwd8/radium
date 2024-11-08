@@ -16,8 +16,10 @@
 #include "radium/browser/ui/signin/signin_window.h"
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "radium/browser/ui/views/radium_layout_provider.h"
+#include "radium/grit/radium_strings.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/hit_test.h"
+#include "ui/base/l10n/l10n_util.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/gfx/text_constants.h"
 #include "ui/views/accessibility/view_accessibility.h"
@@ -27,6 +29,7 @@
 #include "ui/views/controls/button/label_button.h"
 #include "ui/views/controls/image_view.h"
 #include "ui/views/controls/label.h"
+#include "ui/views/controls/link.h"
 #include "ui/views/controls/separator.h"
 #include "ui/views/layout/box_layout.h"
 #include "ui/views/layout/box_layout_view.h"
@@ -107,16 +110,20 @@ void SigninFrameView::Init(views::Widget* widget,
                   views::Builder<views::Label>()
                       .SetProperty(views::kBoxLayoutFlexKey,
                                    views::BoxLayoutFlexSpecification())
-                      .SetText(u"微信（开发版）")
+                      .SetText(
+                          l10n_util::GetStringUTF16(IDS_SIGNIN_FRAME_TITLE))
 #if !BUILDFLAG(IS_MAC)
                       .SetHorizontalAlignment(
                           gfx::HorizontalAlignment::ALIGN_LEFT),
                   views::Builder<views::Button>(
                       CreateFrameCaptionButton(
-                          views::CaptionButtonIcon::CAPTION_BUTTON_ICON_MENU,
-                          HTSYSMENU, views::kWindowControlMaximizeIcon))
+                          views::CaptionButtonIcon::
+                              CAPTION_BUTTON_ICON_MINIMIZE,
+                          HTMINBUTTON, views::kWindowControlMinimizeIcon))
                       .SetPreferredSize(
-                          gfx::Size(views::GetCaptionButtonWidth(), 0)),
+                          gfx::Size(views::GetCaptionButtonWidth(), 0))
+                      .SetCallback(base::BindOnce(&views::Widget::Minimize,
+                                                  base::Unretained(widget))),
                   views::Builder<views::Button>(
                       CreateFrameCaptionButton(
                           views::CaptionButtonIcon::CAPTION_BUTTON_ICON_CLOSE,
@@ -160,7 +167,8 @@ void SigninFrameView::Init(views::Widget* widget,
                                            views::BoxLayoutFlexSpecification())
                               .SetHorizontalAlignment(
                                   gfx::HorizontalAlignment::ALIGN_CENTER)
-                              .SetText(u"进入微信")
+                              .SetText(l10n_util::GetStringUTF16(
+                                  IDS_SIGNIN_CONFIRM_BUTTON))
                               .SetCallback(std::move(finish_callback)
                                                .Then(base::BindOnce(
                                                    &views::Widget::Close,
@@ -169,13 +177,13 @@ void SigninFrameView::Init(views::Widget* widget,
                       .SetBetweenChildSpacing(8)
                       .AddChildren(
                           views::Builder<views::Label>()
-                              .SetText(u"切换账号")
+                              .SetText(l10n_util::GetStringUTF16(
+                                  IDS_SIGNIN_CHANGE_ACCOUNT))
                               .SetTextStyle(views::style::STYLE_LINK),
                           views::Builder<views::Separator>().SetOrientation(
                               views::Separator::Orientation::kVertical),
-                          views::Builder<views::Label>()
-                              .SetText(u"仅传输文件")
-                              .SetTextStyle(views::style::STYLE_LINK))))
+                          views::Builder<views::Link>().SetText(
+                              l10n_util::GetStringUTF16(IDS_SIGNIN_HELP)))))
       .BuildChildren();
 
   UpdateQRContent();

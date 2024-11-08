@@ -78,6 +78,7 @@ template("radium_extra_paks") {
       "$root_gen_dir/content/quota_internals_resources.pak",
       "$root_gen_dir/mojo/public/js/mojo_bindings_resources.pak",
       "$root_gen_dir/net/net_resources.pak",
+      "$root_gen_dir/radium/example_resources.pak",
       "$root_gen_dir/third_party/blink/public/resources/blink_resources.pak",
       "$root_gen_dir/third_party/blink/public/resources/inspector_overlay_resources.pak",
       "$root_gen_dir/ui/resources/webui_resources.pak",
@@ -90,6 +91,7 @@ template("radium_extra_paks") {
       "//content/browser/resources:resources",
       "//mojo/public/js:resources",
       "//net:net_resources",
+      "//radium/browser/ui/webui:resources",
       "//third_party/blink/public:devtools_inspector_resources",
       "//third_party/blink/public:resources",
       "//ui/resources",
@@ -104,20 +106,17 @@ template("radium_extra_paks") {
     if (!is_android) {
       # New paks should be added here by default.
       sources += [
+        # Special case. Otherwise we shouldn't depend on any part of //chrome
+        "$root_gen_dir/chrome/side_panel_shared_resources.pak",
         "$root_gen_dir/content/browser/devtools/devtools_resources.pak",
         "$root_gen_dir/content/browser/tracing/tracing_resources.pak",
         "$root_gen_dir/content/traces_internals_resources.pak",
+        "$root_gen_dir/radium/webui_gallery_resources.pak",
       ]
       deps += [
         "//content/browser/devtools:devtools_resources",
         "//content/browser/tracing:resources",
       ]
-      if (!optimize_webui) {
-        # Only add when optimize_webui=false, since in other cases the same
-        # resources are already bundled within the UIs that use them.
-        sources += [ "$root_gen_dir/chrome/settings_shared_resources.pak" ]
-        deps += [ "//chrome/browser/resources/settings_shared:resources" ]
-      }
     }
   }
 }

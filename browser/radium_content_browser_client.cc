@@ -12,6 +12,7 @@
 #include "components/embedder_support/user_agent_utils.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/common/content_descriptors.h"
 #include "radium/browser/browser_process.h"
 #include "radium/browser/devtools/radium_devtools_manager_delegate.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
@@ -19,16 +20,20 @@
 #include "radium/browser/net/profile_network_context_service_factory.h"
 #include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/profiles/radium_browser_main_extra_parts_profiles.h"
+#include "radium/browser/radium_browser_interface_binders.h"
 #include "radium/browser/radium_browser_main_extra_parts.h"
 #include "radium/browser/radium_browser_main_parts.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views.h"
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
+#include "radium/common/webui_url_constants.h"
 
 #if BUILDFLAG(IS_WIN)
 #include "radium/browser/radium_browser_main_parts_win.h"
 #elif BUILDFLAG(IS_LINUX)
+#include "components/crash/core/app/crash_switches.h"
+#include "components/crash/core/app/crashpad.h"
 #include "radium/browser/radium_browser_main_parts_linux.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views_linux.h"
 #elif BUILDFLAG(IS_MAC)
@@ -36,6 +41,7 @@
 #include "radium/browser/radium_browser_main_parts_mac.h"
 #elif BUILDFLAG(IS_ANDROID)
 #include "components/crash/content/browser/child_exit_observer_android.h"
+#include "components/crash/content/browser/crash_handler_host_linux.h"
 #include "components/crash/content/browser/crash_memory_metrics_collector_android.h"
 #include "radium/browser/android/devtools_manager_delegate_android.h"
 #include "radium/browser/radium_browser_main_parts_android.h"
@@ -148,6 +154,11 @@ RadiumContentBrowserClient::CreateBrowserMainParts(bool is_integration_test) {
   return main_parts;
 }
 
+void RadiumContentBrowserClient::GetAdditionalWebUISchemes(
+    std::vector<std::string>* additional_schemes) {
+  additional_schemes->emplace_back(radium::kRadiumUIScheme);
+}
+
 std::unique_ptr<content::DevToolsManagerDelegate>
 RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
 #if BUILDFLAG(IS_ANDROID)
@@ -155,6 +166,18 @@ RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
 #else
   return std::make_unique<RadiumDevToolsManagerDelegate>();
 #endif
+}
+
+void RadiumContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
+    content::RenderFrameHost* render_frame_host,
+    mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
+  radium::internal::PopulateRadiumFrameBinders(map, render_frame_host);
+  radium::internal::PopulateRadiumWebUIFrameBinders(map, render_frame_host);
+}
+
+void RadiumContentBrowserClient::RegisterWebUIInterfaceBrokers(
+    content::WebUIBrowserInterfaceBrokerRegistry& registry) {
+  radium::internal::PopulateRadiumWebUIFrameInterfaceBrokers(registry);
 }
 
 void RadiumContentBrowserClient::OnNetworkServiceCreated(

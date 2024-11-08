@@ -1,0 +1,8 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+radium_lit_visibility = [
+  "//radium/browser/ui/webui/webui_gallery/resources:build_ts",
+  "//radium/browser/ui/webui/example/resources:build_ts",
+]

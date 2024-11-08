@@ -1,0 +1,16 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("example") {
+  public = [ "example_ui.h" ]
+
+  sources = [ "example_ui.cc" ]
+
+  deps = [
+    "resources",
+    "//base",
+    "//content/public/browser",
+    "//radium/common",
+  ]
+}

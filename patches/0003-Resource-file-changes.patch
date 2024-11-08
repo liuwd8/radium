@@ -1,0 +1,64 @@
+From 52bd9726965dcf32ad07778f551b121e19777f7a Mon Sep 17 00:00:00 2001
+From: weidongliu <weidongliu@chromium.org>
+Date: Fri, 8 Nov 2024 21:46:55 +0800
+Subject: [PATCH 3/3] Resource file changes
+
+---
+ tools/gritsettings/resource_ids.spec        | 20 +++++++++++++++++++-
+ ui/base/resource/resource_bundle_android.cc |  4 ++--
+ 2 files changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
+index a5b89cfbae164..e75316525a2cc 100644
+--- a/tools/gritsettings/resource_ids.spec
++++ b/tools/gritsettings/resource_ids.spec
+@@ -1385,11 +1385,29 @@
+   "<(SHARED_INTERMEDIATE_DIR)/third_party/blink/public/strings/permission_element_generated_strings.grd": {
+     "META": {"sizes": {"messages": [2000],}},
+     "messages": [10080],
+-  }
++  },
+ 
+   # END "everything else" section.
+   # Everything but chrome/, components/, content/, and ios/
+ 
+   # Thinking about appending to the end?
+   # Please read the header and find the right section above instead.
++
++  "radium/app/radium_strings.grd": {
++    "messages": [20000],
++  },
++
++  "radium/app/theme/theme_resources.grd": {
++    "structures": [20020],
++  },
++
++  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/webui_gallery/resources/resources.grd": {
++    "META": {"sizes": {"includes": [200],}},
++    "includes": [20040],
++  },
++  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/example/resources/resources.grd": {
++    "META": {"sizes": {"includes": [200],}},
++    "includes": [20060],
++  },
++
+ }
+diff --git a/ui/base/resource/resource_bundle_android.cc b/ui/base/resource/resource_bundle_android.cc
+index 7d9b6242e571c..c9bcc4896506c 100644
+--- a/ui/base/resource/resource_bundle_android.cc
++++ b/ui/base/resource/resource_bundle_android.cc
+@@ -90,9 +90,9 @@ std::unique_ptr<DataPack> LoadDataPackFromLocalePak(
+ void ResourceBundle::LoadCommonResources() {
+   base::FilePath disk_path;
+   base::PathService::Get(ui::DIR_RESOURCE_PAKS_ANDROID, &disk_path);
+-  disk_path = disk_path.AppendASCII("chrome_100_percent.pak");
++  disk_path = disk_path.AppendASCII("radium_100_percent.pak");
+   bool success =
+-      LoadFromApkOrFile("assets/chrome_100_percent.pak", &disk_path,
++      LoadFromApkOrFile("assets/radium_100_percent.pak", &disk_path,
+                         &g_chrome_100_percent_fd, &g_chrome_100_percent_region);
+   DCHECK(success);
+ 
+-- 
+2.34.1
+
