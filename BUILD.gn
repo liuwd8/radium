@@ -54,7 +54,10 @@ if (is_win) {
 }
 
 group("all") {
-  deps = [ ":radium" ]
+  deps = [
+    ":radium",
+    "tools/variations",
+  ]
 }
 
 group("strings") {
