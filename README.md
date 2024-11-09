@@ -13,7 +13,7 @@ Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms
 # Demo
 
 ## Linux Demo
-[Linux Demo](https://github.com/user-attachments/assets/0e8821fd-baff-4c87-ad90-b4f5966705ff)
+[Linux Demo](https://github.com/liuwd8/chromium_application/blob/main/demo.mp4)
 
 ## Mac Demo
 [Mac Demo](https://github.com/user-attachments/assets/85761526-2f84-4d03-b59c-ed0528e30c26)
