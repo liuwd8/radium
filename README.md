@@ -23,6 +23,9 @@ Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms
 
 [Win Demo(dark mode)](https://github.com/user-attachments/assets/8a7ef266-d1a8-48dc-9179-a671ec6b6f4b)
 
+# Android Demo
+[Android Demo](https://github.com/user-attachments/assets/8421e5bb-a451-4c5d-9748-083cb9e7df53)
+
 # Build
 To compile this project, you need to pull the Chromium project first. For the documentation of the Chromium project, please refer to: https://www.chromium.org/developers/how-tos/get-the-code/
 
