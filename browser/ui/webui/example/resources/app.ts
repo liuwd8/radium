@@ -2,11 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import '//resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
-import '//resources/cr_elements/cr_toggle/cr_toggle.js';
-
-import { ColorChangeUpdater, COLORS_CSS_SELECTOR } from '//resources/cr_components/color_change_listener/colors_css_updater.js';
-import type { CrMenuSelector } from '//resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
 import { assert } from '//resources/js/assert.js';
 import { CrRouter } from '//resources/js/cr_router.js';
 import { CrLitElement } from '//resources/lit/v3_0/lit.rollup.js';
@@ -23,7 +18,6 @@ interface Demo {
 export interface ExampleAppElement {
   $: {
     main: HTMLElement,
-    selector: CrMenuSelector,
   };
 }
 
@@ -170,7 +164,6 @@ export class ExampleAppElement extends CrLitElement {
   ];
 
   override firstUpdated() {
-    ColorChangeUpdater.forDocument().start();
     const router = CrRouter.getInstance();
     this.onPathChanged_(router.getPath());
     router.addEventListener(
@@ -195,7 +188,6 @@ export class ExampleAppElement extends CrLitElement {
     const demoIndex =
       path === '' ? 0 : this.demos_.findIndex(demo => demo.path === path);
     assert(demoIndex !== -1);
-    this.$.selector.selected = demoIndex;
 
     const demo = this.demos_[demoIndex]!;
 
@@ -207,19 +199,8 @@ export class ExampleAppElement extends CrLitElement {
     this.$.main.appendChild(demoElement);
   }
 
-  protected onFollowColorPipelineChange_(e: CustomEvent<boolean>) {
-    if (e.detail) {
-      assert(document.body.querySelector(COLORS_CSS_SELECTOR) === null);
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'radium://theme/colors.css?sets=ui,radium';
-      document.body.appendChild(link);
-      return;
-    }
+  protected onFollowColorPipelineChange_(_: CustomEvent<boolean>) {
 
-    const link = document.body.querySelector(COLORS_CSS_SELECTOR);
-    assert(link);
-    link.remove();
   }
 }
 

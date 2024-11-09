@@ -9,20 +9,7 @@ import type { ExampleAppElement } from './app.js';
 export function getHtml(this: ExampleAppElement) {
   return html`
 <div id="sidebar">
-  <cr-menu-selector id="selector" selectable="a" selected-attribute="selected"
-      @iron-select="${this.onMenuItemSelect_}">
-    ${this.demos_.map(demo => html`
-        <a role="menuitem" href="${demo.path}"
-            class="cr-nav-menu-item" @click="${this.onMenuItemClick_}">
-        ${demo.name}
-        </a>`)}
-  </cr-menu-selector>
-
   <div class="cr-row">
-    <span id="toggleDescription">Follow color pipeline</span>
-    <cr-toggle aria-labeledby="toggleDescription"
-        @change="${this.onFollowColorPipelineChange_}">
-    </cr-toggle>
   </div>
 </div>
 

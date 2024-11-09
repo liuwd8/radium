@@ -9,6 +9,7 @@ source_set("signin") {
 
   deps = [
     "//components/qr_code_generator:bitmap_generator",
+    "//radium/app:strings",
     "//radium/browser/ui/views/frame",
     "//ui/views",
     "//ui/views/window/vector_icons",
