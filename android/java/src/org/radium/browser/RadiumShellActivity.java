@@ -50,7 +50,7 @@ public class RadiumShellActivity extends AppCompatActivity {
         mWindowAndroid.setAnimationPlaceholderView(
                 mShellManager.getContentViewRenderView().getSurfaceView());
 
-        mStartupUrl = "https://pc.weixin.qq.com";
+        mStartupUrl = "radium://example";
 
         BrowserStartupController.getInstance().startBrowserProcessesAsync(
                 LibraryProcessType.PROCESS_BROWSER, true, false,

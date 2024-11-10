@@ -4,53 +4,47 @@
 
 /* #css_wrapper_metadata_start
  * #type=style-lit
- * #import=//resources/cr_elements/cr_shared_vars.css.js
  * #scheme=relative
  * #css_wrapper_metadata_end */
 
 :host {
+  min-height: 100vh;
   display: flex;
-  height: 100%;
-}
-
-#sidebar {
-  border-inline-end: 1px solid var(--cr-separator-color);
-  box-sizing: border-box;
-  min-width: 256px;
-  overflow: auto;
-}
-
-#selector {
-  padding-inline-end: 12px;
-}
-
-h1 {
-  color: var(--cr-primary-text-color);
-  font-size: 170%;
-  font-weight: 500;
-  padding-inline-start: 24px;
-}
-
-iframe {
-  border: none;
-  height: 100%;
-  width: 100%;
-}
-
-#main {
-  flex: 1;
-  overflow: auto;
-  padding: 16px;
-}
-
-#toggleDescription {
-  flex: 1;
-}
-
-.cr-row {
+  flex-direction: column;
   align-items: center;
-  border-top: var(--cr-separator-line);
-  display: flex;
-  min-height: var(--cr-section-min-height);
-  padding: 0 var(--cr-section-padding);
+  justify-content: flex-start;
+  font-size: calc(10px + 2vmin);
+  color: #1a2b42;
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+  background-color: var(--example-app-background-color);
+}
+
+main {
+  flex-grow: 1;
+}
+
+.logo {
+  margin-top: 36px;
+  animation: app-logo-spin infinite 20s linear;
+}
+
+@keyframes app-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.app-footer {
+  font-size: calc(12px + 0.5vmin);
+  align-items: center;
+}
+
+.app-footer a {
+  margin-left: 5px;
 }
