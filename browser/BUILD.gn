@@ -68,6 +68,7 @@ static_library("browser") {
     "//content/public/browser",
     "//content/public/common",
     "//radium/app/theme:theme_resources",
+    "//radium/browser/badging",
     "//radium/browser/content_settings",
     "//radium/browser/devtools",
     "//radium/browser/metrics",

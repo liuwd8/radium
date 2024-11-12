@@ -9,6 +9,7 @@
 #include "radium/browser/net/profile_network_context_service_factory.h"
 
 #if !BUILDFLAG(IS_ANDROID)
+#include "radium/browser/badging/badge_manager_factory.h"
 #include "radium/browser/themes/theme_service_factory.h"
 #endif
 
@@ -19,6 +20,9 @@ RadiumBrowserMainExtraPartsProfiles::~RadiumBrowserMainExtraPartsProfiles() =
 
 void RadiumBrowserMainExtraPartsProfiles::
     EnsureBrowserContextKeyedServiceFactoriesBuilt() {
+#if !BUILDFLAG(IS_ANDROID)
+  badging::BadgeManagerFactory::GetInstance();
+#endif
   CookieSettingsFactory::GetInstance();
   HostContentSettingsMapFactory::GetInstance();
   ProfileNetworkContextServiceFactory::GetInstance();

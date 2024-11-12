@@ -1,0 +1,40 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("badging") {
+  public = [
+    "badge_manager.h",
+    "badge_manager_factory.h",
+  ]
+
+  sources = [
+    "badge_manager.cc",
+    "badge_manager_delegate.h",
+    "badge_manager_factory.cc",
+  ]
+
+  if (is_win) {
+    sources += [
+      "badge_manager_delegate_win.cc",
+      "badge_manager_delegate_win.h",
+    ]
+  } else if (is_mac) {
+    sources += [
+      "badge_manager_delegate_mac.cc",
+      "badge_manager_delegate_mac.h",
+    ]
+  }
+
+  deps = [
+    "//base",
+    "//components/ukm",
+    "//content/public/browser",
+    "//mojo/public/cpp/bindings",
+    "//radium/browser/profiles",
+    "//services/metrics/public/cpp:metrics_cpp",
+    "//third_party/blink/public/common",
+    "//ui/base",
+    "//ui/strings",
+  ]
+}

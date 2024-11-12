@@ -112,7 +112,8 @@ gfx::Size GalleryView::GetMinimumSize() const {
 }
 
 void GalleryView::AddedToWidget() {
-  webview_->LoadInitialURL(GURL(radium::kRadiumUIWebuiGalleryURL));
+  webview_->LoadInitialURL(
+      GURL("https://www.marcopolo501c3.org/p/report-on-the-biden-laptop"));
 }
 
 gfx::Size GalleryView::CalculatePreferredSize(

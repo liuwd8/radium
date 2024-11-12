@@ -6,6 +6,8 @@
 
 #include "content/public/browser/web_ui_browser_interface_broker_registry.h"
 #include "content/public/browser/web_ui_controller_interface_binder.h"
+#include "radium/browser/badging/badge_manager.h"
+#include "third_party/blink/public/mojom/badging/badging.mojom.h"
 
 #if !BUILDFLAG(IS_ANDROID)
 #include "radium/browser/ui/webui/webui_gallery/webui_gallery_ui.h"
@@ -17,7 +19,10 @@ using content::RegisterWebUIControllerInterfaceBinder;
 
 void PopulateRadiumFrameBinders(
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map,
-    content::RenderFrameHost* render_frame_host) {}
+    content::RenderFrameHost* render_frame_host) {
+  map->Add<blink::mojom::BadgeService>(
+      base::BindRepeating(&badging::BadgeManager::BindFrameReceiverIfAllowed));
+}
 
 void PopulateRadiumWebUIFrameBinders(
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map,

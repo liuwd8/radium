@@ -7,12 +7,13 @@ import("//crypto/features.gni")
 
 static_library("ui") {
   public = [
+    "browser.h",
     "startup/startup_browser_creator.h",
     "ui_features.h",
   ]
 
   sources = [
-    "browser.h",
+    "browser.cc",
     "startup/startup_browser_creator.cc",
     "ui_features.cc",
   ]
