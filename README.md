@@ -27,26 +27,22 @@ Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms
 [Linux Demo](https://github.com/user-attachments/assets/3cc0ed85-7389-4d34-914c-9c34ab3f956c)
 
 # Build
-To compile this project, you need to pull the Chromium project first. For the documentation of the Chromium project, please refer to: https://www.chromium.org/developers/how-tos/get-the-code/
+Pulling code requires the chromium depot_tools tool, please refer to: https://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
 
-After pulling Chromium, apply the patch file under patches to the chromium project:
-```
-git am --reject patches/*.patch
-```
-
-If there is a .reject after the patch, you need to manually resolve the conflict
-
-Add to the .gclient file
-
-```
-    "custom_vars": {
-      "checkout_radium": True,
-    },
-```
-
-After that you need to re-run `gclient sync`. Then you can start compiling
+## Pull code:
 ```shell
+mkdir radium && cd radium
+gclient config --name "src/radium" --unmanaged https://github.com/liuwd8/radium.git
+gclient sync --with_branch_heads --with_tags -D
+# This will pull chromium and configure the chromium compilation environment for you
+```
+
+## Build
+```shell
+cd src
+export CHROMIUM_BUILDTOOLS_PATH=`pwd`/buildtools
+gn gen out/xxx
 autoninja -C out/xxx radium
 ```
 
-Currently based on chromium main branch (commit: 4a21fad763705b6a4996c5cf07758f8cd185c78d. Each rebase will update the commit value). Synchronize chromium repository code every week.
+Synchronize chromium repository code every week.
