@@ -35,6 +35,11 @@
 #include "radium/radium_elf/radium_elf_main.h"
 #include "third_party/crashpad/crashpad/util/win/initial_client_data.h"
 
+#if defined(WIN_CONSOLE_APP)
+// Forward declaration of main.
+int main();
+#endif
+
 namespace {
 // Sets the current working directory for the process to the directory holding
 // the executable if this is the browser process. This avoids leaking a handle
@@ -97,6 +102,38 @@ int RunFallbackCrashHandler(const base::CommandLine& cmd_line) {
       cmd_line, base::WideToUTF8(product_name), base::WideToUTF8(version),
       base::WideToUTF8(channel_name));
 }
+
+// In 32-bit builds, the main thread starts with the default (small) stack size.
+// The ARCH_CPU_32_BITS blocks here and below are in support of moving the main
+// thread to a fiber with a larger stack size.
+#if defined(ARCH_CPU_32_BITS)
+// The information needed to transfer control to the large-stack fiber and later
+// pass the main routine's exit code back to the small-stack fiber prior to
+// termination.
+struct FiberState {
+  HINSTANCE instance;
+  LPVOID original_fiber;
+  int fiber_result;
+};
+
+// A PFIBER_START_ROUTINE function run on a large-stack fiber that calls the
+// main routine, stores its return value, and returns control to the small-stack
+// fiber. |params| must be a pointer to a FiberState struct.
+void WINAPI FiberBinder(void* params) {
+  auto* fiber_state = static_cast<FiberState*>(params);
+  // Call the main routine from the fiber. Reusing the entry point minimizes
+  // confusion when examining call stacks in crash reports - seeing wWinMain on
+  // the stack is a handy hint that this is the main thread of the process.
+#if !defined(WIN_CONSOLE_APP)
+  fiber_state->fiber_result =
+      wWinMain(fiber_state->instance, nullptr, nullptr, 0);
+#else   // !defined(WIN_CONSOLE_APP)
+  fiber_state->fiber_result = main();
+#endif  // !defined(WIN_CONSOLE_APP)
+  // Switch back to the main thread to exit.
+  ::SwitchToFiber(fiber_state->original_fiber);
+}
+#endif  // defined(ARCH_CPU_32_BITS)
 
 }  // namespace
 
