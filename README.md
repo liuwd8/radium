@@ -37,6 +37,14 @@ gclient sync --with_branch_heads --with_tags -D
 # This will pull chromium and configure the chromium compilation environment for you
 ```
 
+## Update
+```shell
+cd src/radium
+git rebase origin/main
+cd ..
+gclient sync --with_branch_heads --with_tags -D
+```
+
 ## Build
 ```shell
 cd src
