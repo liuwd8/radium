@@ -40,6 +40,10 @@ class UntitledDesktopWindowTreeHostWin
   bool GetClientAreaInsets(gfx::Insets* insets,
                            HMONITOR monitor) const override;
   bool GetDwmFrameInsetsInPixels(gfx::Insets* insets) const override;
+  bool PreHandleMSG(UINT message,
+                    WPARAM w_param,
+                    LPARAM l_param,
+                    LRESULT* result) override;
   void PostHandleMSG(UINT message, WPARAM w_param, LPARAM l_param) override;
 
   // Kicks off an asynchronous update of |workspace_|, and notifies

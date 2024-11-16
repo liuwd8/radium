@@ -11,6 +11,7 @@
 #include "base/sequence_checker.h"
 #include "components/keep_alive_registry/keep_alive_state_observer.h"
 
+class BrowserProcessPlatformPart;
 class GlobalFeatures;
 class GpuModeManager;
 class PrefRegistrySimple;
@@ -69,12 +70,15 @@ class BrowserProcess : public KeepAliveStateObserver {
   void PostDestroyThreads();
 #endif
 
+  void EndSession();
+
   policy::RadiumBrowserPolicyConnector* browser_policy_connector();
   PrefService* local_state();
   GpuModeManager* gpu_mode_manager();
   os_crypt_async::OSCryptAsync* os_crypt_async();
   policy::PolicyService* policy_service();
   SystemNetworkContextManager* system_network_context_manager();
+  BrowserProcessPlatformPart* platform_part();
 
   GlobalFeatures* GetFeatures();
 
@@ -98,6 +102,8 @@ class BrowserProcess : public KeepAliveStateObserver {
 #if !BUILDFLAG(IS_ANDROID)
   std::unique_ptr<RemoteDebuggingServer> remote_debugging_server_;
 #endif
+
+  std::unique_ptr<BrowserProcessPlatformPart> platform_part_;
 
 #if !BUILDFLAG(IS_ANDROID)
   // Called to signal the process' main message loop to exit.

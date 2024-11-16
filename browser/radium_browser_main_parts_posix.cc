@@ -14,8 +14,20 @@
 #include "base/callback_list.h"
 #include "base/logging.h"
 #include "content/public/browser/browser_thread.h"
+#include "radium/browser/devtools/radium_devtools_manager_delegate.h"
+#include "radium/browser/lifetime/application_lifetime.h"
+#include "radium/browser/lifetime/application_lifetime_desktop.h"
 #include "radium/browser/profiles/profile.h"
 #include "radium/browser/radium_browser_main_parts.h"
+#include "radium/browser/shutdown_signal_handlers_posix.h"
+
+namespace SessionRestore {
+
+bool IsRestoringSynchronously() {
+  return false;
+}
+
+}  // namespace SessionRestore
 
 namespace {
 
@@ -55,17 +67,62 @@ class ExitHandler {
 // static
 void ExitHandler::ExitWhenPossibleOnUIThread(int signal) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  // DevTools delegate's browser keeplive may prevent browser from closing so
+  // remove it before proceeding because we have an explicit shutdown request.
+  RadiumDevToolsManagerDelegate::AllowBrowserToClose();
+
+  if (SessionRestore::IsRestoringSynchronously()) {
+    // ExitHandler takes care of deleting itself.
+    new ExitHandler();
+  } else {
+#if BUILDFLAG(IS_LINUX)
+    switch (signal) {
+      case SIGINT:
+      case SIGHUP:
+        // SIGINT gets sent when the user types Ctrl+C, but the session is
+        // likely not going away, so try to exit gracefully.  SIGHUP is sent on
+        // most systems as a first warning of shutdown.  If the process takes
+        // too long to quit, the next signal is usually SIGTERM.
+        Exit();
+        break;
+      case SIGTERM:
+        // SIGTERM is usually sent instead of SIGKILL to gracefully shutdown
+        // processes.  But most systems use it as a shutdown warning, so
+        // conservatively assume that the session is ending.  If the process
+        // still doesn't quit within a bounded time, most systems will finally
+        // send SIGKILL, which we're unable to install a signal handler for.
+        // TODO(thomasanderson): Try to distinguish if the session is really
+        // ending or not.  Maybe there's a systemd or DBus API to query.
+        radium::SessionEnding();
+        break;
+      default:
+        NOTREACHED();
+    }
+#else
+    Exit();
+#endif
+  }
 }
 
 ExitHandler::ExitHandler() = default;
 
 ExitHandler::~ExitHandler() = default;
 
-void ExitHandler::OnSessionRestoreDone(Profile* profile, int /* num_tabs */) {}
+void ExitHandler::OnSessionRestoreDone(Profile* profile, int /* num_tabs */) {
+  if (!SessionRestore::IsRestoringSynchronously()) {
+    // At this point the message loop may not be running (meaning we haven't
+    // gotten through browser startup, but are close). Post the task to at which
+    // point the message loop is running.
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE, base::BindOnce(&ExitHandler::Exit));
+    delete this;
+  }
+}
 
 // static
 void ExitHandler::Exit() {
-  LOG(ERROR) << __func__;
+  radium::AttemptExit();
 }
 
 }  // namespace
@@ -95,8 +152,8 @@ int RadiumBrowserMainPartsPosix::PreEarlyInitialization() {
 void RadiumBrowserMainPartsPosix::PostCreateMainMessageLoop() {
   RadiumBrowserMainParts::PostCreateMainMessageLoop();
 
-  // // Exit in response to SIGINT, SIGTERM, etc.
-  // InstallShutdownSignalHandlers(
-  //     base::BindOnce(&ExitHandler::ExitWhenPossibleOnUIThread),
-  //     content::GetUIThreadTaskRunner({}));
+  // Exit in response to SIGINT, SIGTERM, etc.
+  InstallShutdownSignalHandlers(
+      base::BindOnce(&ExitHandler::ExitWhenPossibleOnUIThread),
+      content::GetUIThreadTaskRunner({}));
 }

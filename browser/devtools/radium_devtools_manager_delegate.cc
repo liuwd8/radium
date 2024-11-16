@@ -4,6 +4,7 @@
 
 #include "radium/browser/devtools/radium_devtools_manager_delegate.h"
 
+#include "components/keep_alive_registry/scoped_keep_alive.h"
 #include "content/public/browser/devtools_agent_host.h"
 #include "radium/browser/devtools/devtools_browser_context_manager.h"
 #include "radium/browser/devtools/radium_devtools_session.h"
@@ -16,6 +17,13 @@ RadiumDevToolsManagerDelegate* g_instance = nullptr;
 // static
 RadiumDevToolsManagerDelegate* RadiumDevToolsManagerDelegate::GetInstance() {
   return g_instance;
+}
+
+// static
+void RadiumDevToolsManagerDelegate::AllowBrowserToClose() {
+  if (auto* instance = GetInstance()) {
+    instance->keep_alive_.reset();
+  }
 }
 
 RadiumDevToolsManagerDelegate::RadiumDevToolsManagerDelegate() {

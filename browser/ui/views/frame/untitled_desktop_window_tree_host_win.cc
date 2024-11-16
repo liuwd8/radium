@@ -23,6 +23,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/lifetime/application_lifetime_desktop.h"
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "ui/base/win/hwnd_metrics.h"
 #include "ui/display/win/screen_win.h"
@@ -331,6 +332,19 @@ bool UntitledDesktopWindowTreeHostWin::GetDwmFrameInsetsInPixels(
     *insets = gfx::Insets::TLBR(tabstrip_region_size.height(), 0, 0, 0);
   }
   return true;
+}
+
+bool UntitledDesktopWindowTreeHostWin::PreHandleMSG(UINT message,
+                                                    WPARAM w_param,
+                                                    LPARAM l_param,
+                                                    LRESULT* result) {
+  switch (message) {
+    case WM_ENDSESSION:
+      radium::SessionEnding();
+      return true;
+  }
+  return DesktopWindowTreeHostWin::PreHandleMSG(message, w_param, l_param,
+                                                result);
 }
 
 void UntitledDesktopWindowTreeHostWin::PostHandleMSG(UINT message,

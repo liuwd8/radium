@@ -8,6 +8,7 @@
 #include "content/public/browser/devtools_manager_delegate.h"
 
 class RadiumDevToolsSession;
+class ScopedKeepAlive;
 
 class RadiumDevToolsManagerDelegate : public content::DevToolsManagerDelegate {
  public:
@@ -19,6 +20,9 @@ class RadiumDevToolsManagerDelegate : public content::DevToolsManagerDelegate {
   ~RadiumDevToolsManagerDelegate() override;
 
   static RadiumDevToolsManagerDelegate* GetInstance();
+
+  // Release browser keep alive allowing browser to close.
+  static void AllowBrowserToClose();
 
  private:
   // content::DevToolsManagerDelegate implementation.
@@ -50,6 +54,8 @@ class RadiumDevToolsManagerDelegate : public content::DevToolsManagerDelegate {
   std::map<content::DevToolsAgentHostClientChannel*,
            std::unique_ptr<RadiumDevToolsSession>>
       sessions_;
+
+  std::unique_ptr<ScopedKeepAlive> keep_alive_;
 };
 
 #endif  // RADIUM_BROWSER_DEVTOOLS_RADIUM_DEVTOOLS_MANAGER_DELEGATE_H_
