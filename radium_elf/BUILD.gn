@@ -142,17 +142,10 @@ source_set("constants") {
 
 shared_library("radium_elf") {
   sources = [
+    "radium_elf.def",
     "radium_elf_main.cc",
     "radium_elf_main.h",
   ]
-
-  if (target_cpu == "x86") {
-    sources += [ "radium_elf_x86.def" ]
-  } else if (target_cpu == "arm64") {
-    sources += [ "radium_elf_arm64.def" ]
-  } else {
-    sources += [ "radium_elf_x64.def" ]
-  }
 
   deps = [
     ":constants",

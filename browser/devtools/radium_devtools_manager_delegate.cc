@@ -53,8 +53,7 @@ void RadiumDevToolsManagerDelegate::HandleCommand(
     std::move(callback).Run(message);
     // This should not happen, but happens. NOTREACHED tries to get
     // a repro in some test.
-    NOTREACHED_IN_MIGRATION();
-    return;
+    NOTREACHED();
   }
   it->second->HandleCommand(message, std::move(callback));
 }

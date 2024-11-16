@@ -20,7 +20,7 @@ bool IsShowingFrame(bool use_custom_frame,
   return use_custom_frame &&
          window_state != ui::PlatformWindowState::kMaximized &&
          window_state != ui::PlatformWindowState::kMinimized &&
-         !ui::IsPlatformWindowStateFullscreen(window_state);
+         window_state != ui::PlatformWindowState::kFullScreen;
 }
 
 }  // namespace

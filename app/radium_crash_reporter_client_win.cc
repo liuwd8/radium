@@ -88,26 +88,19 @@ void RadiumCrashReporterClient::GetProductNameAndVersion(
                                               special_build, channel_name);
 }
 
-bool RadiumCrashReporterClient::ShouldShowRestartDialog(std::wstring* title,
-                                                        std::wstring* message,
-                                                        bool* is_rtl_locale) {
-  return false;
-}
-
-bool RadiumCrashReporterClient::AboutToRestart() {
-  return false;
-}
-
-bool RadiumCrashReporterClient::GetIsPerUserInstall() {
-  return true;
+void RadiumCrashReporterClient::GetProductInfo(ProductInfo* product_info) {
+  std::wstring product_name, version, special_build, channel_name;
+  wchar_t exe_file[MAX_PATH] = {};
+  CHECK(::GetModuleFileName(nullptr, exe_file, std::size(exe_file)));
+  GetProductNameAndVersion(exe_file, &product_name, &version, &special_build,
+                           &channel_name);
+  product_info->product_name = base::WideToUTF8(product_name);
+  product_info->version = base::WideToUTF8(version);
+  product_info->channel = base::WideToUTF8(channel_name);
 }
 
 bool RadiumCrashReporterClient::GetShouldDumpLargerDumps() {
   return false;
-}
-
-int RadiumCrashReporterClient::GetResultCodeRespawnFailed() {
-  return radium::RESULT_CODE_RESPAWN_FAILED;
 }
 
 bool RadiumCrashReporterClient::ReportingIsEnforcedByPolicy(
@@ -158,8 +151,7 @@ bool RadiumCrashReporterClient::ShouldMonitorCrashHandlerExpensively() {
 bool RadiumCrashReporterClient::EnableBreakpadForProcess(
     const std::string& process_type) {
   // This is not used by Crashpad (at least on Windows).
-  NOTREACHED_IN_MIGRATION();
-  return true;
+  NOTREACHED();
 }
 
 std::wstring RadiumCrashReporterClient::GetWerRuntimeExceptionModule() {

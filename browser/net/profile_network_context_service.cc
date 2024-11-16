@@ -180,9 +180,7 @@ bool IsAmbientAuthAllowedForProfile(Profile* profile) {
   }
 
   // Profile type not yet supported.
-  NOTREACHED_IN_MIGRATION();
-
-  return false;
+  NOTREACHED();
 }
 
 void UpdateAntiAbuseSettings(Profile* profile) {

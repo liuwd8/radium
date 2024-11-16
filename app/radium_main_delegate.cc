@@ -143,7 +143,7 @@ void AdjustLinuxOOMScore(const std::string& process_type) {
     // we want to assign a score that is somewhat representative for debugging.
     score = content::kLowestRendererOomScore;
   } else {
-    NOTREACHED_IN_MIGRATION() << "Unknown process type";
+    NOTREACHED() << "Unknown process type";
   }
   // In the case of a 0 score, still try to adjust it. Most likely the score is
   // 0 already, but it may not be if this process inherited a higher score from

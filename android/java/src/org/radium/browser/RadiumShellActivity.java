@@ -40,9 +40,11 @@ public class RadiumShellActivity extends AppCompatActivity {
         final boolean listenToActivityState = true;
         mIntentRequestTracker = IntentRequestTracker.createFromActivity(this);
         mWindowAndroid =
-                new ActivityWindowAndroid(this, listenToActivityState, mIntentRequestTracker,
-                        /* insetObserver= */ null,
-                        /* trackOcclusion= */ true);
+                new ActivityWindowAndroid(
+                        this,
+                        listenToActivityState,
+                        mIntentRequestTracker,
+                        /* insetObserver= */ null);
         mIntentRequestTracker.restoreInstanceState(savedInstanceState);
         mShellManager.setWindow(mWindowAndroid);
         // Set up the animation placeholder to be the SurfaceView. This disables the

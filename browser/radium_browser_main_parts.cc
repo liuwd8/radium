@@ -237,7 +237,7 @@ void RadiumBrowserMainParts::WillRunMainMessageLoop(
 #if BUILDFLAG(IS_ANDROID)
   // Chrome on Android does not use default MessageLoop. It has its own
   // Android specific MessageLoop
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 #else
   DCHECK(base::CurrentUIThread::IsSet());
 
@@ -258,7 +258,7 @@ void RadiumBrowserMainParts::PostMainMessageLoopRun() {
 #if BUILDFLAG(IS_ANDROID)
   // Chrome on Android does not use default MessageLoop. It has its own
   // Android specific MessageLoop
-  NOTREACHED_IN_MIGRATION();
+  NOTREACHED();
 #else
   // Start watching hangs up to the end of the process.
   StartWatchingForProcessShutdownHangs();

@@ -73,8 +73,7 @@ std::string FaviconSource::GetSource() {
     case chrome::FaviconUrlFormat::kFavicon2:
       return radium::kRadiumUIFavicon2Host;
   }
-  NOTREACHED_IN_MIGRATION();
-  return "";
+  NOTREACHED();
 }
 
 void FaviconSource::StartDataRequest(
