@@ -30,6 +30,7 @@
 #include "radium/common/webui_url_constants.h"
 
 #if BUILDFLAG(IS_WIN)
+#include "radium/browser/lifetime/application_lifetime_desktop.h"
 #include "radium/browser/radium_browser_main_parts_win.h"
 #elif BUILDFLAG(IS_LINUX)
 #include "components/crash/core/app/crash_switches.h"
@@ -179,6 +180,13 @@ void RadiumContentBrowserClient::RegisterWebUIInterfaceBrokers(
     content::WebUIBrowserInterfaceBrokerRegistry& registry) {
   radium::internal::PopulateRadiumWebUIFrameInterfaceBrokers(registry);
 }
+
+#if BUILDFLAG(IS_WIN)
+void RadiumContentBrowserClient::SessionEnding(
+    std::optional<DWORD> control_type) {
+  radium::SessionEnding();
+}
+#endif  // BUILDFLAG(IS_WIN)
 
 void RadiumContentBrowserClient::OnNetworkServiceCreated(
     network::mojom::NetworkService* network_service) {

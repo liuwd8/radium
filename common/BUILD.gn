@@ -7,6 +7,9 @@ import("//build/util/process_version.gni")
 
 group("common") {
   public_deps = [ ":common_lib" ]
+  if (is_win) {
+    public_deps += [ "//radium/common/win:delay_load_hooks" ]
+  }
 }
 
 source_set("channel_info") {

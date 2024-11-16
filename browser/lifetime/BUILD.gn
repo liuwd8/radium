@@ -1,0 +1,44 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+
+source_set("lifetime") {
+  sources = [
+    "application_lifetime.cc",
+    "application_lifetime.h",
+  ]
+
+  deps = [ "//base" ]
+
+  if (!is_android) {
+    sources += [
+      "application_lifetime_desktop.cc",
+      "application_lifetime_desktop.h",
+    ]
+  } else {
+    sources += [
+      "application_lifetime_android.cc",
+      "application_lifetime_android.h",
+    ]
+
+    deps += [ "//radium/browser/lifetime/android:jni_headers" ]
+  }
+
+  if (use_aura) {
+    # Cross - platform Aura files.
+    sources += [ "application_lifetime_aura.cc" ]
+
+    deps += [
+      "//ui/aura",
+      "//ui/views",
+    ]
+  }
+
+  if (is_mac) {
+    sources += [ "application_lifetime_mac.mm" ]
+
+    deps += [ "//ui/views" ]
+  }
+}

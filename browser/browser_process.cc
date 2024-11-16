@@ -8,6 +8,7 @@
 
 #include "base/run_loop.h"
 #include "base/sequence_checker.h"
+#include "base/synchronization/waitable_event.h"
 #include "base/trace_event/trace_event.h"
 #include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/language/core/browser/pref_names.h"
@@ -15,11 +16,13 @@
 #include "components/os_crypt/async/browser/os_crypt_async.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
+#include "radium/browser/browser_process_platform_part.h"
 #include "radium/browser/devtools/remote_debugging_server.h"
 #include "radium/browser/global_features.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/policy/radium_browser_policy_connector.h"
+#include "radium/browser/profiles/profile_manager.h"
 #include "radium/common/pref_names.h"
 
 #if BUILDFLAG(IS_WIN)
@@ -32,8 +35,20 @@
 #include "components/os_crypt/async/browser/secret_portal_key_provider.h"
 #endif
 
+#if !BUILDFLAG(IS_ANDROID)
+#include "radium/browser/lifetime/application_lifetime_desktop.h"
+#endif
+
 namespace {
 BrowserProcess* g_browser_process = nullptr;
+
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_OZONE)
+// How long to wait for the File thread to complete during EndSession, on Linux
+// and Windows. We have a timeout here because we're unable to run the UI
+// messageloop and there's some deadlock risk. Our only option is to exit
+// anyway.
+constexpr base::TimeDelta kEndSessionTimeout = base::Seconds(10);
+#endif
 
 #if BUILDFLAG(IS_LINUX)
 // Enables usage of os_crypt_async::SecretPortalKeyProvider.  Once
@@ -51,6 +66,71 @@ BASE_FEATURE(kSecretPortalKeyProviderUseForEncryption,
              "SecretPortalKeyProviderUseForEncryption",
              base::FEATURE_DISABLED_BY_DEFAULT);
 #endif  // BUILDFLAG(IS_LINUX)
+
+// Used at the end of session to block the UI thread for completion of sentinel
+// tasks on the set of threads used to persist profile data and local state.
+// This is done to ensure that the data has been persisted to disk before
+// continuing.
+class RundownTaskCounter
+    : public base::RefCountedThreadSafe<RundownTaskCounter> {
+ public:
+  RundownTaskCounter();
+
+  RundownTaskCounter(const RundownTaskCounter&) = delete;
+  RundownTaskCounter& operator=(const RundownTaskCounter&) = delete;
+
+  // Increments |count_| and returns a closure bound to Decrement(). All
+  // closures returned by this RundownTaskCounter's GetRundownClosure() method
+  // must be invoked for TimedWait() to complete its wait without timing
+  // out.
+  base::OnceClosure GetRundownClosure();
+
+  // Waits until the count is zero or |timeout| expires.
+  // This can only be called once per instance.
+  void TimedWait(base::TimeDelta timeout);
+
+ private:
+  friend class base::RefCountedThreadSafe<RundownTaskCounter>;
+  ~RundownTaskCounter() {}
+
+  // Decrements the counter and releases the waitable event on transition to
+  // zero.
+  void Decrement();
+
+  // The count starts at one to defer the possibility of one->zero transitions
+  // until TimedWait is called.
+  base::AtomicRefCount count_{1};
+  base::WaitableEvent waitable_event_;
+};
+
+RundownTaskCounter::RundownTaskCounter() = default;
+
+base::OnceClosure RundownTaskCounter::GetRundownClosure() {
+  // As the count starts off at one, it should never get to zero unless
+  // TimedWait has been called.
+  DCHECK(!count_.IsZero());
+
+  count_.Increment();
+
+  return base::BindOnce(&RundownTaskCounter::Decrement, this);
+}
+
+void RundownTaskCounter::Decrement() {
+  if (!count_.Decrement()) {
+    waitable_event_.Signal();
+  }
+}
+
+void RundownTaskCounter::TimedWait(base::TimeDelta timeout) {
+  // Decrement the excess count from the constructor.
+  Decrement();
+
+  // RundownTaskCounter::TimedWait() could return
+  // |waitable_event_.TimedWait()|'s result if any user ever cared about whether
+  // it returned per success or timeout. Currently no user of this API cares and
+  // as such this return value is ignored.
+  waitable_event_.TimedWait(timeout);
+}
 
 }  // namespace
 
@@ -82,7 +162,8 @@ BrowserProcess::BrowserProcess(
     RadiumFeatureListCreator* radium_feature_list_creator)
     : browser_policy_connector_(
           radium_feature_list_creator->TakeRadiumBrowserPolicyConnector()),
-      local_state_(radium_feature_list_creator->TakePrefService()) {
+      local_state_(radium_feature_list_creator->TakePrefService()),
+      platform_part_(std::make_unique<BrowserProcessPlatformPart>()) {
   g_browser_process = this;
 }
 
@@ -196,6 +277,25 @@ void BrowserProcess::StartTearDown() {
 void BrowserProcess::PostDestroyThreads() {}
 #endif
 
+void BrowserProcess::EndSession() {
+  // Mark all the profiles as clean.
+  ProfileManager* pm = features_->profile_manager();
+  scoped_refptr<RundownTaskCounter> rundown_counter =
+      base::MakeRefCounted<RundownTaskCounter>();
+  for (Profile* profile : pm->GetLoadedProfiles()) {
+    if (profile->GetPrefs()) {
+      profile->GetPrefs()->CommitPendingWrite(
+          base::OnceClosure(), rundown_counter->GetRundownClosure());
+    }
+  }
+
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_OZONE)
+  rundown_counter->TimedWait(kEndSessionTimeout);
+#else
+  NOTIMPLEMENTED();
+#endif
+}
+
 policy::RadiumBrowserPolicyConnector*
 BrowserProcess::browser_policy_connector() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
@@ -226,6 +326,10 @@ SystemNetworkContextManager* BrowserProcess::system_network_context_manager() {
   return SystemNetworkContextManager::GetInstance();
 }
 
+BrowserProcessPlatformPart* BrowserProcess::platform_part() {
+  return platform_part_.get();
+}
+
 GlobalFeatures* BrowserProcess::GetFeatures() {
   return features_.get();
 }
@@ -254,5 +358,7 @@ void BrowserProcess::Unpin() {
 
 #if !BUILDFLAG(IS_ANDROID)
   std::move(quit_closure_).Run();
+
+  radium::ShutdownIfNeeded();
 #endif  // !BUILDFLAG(IS_ANDROID)
 }

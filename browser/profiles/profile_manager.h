@@ -64,6 +64,15 @@ class ProfileManager : public Profile::Delegate {
       base::OnceCallback<void(Profile*)> initialized_callback,
       base::OnceCallback<void(Profile*)> created_callback = {});
 
+  // Returns loaded and fully initialized profiles. Notes:
+  // - profiles order is NOT guaranteed to be related with the creation order.
+  // - only returns profiles owned by the ProfileManager. In particular, this
+  //   does not return incognito profiles, because they are owned by their
+  //   original profiles.
+  // - may also return irregular profiles like on-the-record System or Guest
+  //   profiles.
+  std::vector<Profile*> GetLoadedProfiles() const;
+
   // If a profile with the given path is currently managed by this object and
   // fully initialized, return a pointer to the corresponding Profile object;
   // otherwise return null.

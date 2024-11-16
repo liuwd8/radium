@@ -146,6 +146,16 @@ bool ProfileManager::IsAllowedProfilePath(const base::FilePath& path) const {
   return path.DirName() == user_data_dir();
 }
 
+std::vector<Profile*> ProfileManager::GetLoadedProfiles() const {
+  std::vector<Profile*> profiles;
+  for (const auto& iter : profiles_info_) {
+    if (iter.second->created_) {
+      profiles.push_back(iter.second->profile.get());
+    }
+  }
+  return profiles;
+}
+
 Profile* ProfileManager::GetProfileByPath(const base::FilePath& path) const {
   auto it = profiles_info_.find(path);
   return it != profiles_info_.end() ? it->second->profile.get() : nullptr;
@@ -189,6 +199,7 @@ void ProfileManager::OnProfileCreationFinished(Profile* profile,
   auto iter = profiles_info_.find(profile->GetPath());
   CHECK(iter != profiles_info_.end());
   ProfileInfo* info = iter->second.get();
+  info->created_ = success;
 
   std::vector<base::OnceCallback<void(Profile*)>> created_callbacks;
   info->created_callbacks.swap(created_callbacks);

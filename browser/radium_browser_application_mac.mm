@@ -21,6 +21,7 @@
 #include "content/public/browser/native_event_processor_mac.h"
 #include "content/public/browser/native_event_processor_observer_mac.h"
 #include "content/public/common/content_features.h"
+#include "radium/browser/app_controller_mac.h"
 #include "radium/browser/mac/exception_processor.h"
 #include "radium/browser/ui/cocoa/l10n_util.h"
 #include "radium/common/radium_switches.h"
@@ -312,14 +313,12 @@ std::string DescriptionForNSEvent(NSEvent* event) {
 // NSApplication event loop, so final post- MessageLoop::Run() work is done
 // before exiting.
 - (void)terminate:(id)sender {
-  // [AppController.sharedController tryToTerminateApplication:self];
-  NOTREACHED();
+  [AppController.sharedController tryToTerminateApplication:self];
   // Return, don't exit. The application is responsible for exiting on its own.
 }
 
 - (void)cancelTerminate:(id)sender {
-  // [AppController.sharedController stopTryingToTerminateApplication:self];
-  NOTREACHED();
+  [AppController.sharedController stopTryingToTerminateApplication:self];
 }
 
 - (NSEvent*)nextEventMatchingMask:(NSEventMask)mask

@@ -12,6 +12,9 @@ static_library("browser") {
     "browser_prefs.h",
     "browser_process.cc",
     "browser_process.h",
+    "browser_process_platform_part.h",
+    "browser_process_platform_part_base.cc",
+    "browser_process_platform_part_base.h",
     "global_features.cc",
     "global_features.h",
     "net/cert_verifier_service_time_updater.cc",
@@ -71,6 +74,7 @@ static_library("browser") {
     "//radium/browser/badging",
     "//radium/browser/content_settings",
     "//radium/browser/devtools",
+    "//radium/browser/lifetime",
     "//radium/browser/metrics",
     "//radium/browser/prefs",
     "//radium/browser/profiles",
@@ -85,6 +89,8 @@ static_library("browser") {
 
   if (is_android) {
     sources += [
+      "browser_process_platform_part_android.cc",
+      "browser_process_platform_part_android.h",
       "radium_browser_main_parts_android.cc",
       "radium_browser_main_parts_android.h",
     ]
@@ -102,6 +108,25 @@ static_library("browser") {
       "//radium/browser/themes",
       "//radium/browser/ui",
     ]
+
+    if (!is_win) {
+      sources += [
+        "radium_browser_main_parts_posix.cc",
+        "radium_browser_main_parts_posix.h",
+      ]
+    } else {
+      sources += [
+        "net/radium_mojo_proxy_resolver_win.cc",
+        "net/radium_mojo_proxy_resolver_win.h",
+        "radium_browser_main_parts_win.cc",
+        "radium_browser_main_parts_win.h",
+      ]
+
+      deps += [
+        "//components/os_crypt/async/browser:dpapi_key_provider",
+        "//radium/browser/win",
+      ]
+    }
   }
 
   if (use_aura) {
@@ -118,22 +143,10 @@ static_library("browser") {
     }
   }
 
-  if (!is_win) {
+  if (is_posix) {
     sources += [
-      "radium_browser_main_parts_posix.cc",
-      "radium_browser_main_parts_posix.h",
-    ]
-  } else {
-    sources += [
-      "net/radium_mojo_proxy_resolver_win.cc",
-      "net/radium_mojo_proxy_resolver_win.h",
-      "radium_browser_main_parts_win.cc",
-      "radium_browser_main_parts_win.h",
-    ]
-
-    deps += [
-      "//components/os_crypt/async/browser:dpapi_key_provider",
-      "//radium/browser/win",
+      "shutdown_signal_handlers_posix.cc",
+      "shutdown_signal_handlers_posix.h",
     ]
   }
 
@@ -148,6 +161,10 @@ static_library("browser") {
 
   if (is_mac) {
     sources += [
+      "app_controller_mac.h",
+      "app_controller_mac.mm",
+      "browser_process_platform_part_mac.h",
+      "browser_process_platform_part_mac.mm",
       "mac/exception_processor.h",
       "mac/exception_processor.mm",
       "platform_util_mac.mm",

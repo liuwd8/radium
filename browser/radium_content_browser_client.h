@@ -35,6 +35,9 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       mojo::BinderMapWithContext<content::RenderFrameHost*>* map) override;
   void RegisterWebUIInterfaceBrokers(
       content::WebUIBrowserInterfaceBrokerRegistry& registry) override;
+#if BUILDFLAG(IS_WIN)
+  void SessionEnding(std::optional<DWORD> control_type) override;
+#endif
   void OnNetworkServiceCreated(
       network::mojom::NetworkService* network_service) override;
   void ConfigureNetworkContextParams(

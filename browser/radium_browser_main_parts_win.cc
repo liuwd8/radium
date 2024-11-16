@@ -4,6 +4,11 @@
 
 #include "radium/browser/radium_browser_main_parts_win.h"
 
+// windows.h must be included before shellapi.h
+#include <windows.h>
+
+#include <delayimp.h>
+
 #include "base/files/file_util.h"
 #include "base/files/important_file_writer_cleaner.h"
 #include "base/path_service.h"
@@ -139,6 +144,12 @@ void RadiumBrowserMainPartsWin::PostMainMessageLoopRun() {
 
 void RadiumBrowserMainPartsWin::PostBrowserStart() {
   RadiumBrowserMainParts::PostBrowserStart();
+
+  // Verify that the delay load helper hooks are in place. This cannot be tested
+  // from unit tests, so rely on this failing here.
+  DCHECK(__pfnDliFailureHook2);
+
+  // InitializeRadiumElf();
 
   // // Some users are getting stuck in compatibility mode. Try to help them
   // // escape; see http://crbug.com/581499.
