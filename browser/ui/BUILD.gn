@@ -29,6 +29,22 @@ static_library("ui") {
     "//third_party/inspector_protocol:crdtp",
   ]
 
+  if (!is_android) {
+    public += [ "browser_list.h" ]
+
+    sources += [
+      "browser_list.cc",
+      "browser_list_observer.h",
+      "browser_observer.h",
+      "browser_user_data.h",
+      "browser_window.h",
+      "unload_controller.cc",
+      "unload_controller.h",
+    ]
+
+    deps += [ "//radium/browser/tab_contents" ]
+  }
+
   if (toolkit_views) {
     sources += [
       "views/accessibility/non_accessible_image_view.cc",

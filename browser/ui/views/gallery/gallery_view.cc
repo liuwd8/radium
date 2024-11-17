@@ -9,6 +9,7 @@
 #include "base/notreached.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
 #include "radium/browser/profiles/profile.h"
+#include "radium/browser/ui/browser.h"
 #include "radium/browser/ui/color/radium_color_id.h"
 #include "radium/browser/ui/views/frame/untitled_widget.h"
 #include "radium/browser/ui/views/radium_layout_provider.h"
@@ -41,9 +42,28 @@ std::unique_ptr<views::FrameCaptionButton> CreateFrameCaptionButton(
 
 }  // namespace
 
-GalleryView::GalleryView()
-    : keep_alive_(KeepAliveOrigin::USER_MANAGER_VIEW,
-                  KeepAliveRestartOption::DISABLED) {
+// static
+BrowserWindow* GalleryView::Show(std::unique_ptr<Browser> browser) {
+  GalleryView* gallery_view = new GalleryView(std::move(browser));
+
+  auto* widget =
+      new UntitledWidget(gallery_view, gallery_view->browser_->profile());
+  views::Widget::InitParams params = widget->GetUntitledWidgetParams();
+  params.delegate = gallery_view;
+  params.name = "GalleryView";
+#if BUILDFLAG(IS_LINUX)
+  params.wm_class_name = "GalleryView";
+  params.wm_class_class = "GalleryView";
+  params.wayland_app_id = params.wm_class_class;
+#endif
+  widget->SetTitleBarBackgroundColor(kColorFrameTitleBarBackground);
+  widget->Init(std::move(params));
+
+  return gallery_view;
+}
+
+GalleryView::GalleryView(std::unique_ptr<Browser> browser)
+    : browser_(std::move(browser)) {
   SetHasWindowSizeControls(true);
   SetTitle(u"WebUI Gallery");
   SetBackground(views::CreateThemedRoundedRectBackground(
@@ -96,8 +116,15 @@ GalleryView::GalleryView()
                       .SetCallback(base::BindRepeating(
                           &GalleryView::OnButtonPressed, base::Unretained(this),
                           HTCLOSE))),
-          views::Builder<views::WebView>().CopyAddressTo(&webview_).SetProperty(
-              views::kBoxLayoutFlexKey, views::BoxLayoutFlexSpecification()))
+          views::Builder<views::WebView>()
+              .CopyAddressTo(&webview_)
+              .CustomConfigure(base::BindOnce(
+                  [](Browser* browser, views::WebView* webview) {
+                    webview->SetWebContents(browser->CreateWebContents());
+                  },
+                  browser_.get()))
+              .SetProperty(views::kBoxLayoutFlexKey,
+                           views::BoxLayoutFlexSpecification()))
       .BuildChildren();
 }
 
@@ -112,8 +139,7 @@ gfx::Size GalleryView::GetMinimumSize() const {
 }
 
 void GalleryView::AddedToWidget() {
-  webview_->LoadInitialURL(
-      GURL("https://www.marcopolo501c3.org/p/report-on-the-biden-laptop"));
+  webview_->LoadInitialURL(GURL(radium::kRadiumUIWebuiGalleryURL));
 }
 
 gfx::Size GalleryView::CalculatePreferredSize(
@@ -123,21 +149,12 @@ gfx::Size GalleryView::CalculatePreferredSize(
   return size;
 }
 
-void GalleryView::Show(Profile* profile) {
-  auto* widget = new UntitledWidget(this, profile);
-  views::Widget::InitParams params = widget->GetUntitledWidgetParams();
-  params.delegate = this;
-  params.name = "GalleryView";
-#if BUILDFLAG(IS_LINUX)
-  params.wm_class_name = "GalleryView";
-  params.wm_class_class = "GalleryView";
-  params.wayland_app_id = params.wm_class_class;
-#endif
-  widget->SetTitleBarBackgroundColor(kColorFrameTitleBarBackground);
-  webview_->SetBrowserContext(profile);
-  widget->Init(std::move(params));
+void GalleryView::Show() {
+  GetWidget()->Show();
+}
 
-  widget->Show();
+void GalleryView::Close() {
+  GetWidget()->Close();
 }
 
 void GalleryView::OnButtonPressed(int hit_component) {
