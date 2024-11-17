@@ -5,26 +5,27 @@
 #ifndef RADIUM_BROWSER_UI_VIEWS_GALLERY_GALLERY_VIEW_H_
 #define RADIUM_BROWSER_UI_VIEWS_GALLERY_GALLERY_VIEW_H_
 
-#include "components/keep_alive_registry/scoped_keep_alive.h"
+#include "radium/browser/ui/browser_window.h"
 #include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "ui/views/view_targeter_delegate.h"
 
-class Profile;
+class Browser;
 
 namespace views {
 class WebView;
 }
 
 class GalleryView : public UntitledWidgetDelegateView,
-                    public views::ViewTargeterDelegate {
+                    public views::ViewTargeterDelegate,
+                    public BrowserWindow {
  public:
-  explicit GalleryView();
+  static BrowserWindow* Show(std::unique_ptr<Browser> browser);
+
+  explicit GalleryView(std::unique_ptr<Browser> browser);
   GalleryView(const GalleryView&) = delete;
   GalleryView& operator=(const GalleryView&) = delete;
 
   ~GalleryView() override;
-
-  void Show(Profile* profile);
 
  private:
   // UntitledWidgetDelegateView:
@@ -34,10 +35,14 @@ class GalleryView : public UntitledWidgetDelegateView,
   gfx::Size CalculatePreferredSize(
       const views::SizeBounds& available_size) const override;
 
+  // BrowserWindow:
+  void Show() override;
+  void Close() override;
+
  private:
   void OnButtonPressed(int hit_component);
 
-  ScopedKeepAlive keep_alive_;
+  std::unique_ptr<Browser> browser_;
 
   raw_ptr<views::View> title_bar_;
   raw_ptr<views::WebView> webview_;

@@ -13,6 +13,7 @@
 #include "radium/browser/global_features.h"
 #include "radium/browser/profiles/profile.h"
 #include "radium/browser/profiles/profile_manager.h"
+#include "radium/browser/ui/browser.h"
 #include "radium/browser/ui/views/gallery/gallery_view.h"
 
 void ShowGalleryView() {
@@ -21,12 +22,17 @@ void ShowGalleryView() {
   base::FilePath path =
       profile_manager->user_data_dir().AppendASCII(base::MD5String("W"));
   Profile* profile = profile_manager->GetProfile(path);
+  auto fn = [](Profile* profile) {
+    Browser::CreateParams params;
+    params.profile = profile;
+    params.new_window = &GalleryView::Show;
+    Browser::Create(std::move(params))->window()->Show();
+  };
+
   if (profile) {
-    (new GalleryView())->Show(profile);
+    fn(profile);
     return;
   }
 
-  profile_manager->CreateProfileAsync(
-      path,
-      base::BindOnce(&GalleryView::Show, base::Unretained(new GalleryView())));
+  profile_manager->CreateProfileAsync(path, base::BindOnce(fn));
 }
