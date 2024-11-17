@@ -84,7 +84,10 @@ void Browser::RemoveObserver(BrowserObserver* observer) {
 void Browser::AddWebContents(
     std::unique_ptr<content::WebContents> web_contents) {
   web_contents->SetDelegate(this);
+  content::WebContents* web_contents_ptr = web_contents.get();
   tabs_.insert(std::move(web_contents));
+
+  observers_.Notify(&BrowserObserver::OnWebContentsAdded, web_contents_ptr);
 }
 
 std::unique_ptr<content::WebContents> Browser::RemoveWebContents(
@@ -100,6 +103,12 @@ std::unique_ptr<content::WebContents> Browser::RemoveWebContents(
   web_contents->SetDelegate(nullptr);
   std::unique_ptr<content::WebContents> value = std::move(*iter);
   tabs_.erase(iter);
+
+  observers_.Notify(&BrowserObserver::OnWebContentsRemoved, value.get());
+
+  if (tabs_.empty()) {
+    observers_.Notify(&BrowserObserver::OnWebContentsEmpty);
+  }
   return value;
 }
 
@@ -110,8 +119,13 @@ content::WebContents* Browser::CreateWebContents() {
   content::WebContents* web_contents_ptr = web_contents.get();
   AddWebContents(std::move(web_contents));
 
-  observers_.Notify(&BrowserObserver::OnWebContentsCreated, web_contents_ptr);
   return web_contents_ptr;
+}
+
+void Browser::CloseContents(content::WebContents* source) {
+  if (unload_controller_.CanCloseContents(source)) {
+    RemoveWebContents(source);
+  }
 }
 
 void Browser::BeforeUnloadFired(content::WebContents* web_contents,

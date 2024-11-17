@@ -2,6 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/win/manifest.gni")
+import("//radium/process_version_rc_template.gni")
+
+process_version_rc_template("radium_elf_resources") {
+  sources = [ "radium_elf.ver" ]
+  output = "$target_gen_dir/radium_elf_version.rc"
+}
+
+# This manifest matches what GYP produces. It may not even be necessary.
+windows_manifest("radium_elf_manifest") {
+  sources = [ as_invoker_manifest ]
+}
+
 static_library("hook_util") {
   sources = [
     "hook_util/hook_util.cc",
@@ -153,6 +166,8 @@ shared_library("radium_elf") {
     ":hook_util",
     ":nt_registry",
     ":pe_image_safe",
+    ":radium_elf_manifest",
+    ":radium_elf_resources",
     ":security",
     ":third_party_dlls",
     "//components/crash/core/app:crash_export_thunks",

@@ -143,6 +143,8 @@ DetermineChannelResult DetermineChannel(const InstallConstants& mode,
                                         std::wstring* update_ap,
                                         std::wstring* update_cohort_name);
 
+bool VersionMismatch();
+
 }  // namespace install_static
 
 #endif  // RADIUM_INSTALL_STATIC_INSTALL_UTIL_H_

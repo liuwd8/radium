@@ -564,4 +564,8 @@ DetermineChannelResult DetermineChannel(const InstallConstants& mode,
           /*is_extended_stable=*/false};
 }
 
+bool VersionMismatch() {
+  return install_static::InstallDetails::Get().VersionMismatch();
+}
+
 }  // namespace install_static

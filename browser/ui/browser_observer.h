@@ -16,7 +16,7 @@ class WebContents;
 
 class BrowserObserver : public base::CheckedObserver {
  public:
-  virtual void OnWebContentsCreated(content::WebContents*) {}
+  virtual void OnWebContentsAdded(content::WebContents*) {}
   virtual void OnWebContentsRemoved(content::WebContents*) {}
   virtual void OnWebContentsEmpty() {}
 };

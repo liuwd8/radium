@@ -29,6 +29,12 @@ class UnloadController : public BrowserObserver,
 
   ~UnloadController() override;
 
+  // Returns true if |contents| can be cleanly closed. When |browser_| is being
+  // closed, this function will return false to indicate |contents| should not
+  // be cleanly closed, since the fast shutdown path will just kill its
+  // renderer.
+  bool CanCloseContents(content::WebContents* contents);
+
   // Called when a BeforeUnload handler is fired for |contents|. |proceed|
   // indicates the user's response to the Y/N BeforeUnload handler dialog. If
   // this parameter is false, any pending attempt to close the whole browser
@@ -48,7 +54,7 @@ class UnloadController : public BrowserObserver,
 
  private:
   // BrowserObserver:
-  void OnWebContentsCreated(content::WebContents*) override;
+  void OnWebContentsAdded(content::WebContents*) override;
   void OnWebContentsRemoved(content::WebContents*) override;
   void OnWebContentsEmpty() override;
 

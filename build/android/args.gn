@@ -1,0 +1,13 @@
+# Set build arguments here. See `gn help buildargs`.
+is_clang = true
+fail_on_android_expectations = true
+ffmpeg_branding = "Chrome"
+is_component_build = false
+is_debug = false
+proprietary_codecs = true
+dcheck_always_on = true
+cc_wrapper = "ccache"
+use_siso = true
+
+target_cpu = "arm64"
+target_os = "android"
