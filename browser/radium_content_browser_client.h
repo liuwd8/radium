@@ -11,6 +11,10 @@
 
 class RadiumFeatureListCreator;
 
+namespace ui {
+class NativeTheme;
+}
+
 class RadiumContentBrowserClient : public content::ContentBrowserClient {
  public:
   explicit RadiumContentBrowserClient();
@@ -30,6 +34,11 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       std::vector<std::string>* additional_schemes) override;
   std::unique_ptr<content::DevToolsManagerDelegate>
   CreateDevToolsManagerDelegate() override;
+  void OverrideWebkitPrefs(content::WebContents* web_contents,
+                           blink::web_pref::WebPreferences* prefs) override;
+  bool OverrideWebPreferencesAfterNavigation(
+      content::WebContents* web_contents,
+      blink::web_pref::WebPreferences* prefs) override;
   void RegisterBrowserInterfaceBindersForFrame(
       content::RenderFrameHost* render_frame_host,
       mojo::BinderMapWithContext<content::RenderFrameHost*>* map) override;
@@ -60,6 +69,8 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
   // Initializes `network_contexts_parent_directory_` and
   // `safe_browsing_service_` on the UI thread.
   void InitOnUIThread();
+
+  const ui::NativeTheme* GetWebTheme() const;
 
   std::unique_ptr<RadiumFeatureListCreator> radium_feature_list_creator_;
 

@@ -69,8 +69,6 @@ ui::ColorProviderKey::ThemeInitializerSupplier* UntitledWidget::GetCustomTheme()
   return nullptr;
 }
 
-void UntitledWidget::OnNativeThemeUpdated(ui::NativeTheme* observed_theme) {}
-
 BEGIN_METADATA(UntitledWidget)
 ADD_PROPERTY_METADATA(int, TitleBarBackgroundHeight)
 ADD_READONLY_PROPERTY_METADATA(std::optional<ui::ColorId>,

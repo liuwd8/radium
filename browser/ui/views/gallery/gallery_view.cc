@@ -149,6 +149,10 @@ gfx::Size GalleryView::CalculatePreferredSize(
   return size;
 }
 
+views::Widget* GalleryView::GetWidget() {
+  return views::View::GetWidget();
+}
+
 void GalleryView::Show() {
   GetWidget()->Show();
 }

@@ -1,0 +1,21 @@
+# Copyright 2024 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("tab") {
+  sources = []
+
+  deps = [ "//base" ]
+
+  sources += [
+    "tab_android.cc",
+    "tab_android.h",
+    "tab_web_contents_delegate_android.cc",
+    "tab_web_contents_delegate_android.h",
+  ]
+
+  deps += [
+    "//components/embedder_support/android:web_contents_delegate",
+    "//radium/browser/tab/android:jni_headers",
+  ]
+}
