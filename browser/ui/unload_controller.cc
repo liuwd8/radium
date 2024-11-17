@@ -32,6 +32,17 @@ UnloadController::UnloadController(Browser* browser)
 
 UnloadController::~UnloadController() = default;
 
+bool UnloadController::CanCloseContents(content::WebContents* contents) {
+  // Don't try to close the tab when the whole browser is being closed, since
+  // that avoids the fast shutdown path where we just kill all the renderers.
+  if (is_attempting_to_close_browser_) {
+    ClearUnloadState(contents, true);
+  }
+
+  return !is_attempting_to_close_browser_ ||
+         is_calling_before_unload_handlers();
+}
+
 bool UnloadController::BeforeUnloadFired(content::WebContents* contents,
                                          bool proceed) {
   if (!is_attempting_to_close_browser_) {
@@ -71,7 +82,7 @@ void UnloadController::CancelWindowClose() {
   radium::OnClosingAllBrowsers(false);
 }
 
-void UnloadController::OnWebContentsCreated(content::WebContents* content) {
+void UnloadController::OnWebContentsAdded(content::WebContents* content) {
   web_contents_collection_.StartObserving(content);
 }
 

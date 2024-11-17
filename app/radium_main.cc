@@ -6,11 +6,9 @@
 #include "base/functional/callback_helpers.h"
 #include "base/sampling_heap_profiler/poisson_allocation_sampler.h"
 #include "build/build_config.h"
-#include "chrome/install_static/install_details.h"
 #include "content/public/app/content_main.h"
 #include "radium/app/radium_main_delegate.h"
 #include "radium/common/radium_result_codes.h"
-#include "radium/install_static/initialize_from_primary_module.h"
 
 #if BUILDFLAG(IS_MAC)
 #include "radium/app/radium_main_mac.h"
@@ -24,6 +22,8 @@
 #include "base/debug/handle_hooks_win.h"
 #include "base/win/current_module.h"
 #include "base/win/win_util.h"
+#include "radium/install_static/initialize_from_primary_module.h"
+#include "radium/install_static/install_util.h"
 #include "radium/radium_elf/radium_elf_main.h"
 
 #define DLLEXPORT __declspec(dllexport)
@@ -101,7 +101,7 @@ int RadiumMain(int argc, const char** argv) {
 
   // Verify that chrome_elf and this module (chrome.dll and chrome_child.dll)
   // have the same version.
-  if (install_static::InstallDetails::Get().VersionMismatch()) {
+  if (install_static::VersionMismatch()) {
     base::debug::DumpWithoutCrashing();
   }
 
