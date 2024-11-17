@@ -66,7 +66,6 @@ class UntitledWidget : public views::Widget {
   const ui::ThemeProvider* GetThemeProvider() const override;
   ui::ColorProviderKey::ThemeInitializerSupplier* GetCustomTheme()
       const override;
-  void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;
 
  private:
   raw_ptr<UntitledWidgetDelegate> delegate_;

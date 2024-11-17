@@ -101,6 +101,7 @@ static_library("browser") {
       "//components/crash/content/browser",
       "//components/embedder_support/android:view",
       "//radium/browser/android",
+      "//radium/browser/tab",
     ]
   } else {
     deps += [

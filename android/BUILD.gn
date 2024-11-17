@@ -125,6 +125,7 @@ android_library("radium_java") {
     "//mojo/public/java/system:system_impl_java",
     "//mojo/public/mojom/base:base_java",
     "//radium/browser/lifetime/android:java",
+    "//radium/browser/tab/android:java",
     "//services/service_manager/public/java:service_manager_java",
     "//services/service_manager/public/mojom:mojom_java",
     "//third_party/androidx:androidx_activity_activity_java",

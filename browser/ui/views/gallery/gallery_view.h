@@ -36,6 +36,7 @@ class GalleryView : public UntitledWidgetDelegateView,
       const views::SizeBounds& available_size) const override;
 
   // BrowserWindow:
+  views::Widget* GetWidget() override;
   void Show() override;
   void Close() override;
 
