@@ -6,9 +6,11 @@
 #include "base/functional/callback_helpers.h"
 #include "base/sampling_heap_profiler/poisson_allocation_sampler.h"
 #include "build/build_config.h"
+#include "chrome/install_static/install_details.h"
 #include "content/public/app/content_main.h"
 #include "radium/app/radium_main_delegate.h"
 #include "radium/common/radium_result_codes.h"
+#include "radium/install_static/initialize_from_primary_module.h"
 
 #if BUILDFLAG(IS_MAC)
 #include "radium/app/radium_main_mac.h"
@@ -59,9 +61,29 @@ int RadiumMain(int argc, const char** argv) {
 #else
 #error Unknown platform.
 #endif
+
+#if BUILDFLAG(IS_WIN)
+  install_static::InitializeFromPrimaryModule();
+#if !defined(COMPONENT_BUILD) && DCHECK_IS_ON()
+  // Patch the main EXE on non-component builds when DCHECKs are enabled.
+  // This allows detection of third party code that might attempt to meddle with
+  // Chrome's handles. This must be done when single-threaded to avoid other
+  // threads attempting to make calls through the hooks while they are being
+  // emplaced.
+  // Note: The EXE is patched separately, in chrome/app/chrome_exe_main_win.cc.
+  base::debug::HandleHooks::AddIATPatch(CURRENT_MODULE());
+#endif  // !defined(COMPONENT_BUILD) && DCHECK_IS_ON()
+  StartupTimestamps timestamps{
+      base::TimeTicks::FromInternalValue(exe_entry_point_ticks),
+      base::TimeTicks::FromInternalValue(preread_begin_ticks),
+      base::TimeTicks::FromInternalValue(preread_end_ticks)};
+  RadiumMainDelegate delegate(timestamps);
+#else  // BUILDFLAG(IS_WIN)
   RadiumMainDelegate delegate(
       {.exe_entry_point_ticks = base::TimeTicks::Now()});
+#endif
   content::ContentMainParams params(&delegate);
+
 #if BUILDFLAG(IS_WIN)
   // The process should crash when going through abnormal termination, but we
   // must be sure to reset this setting when ChromeMain returns normally.
@@ -76,6 +98,12 @@ int RadiumMain(int argc, const char** argv) {
   // Pass chrome_elf's copy of DumpProcessWithoutCrash resolved via load-time
   // dynamic linking.
   base::debug::SetDumpWithoutCrashingFunction(&DumpProcessWithoutCrash);
+
+  // Verify that chrome_elf and this module (chrome.dll and chrome_child.dll)
+  // have the same version.
+  if (install_static::InstallDetails::Get().VersionMismatch()) {
+    base::debug::DumpWithoutCrashing();
+  }
 
   base::CommandLine::Init(0, nullptr);
 #else
