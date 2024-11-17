@@ -3,10 +3,23 @@
 # found in the LICENSE file.
 
 static_library("win") {
+  public = [
+    "radium_elf_init.h",
+    "remove_app_compat_entries.h",
+  ]
+
   sources = [
     "parental_controls.cc",
     "parental_controls.h",
+    "radium_elf_init.cc",
+    "remove_app_compat_entries.cc",
   ]
 
-  deps = [ "//base" ]
+  deps = [
+    "//base",
+    "//radium/install_static:install_static_util",
+    "//radium/radium_elf",
+    "//radium/radium_elf:constants",
+    "//radium/radium_elf:third_party_shared_defines",
+  ]
 }

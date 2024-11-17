@@ -24,6 +24,8 @@
 #include "components/os_crypt/sync/os_crypt.h"
 #include "content/public/browser/render_process_host.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/win/radium_elf_init.h"
+#include "radium/browser/win/remove_app_compat_entries.h"
 #include "radium/common/channel_info.h"
 #include "radium/common/radium_paths.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -149,18 +151,18 @@ void RadiumBrowserMainPartsWin::PostBrowserStart() {
   // from unit tests, so rely on this failing here.
   DCHECK(__pfnDliFailureHook2);
 
-  // InitializeRadiumElf();
+  InitializeRadiumElf();
 
-  // // Some users are getting stuck in compatibility mode. Try to help them
-  // // escape; see http://crbug.com/581499.
-  // base::ThreadPool::PostTask(
-  //     FROM_HERE, {base::TaskPriority::BEST_EFFORT, base::MayBlock()},
-  //     base::BindOnce([]() {
-  //       base::FilePath current_exe;
-  //       if (base::PathService::Get(base::FILE_EXE, &current_exe)) {
-  //         RemoveAppCompatEntries(current_exe);
-  //       }
-  //     }));
+  // Some users are getting stuck in compatibility mode. Try to help them
+  // escape; see http://crbug.com/581499.
+  base::ThreadPool::PostTask(
+      FROM_HERE, {base::TaskPriority::BEST_EFFORT, base::MayBlock()},
+      base::BindOnce([]() {
+        base::FilePath current_exe;
+        if (base::PathService::Get(base::FILE_EXE, &current_exe)) {
+          RemoveAppCompatEntries(current_exe);
+        }
+      }));
 
   base::ImportantFileWriterCleaner::GetInstance().Start();
 }
