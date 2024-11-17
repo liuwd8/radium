@@ -27,6 +27,7 @@
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
+#include "radium/common/radium_version.h"
 #include "radium/common/webui_url_constants.h"
 
 #if BUILDFLAG(IS_WIN)
@@ -295,7 +296,7 @@ void RadiumContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 
 std::string RadiumContentBrowserClient::GetProduct() {
-  return "Radium/" PRODUCT_VERSION;
+  return PRODUCT_SHORTNAME_STRING "/" PRODUCT_VERSION;
 }
 
 std::string RadiumContentBrowserClient::GetUserAgent() {

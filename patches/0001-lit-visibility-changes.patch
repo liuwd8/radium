@@ -1,14 +1,14 @@
-From ab213552fb7a8e7f9744f4d0e4d7884371be861c Mon Sep 17 00:00:00 2001
+From 285ae3958ff1585456939f53054aa637a9ac0180 Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:36 +0800
-Subject: [PATCH 2/3] lit visibility changes
+Subject: [PATCH 1/4] lit visibility changes
 
 ---
  third_party/lit/v3_0/BUILD.gn | 4 ++++
  1 file changed, 4 insertions(+)
 
 diff --git a/third_party/lit/v3_0/BUILD.gn b/third_party/lit/v3_0/BUILD.gn
-index 22830ec4511bf..d44fbfd1eb896 100644
+index da51dd2f5853c..3abc42e3323a8 100644
 --- a/third_party/lit/v3_0/BUILD.gn
 +++ b/third_party/lit/v3_0/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -19,7 +19,7 @@ index 22830ec4511bf..d44fbfd1eb896 100644
  import("//tools/typescript/ts_library.gni")
  import("//ui/webui/resources/tools/bundle_js.gni")
  import("//ui/webui/resources/tools/generate_grd.gni")
-@@ -88,6 +89,9 @@ ts_library("build_ts") {
+@@ -91,6 +92,9 @@ ts_library("build_ts") {
      "//ui/webui/resources/cr_components/theme_color_picker:build_ts",
      "//ui/webui/resources/cr_elements:build_ts",
    ]

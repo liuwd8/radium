@@ -41,6 +41,32 @@ action("generate_xtb_file") {
          ] + grit_args + xtb_locales
 }
 
+# This target is for dependency tracking for the command ID header.
+source_set("command_ids") {
+  sources = [ "radium_command_ids.h" ]
+  public_deps = [ "//build:branding_buildflags" ]
+  deps = [ "//ui/base:constants" ]
+}
+
+# On Windows, links radium_dll.rc. On other platforms, does nothing so you can
+# unconditionally depend on it.
+source_set("radium_dll_resources") {
+  # This source is added unconditionally for include checking on non-Windows
+  # platforms.
+  sources = [ "radium_dll_resource.h" ]
+
+  deps = [ ":command_ids" ]
+
+  if (is_win) {
+    sources += [ "radium_dll.rc" ]
+
+    deps += [
+      "//build:branding_buildflags",
+      "//printing/buildflags",
+    ]
+  }
+}
+
 if (is_win) {
   source_set("exit_code_watcher") {
     sources = [

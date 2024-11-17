@@ -2,8 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//build/config/chrome_build.gni")
 import("//build/util/process_version.gni")
+import("//radium/build/branding.gni")
 
 group("common") {
   public_deps = [ ":common_lib" ]
@@ -56,7 +56,7 @@ process_version("version_header") {
 
   sources = [
     "//chrome/VERSION",
-    "//radium/BRANDING",
+    radium_branding_file_path,
   ]
 
   template_file = "radium_version.h.in"

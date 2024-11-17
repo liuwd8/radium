@@ -1,0 +1,24 @@
+From e4cf84a6b5ba8135054129d9fc903cbe19328855 Mon Sep 17 00:00:00 2001
+From: weidongliu <weidongliu@chromium.org>
+Date: Sun, 17 Nov 2024 14:53:32 +0800
+Subject: [PATCH 4/4] Support Radium Version Assembly
+
+---
+ chrome/app/version_assembly/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/chrome/app/version_assembly/BUILD.gn b/chrome/app/version_assembly/BUILD.gn
+index f7dd033fe0deb..f613f491da16d 100644
+--- a/chrome/app/version_assembly/BUILD.gn
++++ b/chrome/app/version_assembly/BUILD.gn
+@@ -40,6 +40,6 @@ windows_manifest("chrome_exe_manifest") {
+ process_version("version_assembly_manifest") {
+   template_file = "version_assembly_manifest.template"
+   sources = [ "//chrome/VERSION" ]
+-  output = "$root_build_dir/$chrome_version_full.manifest"
++  output = "$target_gen_dir/$chrome_version_full.manifest"
+   process_only = true
+ }
+-- 
+2.34.1
+

@@ -6,6 +6,7 @@ import("//build/config/ui.gni")
 import("//build/config/win/console_app.gni")
 import("//build/config/win/manifest.gni")
 import("//radium/build/branding.gni")
+import("//radium/process_version_rc_template.gni")
 import("//radium/radium_paks.gni")
 import("//tools/resources/generate_resource_allowlist.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
@@ -143,7 +144,7 @@ if (!is_android && !is_mac) {
     deps = [ "//base" ]
 
     data = [ "$root_out_dir/radium_resources.pak" ]
-    data_deps = []
+    data_deps = [ "//radium/app/version_assembly:version_assembly_manifest" ]
     defines = []
 
     if (is_win) {
@@ -152,16 +153,20 @@ if (!is_android && !is_mac) {
         "app/delay_load_failure_hook_win.h",
         "app/main_dll_loader_win.cc",
         "app/main_dll_loader_win.h",
+        "app/radium_exe.rc",
         "app/radium_exe_main_win.cc",
+        "app/radium_exe_resource.h",
       ]
 
       deps += [
         ":radium_dll",
+        ":radium_exe_version",
         "//components/crash/core/app",
         "//components/crash/core/app:run_as_crashpad_handler",
         "//content:sandbox_helper_win",
         "//content/public/common:static_switches",
         "//radium/app:exit_code_watcher",
+        "//radium/app/version_assembly:radium_exe_manifest",
         "//radium/common:constants",
         "//radium/common/win:delay_load_failure_support",
         "//radium/install_static:secondary_module",
@@ -235,6 +240,16 @@ if (!is_android && !is_mac) {
 }
 
 if (is_win) {
+  process_version_rc_template("radium_exe_version") {
+    sources = [ "app/radium_exe.ver" ]
+    output = "$target_gen_dir/radium_exe_version.rc"
+  }
+
+  process_version_rc_template("radium_dll_version") {
+    sources = [ "app/radium_dll.ver" ]
+    output = "$target_gen_dir/radium_dll_version.rc"
+  }
+
   # This manifest matches what GYP produced. It may not even be necessary.
   windows_manifest("radium_dll_manifest") {
     sources = [
@@ -261,11 +276,14 @@ if (is_win) {
     deps = [
       ":dependencies",
       ":radium_dll_manifest",
+      ":radium_dll_version",
       "//components/crash/core/app",
       "//components/crash/core/app:crash_export_thunks",
       "//components/crash/core/common:crash_key",
       "//content/public/app",
+      "//radium/app:radium_dll_resources",
       "//radium/child",
+      "//radium/install_static:secondary_module",
       "//radium/radium_elf",
     ]
 
