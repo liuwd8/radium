@@ -30,11 +30,13 @@
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/radium_content_browser_client.h"
 #include "radium/browser/radium_resource_bundle_helper.h"
+#include "radium/common/channel_info.h"
 #include "radium/common/logging_radium.h"
 #include "radium/common/profiler/unwind_util.h"
 #include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_result_codes.h"
+#include "radium/common/radium_version.h"
 #include "radium/common/webui_url_constants.h"
 #include "services/tracing/public/cpp/stack_sampling/tracing_sampler_profiler.h"
 #include "ui/base/resource/resource_bundle.h"
@@ -54,6 +56,7 @@
 #include "base/win/dark_mode_support.h"
 #include "base/win/resource_exhaustion.h"
 #include "radium/child/v8_crashpad_support_win.h"
+#include "radium/radium_elf/radium_elf_main.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "ui/base/resource/resource_bundle_win.h"
@@ -243,8 +246,33 @@ void RecordMainStartupMetrics(const StartupTimestamps& timestamps) {
   startup_metric_utils::GetCommon().RecordChromeMainEntryTime(now);
 }
 
-constexpr inline bool IsCanaryDev() {
-  return false;
+#if BUILDFLAG(IS_WIN)
+constexpr wchar_t kOnResourceExhaustedMessage[] =
+    L"Your computer has run out of resources and cannot start "
+    PRODUCT_SHORTNAME_STRING
+    L". Sign out of Windows or restart your computer and try again.";
+
+void OnResourceExhausted() {
+  // RegisterClassEx will fail if the session's pool of ATOMs is exhausted. This
+  // appears to happen most often when the browser is being driven by automation
+  // tools, though the underlying reason for this remains a mystery
+  // (https://crbug.com/1470483). There is nothing that Chrome can do to
+  // meaningfully run until the user restarts their session by signing out of
+  // Windows or restarting their computer.
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kNoErrorDialogs)) {
+    static constexpr wchar_t kMessageBoxTitle[] = L"System resource exhausted";
+    ::MessageBox(nullptr, kOnResourceExhaustedMessage, kMessageBoxTitle, MB_OK);
+  }
+  base::Process::TerminateCurrentProcessImmediately(
+      radium::RESULT_CODE_SYSTEM_RESOURCE_EXHAUSTED);
+}
+#endif
+
+bool IsCanaryDev() {
+  const auto channel = radium::GetChannel();
+  return channel == version_info::Channel::CANARY ||
+         channel == version_info::Channel::DEV;
 }
 
 }  // namespace
@@ -487,6 +515,16 @@ std::optional<int> RadiumMainDelegate::PreBrowserMain() {
     // Don't do this if the locale is already set, which is done by integration
     // tests to ensure tests always run with the same locale.
     l10n_util::OverrideLocaleWithCocoaLocale();
+  }
+#endif
+
+#if BUILDFLAG(IS_WIN)
+  // Register callback to handle resource exhaustion.
+  base::win::SetOnResourceExhaustedFunction(OnResourceExhausted);
+
+  if (IsExtensionPointDisableSet()) {
+    sandbox::SandboxFactory::GetBrokerServices()->SetStartingMitigations(
+        sandbox::MITIGATION_EXTENSION_POINT_DISABLE);
   }
 #endif
 

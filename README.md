@@ -8,7 +8,7 @@ This project is based on the Chromium open source project. Use //content + //ui 
 
 # Supported Platforms
 
-Planned to support Win/Mac/Linux/Android. Currently only Linux/Win/Mac platforms are supported.
+Windows/Mac/Linux/Android.
 
 # Demo
 

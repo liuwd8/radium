@@ -2,18 +2,17 @@ gclient_gn_args_from = 'src'
 
 
 vars = {
-  'chromium_revision': '1816bb54c1da55d17ed43b2d8f664a732121de01',
+    'chromium_revision': 'fdcadc25fb4481f352b47f634eb0701350faaedd',
+    'chromium_git': 'https://chromium.googlesource.com',
 
-  'chromium_git': 'https://chromium.googlesource.com',
+    # To be able to build clean Chromium from sources.
+    'apply_patches': True,
 
-  # To be able to build clean Chromium from sources.
-  'apply_patches': True,
+    # To allow running hooks without parsing the DEPS tree
+    'process_deps': True,
 
-  # To allow running hooks without parsing the DEPS tree
-  'process_deps': True,
-
-  # To allow in-house builds to checkout those manually.
-  'checkout_chromium': True,
+    # To allow in-house builds to checkout those manually.
+    'checkout_chromium': True,
 }
 
 deps = {
