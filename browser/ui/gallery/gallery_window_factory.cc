@@ -9,6 +9,8 @@
 #include "base/hash/md5.h"
 #include "base/location.h"
 #include "base/task/task_traits.h"
+#include "components/keep_alive_registry/keep_alive_types.h"
+#include "components/keep_alive_registry/scoped_keep_alive.h"
 #include "radium/browser/browser_process.h"
 #include "radium/browser/global_features.h"
 #include "radium/browser/profiles/profile.h"
@@ -22,7 +24,9 @@ void ShowGalleryView() {
   base::FilePath path =
       profile_manager->user_data_dir().AppendASCII(base::MD5String("W"));
   Profile* profile = profile_manager->GetProfile(path);
-  auto fn = [](Profile* profile) {
+  auto keep_alive = std::make_unique<ScopedKeepAlive>(
+      KeepAliveOrigin::BROWSER, KeepAliveRestartOption::DISABLED);
+  auto fn = [](std::unique_ptr<ScopedKeepAlive>, Profile* profile) {
     Browser::CreateParams params;
     params.profile = profile;
     params.new_window = &GalleryView::Show;
@@ -30,9 +34,10 @@ void ShowGalleryView() {
   };
 
   if (profile) {
-    fn(profile);
+    fn(std::move(keep_alive), profile);
     return;
   }
 
-  profile_manager->CreateProfileAsync(path, base::BindOnce(fn));
+  profile_manager->CreateProfileAsync(
+      path, base::BindOnce(fn, std::move(keep_alive)));
 }
