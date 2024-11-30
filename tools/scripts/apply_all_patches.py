@@ -9,8 +9,8 @@ import subprocess
 import json
 
 _THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-_ROOT_DIR = os.path.abspath(
-    os.path.join(_THIS_DIR, "..", "..", "..", "third_party/depot_tools"))
+_SRC_DIR = os.path.abspath(os.path.join(_THIS_DIR, "..", "..", ".."))
+_ROOT_DIR = os.path.abspath(os.path.join(_SRC_DIR, "third_party/depot_tools"))
 
 sys.path.insert(0, _ROOT_DIR)
 
@@ -58,6 +58,7 @@ def main():
         with open(out_file, mode="r", encoding='utf-8') as f:
             mtime = json.load(f)
 
+    os.chdir(_SRC_DIR)
     paths = walk_dir(patch_dir)
 
     if not last_revision_key in mtime:
