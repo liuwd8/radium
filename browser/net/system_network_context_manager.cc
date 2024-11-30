@@ -848,7 +848,6 @@ void SystemNetworkContextManager::ConfigureDefaultNetworkContextParams(
   network_context_params->enable_brotli = true;
 
   network_context_params->enable_zstd =
-      base::FeatureList::IsEnabled(net::features::kZstdContentEncoding) &&
       local_state_->GetBoolean(prefs::kZstdContentEncodingEnabled);
 
   network_context_params->user_agent = embedder_support::GetUserAgent();
@@ -912,10 +911,7 @@ SystemNetworkContextManager::CreateDefaultNetworkContextParams() {
   // CertVerifierServiceUpdater.
   network_context_params->cert_verifier_params =
       content::GetCertVerifierParams(std::move(cert_verifier_creation_params));
-  network_context_params->acam_preflight_spec_conformant =
-      base::FeatureList::IsEnabled(
-          network::features::
-              kAccessControlAllowMethodsInCORSPreflightSpecConformant);
+  network_context_params->acam_preflight_spec_conformant = true;
   return network_context_params;
 }
 

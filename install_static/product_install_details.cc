@@ -11,6 +11,8 @@
 
 #include <windows.h>
 
+#include <stdlib.h>
+
 #include <algorithm>
 
 #include "radium/install_static/chromium_install_modes.h"

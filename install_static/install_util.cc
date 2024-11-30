@@ -243,7 +243,7 @@ void GetExecutableVersionDetails(const std::wstring& exe_path,
   assert(channel_name);
 
   // Default values in case we don't find a version resource.
-  *product_name = L"Chrome";
+  *product_name = L"Radium";
   *version = L"0.0.0.0-devel";
   special_build->clear();
 

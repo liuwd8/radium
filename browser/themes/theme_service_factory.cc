@@ -38,10 +38,10 @@ ThemeServiceFactory::ThemeServiceFactory()
 
 ThemeServiceFactory::~ThemeServiceFactory() = default;
 
-KeyedService* ThemeServiceFactory::BuildServiceInstanceFor(
+std::unique_ptr<KeyedService>
+ThemeServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* profile) const {
-  return std::make_unique<ThemeService>(static_cast<Profile*>(profile))
-      .release();
+  return std::make_unique<ThemeService>(static_cast<Profile*>(profile));
 }
 
 bool ThemeServiceFactory::ServiceIsCreatedWithBrowserContext() const {
