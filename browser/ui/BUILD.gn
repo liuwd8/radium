@@ -115,7 +115,7 @@ static_library("ui") {
           "views/dark_mode_manager_linux.h",
         ]
         deps += [
-          "//components/dbus/thread_linux",
+          "//components/dbus",
           "//dbus",
         ]
       }
