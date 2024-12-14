@@ -15,6 +15,7 @@ import org.radium.Radium.ProductConfig;
 import org.radium.browser.metrics.UmaUtils;
 
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.BundleUtils;
 import org.chromium.base.CommandLine;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
@@ -42,16 +43,16 @@ public class RadiumApplication extends Application {
     protected void attachBaseContext(Context base) {
         boolean isIsolatedProcess = ContextUtils.isIsolatedProcess();
         boolean isBrowserProcess = isBrowserProcess();
-        Log.i(TAG,
-                "version=%s (%s) minSdkVersion=%s isBundle=%s processName=%s isIsolatedProcess=%s",
-                VersionConstants.PRODUCT_VERSION, BuildConfig.VERSION_CODE,
-                BuildConfig.MIN_SDK_VERSION, BuildConfig.IS_BUNDLE, ContextUtils.getProcessName(),
-                isIsolatedProcess);
         if (isBrowserProcess) {
             UmaUtils.recordMainEntryPointTime();
         }
         super.attachBaseContext(base);
         ContextUtils.initApplicationContext(this);
+
+        Log.i(TAG,
+            "version=%s (%s) minSdkVersion=%s isBundle=%s processName=%s isIsolatedProcess=%s",
+            VersionConstants.PRODUCT_VERSION, BuildConfig.VERSION_CODE, BuildConfig.MIN_SDK_VERSION,
+            BundleUtils.isBundle(), ContextUtils.getProcessName(), isIsolatedProcess);
 
         // if (isBrowserProcess) {
         // // This must come as early as possible to avoid early loading of the native
