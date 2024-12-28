@@ -88,11 +88,23 @@ gfx::ImageSkia UntitledWidgetNonClientFrameView::GetFrameOverlayImage(
 }
 
 gfx::Size UntitledWidgetNonClientFrameView::GetMinimumSize() const {
-  return untitled_widget_->client_view()->GetMinimumSize();
+  auto size = untitled_widget_->client_view()->GetMinimumSize();
+  if (size.IsEmpty()) {
+    return size;
+  }
+
+  gfx::Rect client_bounds(size);
+  return GetWindowBoundsForClientBounds(client_bounds).size();
 }
 
 gfx::Size UntitledWidgetNonClientFrameView::GetMaximumSize() const {
-  return untitled_widget_->client_view()->GetMaximumSize();
+  auto size = untitled_widget_->client_view()->GetMaximumSize();
+  if (size.IsEmpty()) {
+    return size;
+  }
+
+  gfx::Rect client_bounds(size);
+  return GetWindowBoundsForClientBounds(client_bounds).size();
 }
 
 void UntitledWidgetNonClientFrameView::PaintAsActiveChanged() {

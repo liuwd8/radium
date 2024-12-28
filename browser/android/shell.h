@@ -185,7 +185,8 @@ class Shell : public content::WebContentsDelegate,
                           const base::FilePath& path) override;
   bool IsBackForwardCacheSupported(content::WebContents& contents) override;
   content::PreloadingEligibility IsPrerender2Supported(
-      content::WebContents& web_contents) override;
+      content::WebContents& web_contents,
+      content::PreloadingTriggerType trigger_type) override;
   bool ShouldAllowRunningInsecureContent(content::WebContents* web_contents,
                                          bool allowed_per_prefs,
                                          const url::Origin& origin,

@@ -30,8 +30,8 @@ void CreateAndAddWebuiGalleryUIHtmlSource(Profile* profile) {
   content::WebUIDataSource* source = content::WebUIDataSource::CreateAndAdd(
       profile, radium::kRadiumUIWebuiGalleryHost);
 
-  webui::SetupWebUIDataSource(source, kWebuiGalleryResources,
-                              IDR_WEBUI_GALLERY_WEBUI_GALLERY_HTML);
+  radium::webui::SetupWebUIDataSource(source, kWebuiGalleryResources,
+                                      IDR_WEBUI_GALLERY_WEBUI_GALLERY_HTML);
 
   source->OverrideContentSecurityPolicy(
       network::mojom::CSPDirectiveName::FrameSrc, "frame-src 'self';");

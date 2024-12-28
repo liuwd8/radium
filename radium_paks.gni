@@ -66,7 +66,7 @@ template("radium_extra_paks") {
     output = "${invoker.output_dir}/radium_resources.pak"
     sources = [
       "$root_gen_dir/base/tracing/protos/tracing_proto_resources.pak",
-      "$root_gen_dir/components/autofill/core/browser/autofill_address_rewriter_resources.pak",
+      "$root_gen_dir/components/autofill/core/browser/geo/autofill_address_rewriter_resources.pak",
       "$root_gen_dir/components/components_resources.pak",
       "$root_gen_dir/components/flags_ui_resources.pak",
       "$root_gen_dir/components/version_ui_resources.pak",
@@ -81,7 +81,7 @@ template("radium_extra_paks") {
       "$root_gen_dir/radium/example_resources.pak",
       "$root_gen_dir/third_party/blink/public/resources/blink_resources.pak",
       "$root_gen_dir/third_party/blink/public/resources/inspector_overlay_resources.pak",
-      "$root_gen_dir/ui/resources/webui_resources.pak",
+      "$root_gen_dir/ui/webui/resources/webui_resources.pak",
     ]
     deps = [
       "//base/tracing/protos:chrome_track_event_resources",
@@ -94,7 +94,7 @@ template("radium_extra_paks") {
       "//radium/browser/ui/webui:resources",
       "//third_party/blink/public:devtools_inspector_resources",
       "//third_party/blink/public:resources",
-      "//ui/resources",
+      "//ui/webui/resources",
     ]
     if (defined(invoker.deps)) {
       deps += invoker.deps

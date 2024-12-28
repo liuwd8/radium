@@ -27,7 +27,6 @@
 #include "ui/color/color_provider_manager.h"
 
 #if BUILDFLAG(IS_WIN)
-#include "base/trace_event/trace_event_etw_export_win.h"
 #include "base/win/win_util.h"
 #include "radium/browser/win/parental_controls.h"
 #include "ui/shell_dialogs/select_file_dialog.h"

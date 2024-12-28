@@ -76,6 +76,10 @@ base::android::ScopedJavaLocalRef<jobject> TabAndroid::GetJavaObject() {
   return weak_java_tab_.get(env);
 }
 
+void TabAndroid::Destroy(JNIEnv* env) {
+  delete this;
+}
+
 base::android::ScopedJavaLocalRef<jobject> JNI_TabImpl_FromWebContents(
     JNIEnv* env,
     const JavaParamRef<jobject>& jweb_contents) {
