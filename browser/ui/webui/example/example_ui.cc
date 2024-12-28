@@ -16,8 +16,8 @@ ExampleUI::ExampleUI(content::WebUI* web_ui) : ui::MojoWebUIController(web_ui) {
       web_ui->GetWebContents()->GetBrowserContext(),
       radium::kRadiumUIExampleHost);
 
-  webui::SetupWebUIDataSource(source, kExampleResources,
-                              IDR_EXAMPLE_EXAMPLE_HTML);
+  radium::webui::SetupWebUIDataSource(source, kExampleResources,
+                                      IDR_EXAMPLE_EXAMPLE_HTML);
 }
 
 ExampleUI::~ExampleUI() = default;

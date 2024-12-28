@@ -340,10 +340,10 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
 
 #if !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
   base::FilePath locales;
-  base::PathService::Get(ui::DIR_LOCALES, &locales);
+  base::PathService::Get(base::DIR_ASSETS, &locales);
   base::PathService::Override(
       ui::DIR_LOCALES,
-      locales.DirName().Append(FILE_PATH_LITERAL("radium_locales")));
+      locales.Append(FILE_PATH_LITERAL("radium_locales")));
 #endif
 
   ContentSettingsPattern::SetNonWildcardDomainNonPortSchemes(

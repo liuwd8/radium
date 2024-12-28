@@ -17,10 +17,13 @@
 #include "ui/base/webui/web_ui_util.h"
 #include "ui/native_theme/native_theme.h"
 #include "ui/resources/grit/webui_resources.h"
+#include "ui/webui/webui_util.h"
 
-namespace webui {
+namespace radium::webui {
 
 void SetJSModuleDefaults(content::WebUIDataSource* source) {
+  ::webui::SetJSModuleDefaults(source);
+
   std::string scheme = radium::kRadiumUIScheme;
 
   // Set the default src to 'self' only. Generally necessary overrides are set
@@ -62,54 +65,18 @@ void SetJSModuleDefaults(content::WebUIDataSource* source) {
       base::StringPrintf(
           "style-src %s://resources %s://theme 'self' 'unsafe-inline';",
           scheme.c_str(), scheme.c_str()));
-
-  source->UseStringsJs();
-  source->EnableReplaceI18nInJS();
-  source->AddResourcePath("test_loader.js", IDR_WEBUI_JS_TEST_LOADER_JS);
-  source->AddResourcePath("test_loader_util.js",
-                          IDR_WEBUI_JS_TEST_LOADER_UTIL_JS);
-  source->AddResourcePath("test_loader.html", IDR_WEBUI_TEST_LOADER_HTML);
 }
 
 void SetupWebUIDataSource(content::WebUIDataSource* source,
-                          base::span<const ResourcePath> resources,
+                          base::span<const ::webui::ResourcePath> resources,
                           int default_resource) {
+  ::webui::SetupWebUIDataSource(source, resources, default_resource);
   SetJSModuleDefaults(source);
-  EnableTrustedTypesCSP(source);
-  source->AddResourcePaths(resources);
-  source->AddResourcePath("", default_resource);
   source->SetSupportedScheme(radium::kRadiumUIScheme);
 }
+}  // namespace radium::webui
 
-// There is another method, ash::EnableTrustedTypesCSP, used by ash-only WebUIs.
-// When adding a new policy here, consider whether to add it to that method as
-// well, as these methods should remain mostly the same.
-void EnableTrustedTypesCSP(content::WebUIDataSource* source) {
-  source->OverrideContentSecurityPolicy(
-      network::mojom::CSPDirectiveName::RequireTrustedTypesFor,
-      "require-trusted-types-for 'script';");
-  source->OverrideContentSecurityPolicy(
-      network::mojom::CSPDirectiveName::TrustedTypes,
-      "trusted-types parse-html-subset sanitize-inner-html static-types "
-      // Add TrustedTypes policies for cr-lottie.
-      "lottie-worker-script-loader "
-      // Add TrustedTypes policies used during tests.
-      "webui-test-script webui-test-html "
-      // Add TrustedTypes policy for creating the PDF plugin.
-      "print-preview-plugin-loader "
-      // Add TrustedTypes policies necessary for using Polymer.
-      "polymer-html-literal polymer-template-event-attribute-policy "
-      // Add TrustedTypes policies necessary for using Desktop's Lit bundle.
-      "lit-html-desktop;");
-}
-
-void AddLocalizedString(content::WebUIDataSource* source,
-                        const std::string& message,
-                        int id) {
-  std::u16string str = l10n_util::GetStringUTF16(id);
-  std::erase(str, '&');
-  source->AddString(message, str);
-}
+namespace webui {
 
 bool ShouldUseDarkMode(ThemeService* theme_service) {
   return ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors();

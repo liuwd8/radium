@@ -106,12 +106,6 @@ int OpaqueFrameView::NonClientHitTest(const gfx::Point& point) {
   return (window_component == HTNOWHERE) ? HTCAPTION : window_component;
 }
 
-gfx::Size OpaqueFrameView::GetMinimumSize() const {
-  gfx::Rect client_bounds(gfx::Point(),
-                          UntitledWidgetNonClientFrameView::GetMinimumSize());
-  return GetWindowBoundsForClientBounds(client_bounds).size();
-}
-
 void OpaqueFrameView::OnPaint(gfx::Canvas* canvas) {
   TRACE_EVENT0("views.frame", "OpaqueFrameView::OnPaint");
   if (untitled_widget()->IsFullscreen()) {

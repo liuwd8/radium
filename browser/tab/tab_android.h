@@ -40,6 +40,10 @@ class TabAndroid : public base::SupportsUserData {
 
   base::android::ScopedJavaLocalRef<jobject> GetJavaObject();
 
+  // Methods called from Java via JNI -----------------------------------------
+
+  void Destroy(JNIEnv* env);
+
  private:
   JavaObjectWeakGlobalRef weak_java_tab_;
 };
