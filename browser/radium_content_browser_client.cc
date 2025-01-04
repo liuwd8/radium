@@ -317,8 +317,9 @@ RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
 #endif
 }
 
-void RadiumContentBrowserClient::OverrideWebkitPrefs(
+void RadiumContentBrowserClient::OverrideWebPreferences(
     content::WebContents* web_contents,
+    content::SiteInstance& main_frame_site,
     blink::web_pref::WebPreferences* web_prefs) {
   UpdateForcedColorsForWebContent(web_prefs, web_contents, GetWebTheme());
   UpdatePreferredColorScheme(
@@ -329,6 +330,7 @@ void RadiumContentBrowserClient::OverrideWebkitPrefs(
 
 bool RadiumContentBrowserClient::OverrideWebPreferencesAfterNavigation(
     content::WebContents* web_contents,
+    content::SiteInstance& main_frame_site,
     blink::web_pref::WebPreferences* web_prefs) {
   bool prefs_changed = false;
 
