@@ -257,6 +257,8 @@ void BadgeManager::ClearBadge() {
 std::vector<std::tuple<webapps::AppId, GURL>>
 BadgeManager::FrameBindingContext::GetAppIdsAndUrlsForBadging() const {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  (void)process_id_;
+  (void)frame_id_;
   return std::vector<std::tuple<webapps::AppId, GURL>>{};
   // content::RenderFrameHost* frame =
   //     content::RenderFrameHost::FromID(process_id_, frame_id_);
@@ -283,6 +285,8 @@ BadgeManager::FrameBindingContext::GetAppIdsAndUrlsForBadging() const {
 std::vector<std::tuple<webapps::AppId, GURL>>
 BadgeManager::ServiceWorkerBindingContext::GetAppIdsAndUrlsForBadging() const {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  (void)process_id_;
+  (void)scope_;
   return std::vector<std::tuple<webapps::AppId, GURL>>{};
 
   // content::RenderProcessHost* render_process_host =

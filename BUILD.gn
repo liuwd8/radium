@@ -285,6 +285,7 @@ if (is_win) {
       "//radium/child",
       "//radium/install_static:secondary_module",
       "//radium/radium_elf",
+      "//sandbox/win:sandbox",
     ]
 
     configs += [ "//build/config/win:delayloads" ]

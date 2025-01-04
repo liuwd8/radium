@@ -6,6 +6,16 @@ import("//components/enterprise/buildflags/buildflags.gni")
 import("//crypto/features.gni")
 import("//ui/base/ui_features.gni")
 
+if (is_win) {
+  # This is in a separate config so the flags can be applied to dependents.
+  # ldflags in GN aren't automatically inherited.
+  config("browser_win_linker_flags") {
+    libs = [
+      "imm32.lib",  # radium_elf_init.cc
+    ]
+  }
+}
+
 static_library("browser") {
   sources = [
     "browser_prefs.cc",
@@ -127,6 +137,8 @@ static_library("browser") {
         "//components/os_crypt/async/browser:dpapi_key_provider",
         "//radium/browser/win",
       ]
+
+      all_dependent_configs = [ ":browser_win_linker_flags" ]
     }
   }
 

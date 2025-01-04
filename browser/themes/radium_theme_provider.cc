@@ -12,7 +12,9 @@
 #include "ui/gfx/image/image_skia.h"
 
 RadiumThemeProvider::RadiumThemeProvider(bool incognito)
-    : incognito_(incognito) {}
+    : incognito_(incognito) {
+  (void)incognito_;
+}
 
 RadiumThemeProvider::~RadiumThemeProvider() = default;
 

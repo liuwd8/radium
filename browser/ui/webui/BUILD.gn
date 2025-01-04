@@ -21,6 +21,7 @@ source_set("webui") {
     "//content/public/browser",
     "//radium/browser/ui/webui/example",
     "//radium/common",
+    "//ui/webui/resources",
   ]
 
   if (!is_android) {
