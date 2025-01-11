@@ -102,6 +102,19 @@ GalleryView::GalleryView(std::unique_ptr<Browser> browser)
                           views::CaptionButtonIcon::
                               CAPTION_BUTTON_ICON_MAXIMIZE_RESTORE,
                           HTMAXBUTTON, views::kWindowControlMaximizeIcon))
+                      .CopyAddressTo(&maximize_button_)
+                      .SetPreferredSize(
+                          gfx::Size(views::GetCaptionButtonWidth(), 0))
+                      .SetCallback(base::BindRepeating(
+                          &GalleryView::OnButtonPressed, base::Unretained(this),
+                          HTMAXBUTTON)),
+                  views::Builder<views::Button>(
+                      CreateFrameCaptionButton(
+                          views::CaptionButtonIcon::
+                              CAPTION_BUTTON_ICON_MAXIMIZE_RESTORE,
+                          HTMAXBUTTON, views::kWindowControlRestoreIcon))
+                      .CopyAddressTo(&restore_button_)
+                      .SetVisible(false)
                       .SetPreferredSize(
                           gfx::Size(views::GetCaptionButtonWidth(), 0))
                       .SetCallback(base::BindRepeating(
@@ -139,7 +152,13 @@ gfx::Size GalleryView::GetMinimumSize() const {
 }
 
 void GalleryView::AddedToWidget() {
+  GetWidget()->AddObserver(this);
+
   webview_->LoadInitialURL(GURL(radium::kRadiumUIWebuiGalleryURL));
+}
+
+void GalleryView::RemovedFromWidget() {
+  GetWidget()->RemoveObserver(this);
 }
 
 gfx::Size GalleryView::CalculatePreferredSize(
@@ -161,13 +180,24 @@ void GalleryView::Close() {
   GetWidget()->Close();
 }
 
+void GalleryView::OnWidgetShowStateChanged(views::Widget* widget) {
+  const bool is_maximize = widget->IsMaximized() || widget->IsFullscreen();
+  maximize_button_->SetVisible(!is_maximize);
+  restore_button_->SetVisible(is_maximize);
+}
+
 void GalleryView::OnButtonPressed(int hit_component) {
   switch (hit_component) {
     case HTMINBUTTON: {
       GetWidget()->Minimize();
     } break;
     case HTMAXBUTTON: {
-      GetWidget()->Maximize();
+      const bool is_maximize = maximize_button_->GetVisible();
+      if (is_maximize) {
+        GetWidget()->Maximize();
+      } else {
+        GetWidget()->Restore();
+      }
     } break;
     case HTCLOSE: {
       GetWidget()->Close();

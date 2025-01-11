@@ -8,6 +8,7 @@
 #include "radium/browser/ui/browser_window.h"
 #include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "ui/views/view_targeter_delegate.h"
+#include "ui/views/widget/widget_observer.h"
 
 class Browser;
 
@@ -17,7 +18,8 @@ class WebView;
 
 class GalleryView : public UntitledWidgetDelegateView,
                     public views::ViewTargeterDelegate,
-                    public BrowserWindow {
+                    public BrowserWindow,
+                    public views::WidgetObserver {
  public:
   static BrowserWindow* Show(std::unique_ptr<Browser> browser);
 
@@ -32,6 +34,7 @@ class GalleryView : public UntitledWidgetDelegateView,
   int NonClientHitTest(const gfx::Point& point) override;
   gfx::Size GetMinimumSize() const override;
   void AddedToWidget() override;
+  void RemovedFromWidget() override;
   gfx::Size CalculatePreferredSize(
       const views::SizeBounds& available_size) const override;
 
@@ -40,12 +43,17 @@ class GalleryView : public UntitledWidgetDelegateView,
   void Show() override;
   void Close() override;
 
+  // WidgetObserver:
+  void OnWidgetShowStateChanged(views::Widget* widget) override;
+
  private:
   void OnButtonPressed(int hit_component);
 
   std::unique_ptr<Browser> browser_;
 
   raw_ptr<views::View> title_bar_;
+  raw_ptr<views::View> maximize_button_;
+  raw_ptr<views::View> restore_button_;
   raw_ptr<views::WebView> webview_;
 };
 
