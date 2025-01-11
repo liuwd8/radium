@@ -66,11 +66,6 @@ GalleryView::GalleryView(std::unique_ptr<Browser> browser)
     : browser_(std::move(browser)) {
   SetHasWindowSizeControls(true);
   SetTitle(u"WebUI Gallery");
-  SetBackground(views::CreateThemedRoundedRectBackground(
-      kColorFrameTitleBarBackground,
-      RadiumLayoutProvider::Get()->GetCornerRadiusMetric(
-          views::Emphasis::kHigh),
-      0, 0));
   views::BoxLayout* layout =
       SetLayoutManager(std::make_unique<views::BoxLayout>());
   layout->SetOrientation(views::BoxLayout::Orientation::kVertical);
@@ -184,6 +179,13 @@ void GalleryView::OnWidgetShowStateChanged(views::Widget* widget) {
   const bool is_maximize = widget->IsMaximized() || widget->IsFullscreen();
   maximize_button_->SetVisible(!is_maximize);
   restore_button_->SetVisible(is_maximize);
+
+  SetBackground(views::CreateThemedRoundedRectBackground(
+      kColorFrameTitleBarBackground,
+      is_maximize ? 0
+                  : RadiumLayoutProvider::Get()->GetCornerRadiusMetric(
+                        views::Emphasis::kHigh),
+      0, 0));
 }
 
 void GalleryView::OnButtonPressed(int hit_component) {
