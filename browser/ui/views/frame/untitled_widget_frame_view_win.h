@@ -6,6 +6,7 @@
 #define RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_WIDGET_FRAME_VIEW_WIN_H_
 
 #include "radium/browser/ui/views/frame/untitled_widget_non_client_frame_view.h"
+#include "ui/base/mojom/window_show_state.mojom-shared.h"
 
 class UntitledWidgetFrameViewWin : public UntitledWidgetNonClientFrameView {
   METADATA_HEADER(UntitledWidgetFrameViewWin, UntitledWidgetNonClientFrameView)
@@ -22,6 +23,7 @@ class UntitledWidgetFrameViewWin : public UntitledWidgetNonClientFrameView {
   gfx::Rect GetWindowBoundsForClientBounds(
       const gfx::Rect& client_bounds) const override;
   int NonClientHitTest(const gfx::Point& point) override;
+  void OnBoundsChanged(const gfx::Rect& new_bounds) override;
 
  private:
   // views::View:
@@ -33,6 +35,8 @@ class UntitledWidgetFrameViewWin : public UntitledWidgetNonClientFrameView {
   int FrameBorderThickness() const;
 
   gfx::Insets RestoredFrameBorderInsets() const;
+
+  ui::mojom::WindowShowState show_state_;
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_WIDGET_FRAME_VIEW_WIN_H_

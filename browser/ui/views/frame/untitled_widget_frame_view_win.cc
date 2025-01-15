@@ -18,9 +18,24 @@
 #include "ui/views/widget/widget_delegate.h"
 #include "ui/views/win/hwnd_util.h"
 
+namespace {
+ui::mojom::WindowShowState GetShowState(views::Widget* widget) {
+  if (widget->IsMaximized()) {
+    return ui::mojom::WindowShowState::kMaximized;
+  } else if (widget->IsMinimized()) {
+    return ui::mojom::WindowShowState::kMinimized;
+  } else if (widget->IsFullscreen()) {
+    return ui::mojom::WindowShowState::kFullscreen;
+  }
+
+  return ui::mojom::WindowShowState::kNormal;
+}
+}  // namespace
+
 UntitledWidgetFrameViewWin::UntitledWidgetFrameViewWin(
     UntitledWidget* untitled_widget)
-    : UntitledWidgetNonClientFrameView(untitled_widget) {}
+    : UntitledWidgetNonClientFrameView(untitled_widget),
+      show_state_(ui::mojom::WindowShowState::kDefault) {}
 
 UntitledWidgetFrameViewWin::~UntitledWidgetFrameViewWin() = default;
 
@@ -108,6 +123,19 @@ int UntitledWidgetFrameViewWin::NonClientHitTest(const gfx::Point& point) {
   }
 
   return HTCAPTION;
+}
+
+void UntitledWidgetFrameViewWin::OnBoundsChanged(const gfx::Rect& new_bounds) {
+  views::Widget* widget = GetWidget();
+  if (!widget) {
+    return;
+  }
+
+  ui::mojom::WindowShowState show_state = GetShowState(widget);
+  if (show_state_ != show_state) {
+    widget->OnNativeWidgetWindowShowStateChanged();
+    show_state_ = show_state;
+  }
 }
 
 void UntitledWidgetFrameViewWin::OnPaint(gfx::Canvas* canvas) {
