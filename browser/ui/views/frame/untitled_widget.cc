@@ -15,6 +15,20 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/widget/widget_delegate.h"
 
+namespace {
+ui::mojom::WindowShowState GetShowState(views::Widget* widget) {
+  if (widget->IsMaximized()) {
+    return ui::mojom::WindowShowState::kMaximized;
+  } else if (widget->IsMinimized()) {
+    return ui::mojom::WindowShowState::kMinimized;
+  } else if (widget->IsFullscreen()) {
+    return ui::mojom::WindowShowState::kFullscreen;
+  }
+
+  return ui::mojom::WindowShowState::kNormal;
+}
+}  // namespace
+
 UntitledWidget::UntitledWidget(UntitledWidgetDelegate* delegate,
                                Profile* profile)
     : delegate_(delegate),
@@ -68,6 +82,18 @@ ui::ColorProviderKey::ThemeInitializerSupplier* UntitledWidget::GetCustomTheme()
   // return ThemeService::GetThemeSupplierForProfile(nullptr);
   return nullptr;
 }
+
+#if BUILDFLAG(IS_WIN)
+void UntitledWidget::OnNativeWidgetSizeChanged(const gfx::Size& new_size) {
+  views::Widget::OnNativeWidgetSizeChanged(new_size);
+
+  ui::mojom::WindowShowState show_state = GetShowState(this);
+  if (last_show_state_ != show_state) {
+    OnNativeWidgetWindowShowStateChanged();
+    last_show_state_ = show_state;
+  }
+}
+#endif
 
 BEGIN_METADATA(UntitledWidget)
 ADD_PROPERTY_METADATA(int, TitleBarBackgroundHeight)

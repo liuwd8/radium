@@ -148,6 +148,7 @@ gfx::Size GalleryView::GetMinimumSize() const {
 
 void GalleryView::AddedToWidget() {
   GetWidget()->AddObserver(this);
+  OnWidgetShowStateChanged(GetWidget());
 
   webview_->LoadInitialURL(GURL(radium::kRadiumUIWebuiGalleryURL));
 }
