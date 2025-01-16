@@ -15,6 +15,7 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/widget/widget_delegate.h"
 
+#if BUILDFLAG(IS_WIN)
 namespace {
 ui::mojom::WindowShowState GetShowState(views::Widget* widget) {
   if (widget->IsMaximized()) {
@@ -28,6 +29,7 @@ ui::mojom::WindowShowState GetShowState(views::Widget* widget) {
   return ui::mojom::WindowShowState::kNormal;
 }
 }  // namespace
+#endif
 
 UntitledWidget::UntitledWidget(UntitledWidgetDelegate* delegate,
                                Profile* profile)
