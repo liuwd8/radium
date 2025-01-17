@@ -49,8 +49,7 @@ gclient sync --with_branch_heads --with_tags -D
 ```shell
 cd src
 export CHROMIUM_BUILDTOOLS_PATH=`pwd`/buildtools
-gn gen out/xxx
-autoninja -C out/xxx radium
+python3 ./radium/tools/scripts/build.py [--release] [--android] [--target_cpu="arm64"|"x64"|"x86"] out/xxx
 ```
 
 Synchronize chromium repository code every week.

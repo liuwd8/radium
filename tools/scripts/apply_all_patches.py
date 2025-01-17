@@ -1,4 +1,4 @@
-# Copyright 2014 The Radium Authors
+# Copyright 2024 The Radium Authors
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -42,7 +42,7 @@ def run_command(cmd):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Apply Electron patches')
+    parser = argparse.ArgumentParser(description='Apply Radium patches')
     parser.add_argument('--revision', help='chromium revision')
     parser.add_argument('patch_dir',
                         help='patches\' config(s) in the JSON format')
@@ -60,20 +60,24 @@ def main():
 
     os.chdir(_SRC_DIR)
     paths = walk_dir(patch_dir)
+    if len(paths) == 0:
+        return
 
     if not last_revision_key in mtime:
         mtime[last_revision_key] = ""
     last_revision = mtime[last_revision_key]
 
-    need_repatch = last_revision != args.revision
-    for i in paths:
-        if not i in mtime:
-            need_repatch = True
-            break
+    head_revision = subprocess.getstatusoutput('git rev-parse HEAD')[1]
+    need_repatch = last_revision != args.revision or head_revision == args.revision
+    if not need_repatch:
+        for i in paths:
+            if not i in mtime:
+                need_repatch = True
+                break
 
-        if mtime[i] != os.path.getmtime(i):
-            need_repatch = True
-            break
+            if mtime[i] != os.path.getmtime(i):
+                need_repatch = True
+                break
 
     if not need_repatch:
         return

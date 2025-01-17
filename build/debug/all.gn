@@ -4,6 +4,4 @@ is_component_ffmpeg = true
 dcheck_always_on = true
 ffmpeg_branding = "Chrome"
 proprietary_codecs = true
-enable_precompiled_headers = false
-cc_wrapper = "ccache"
 use_siso = true
