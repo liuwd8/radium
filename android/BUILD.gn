@@ -209,6 +209,12 @@ group("jni_headers") {
   public_deps = [ ":radium_jni_headers" ]
 }
 
+if (enable_resource_allowlist_generation) {
+  libradium_impl("libradium_inputs") {
+    collect_inputs_only = true
+  }
+}
+
 libradium_impl("libradium") {
   if (enable_resource_allowlist_generation) {
     # Make sure allowlist_inputs is built first so when concurrent_links == 1
