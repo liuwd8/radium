@@ -279,7 +279,6 @@ if (is_win) {
       ":radium_dll_version",
       "//components/crash/core/app",
       "//components/crash/core/app:crash_export_thunks",
-      "//components/crash/core/common:crash_key",
       "//content/public/app",
       "//radium/app:radium_dll_resources",
       "//radium/child",
@@ -791,6 +790,7 @@ group("dependencies") {
   public_deps = [
     "//components/content_settings/core/common",
     "//components/crash/core/app",
+    "//components/crash/core/common:crash_key",
     "//components/memory_system",
     "//components/startup_metric_utils",
     "//radium/browser",
