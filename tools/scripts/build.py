@@ -127,8 +127,11 @@ def main():
 
     os.chdir(_SRC_DIR)
 
+    os.environ['CHROMIUM_BUILDTOOLS_PATH'] = os.path.join(
+        _SRC_DIR, 'buildtools')
+
     if platform.system().lower() == 'windows':
-        build_process = BuildProcessWin(args)
+        build_process = BuildProcessWin(args.output_dir, args.target_cpu)
     else:
         build_process = BuildProcessPosix(args.output_dir, args.target_cpu)
 
