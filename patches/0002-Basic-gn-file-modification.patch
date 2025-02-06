@@ -1,15 +1,14 @@
-From e1fabb272ca6c8ff8fa1a147ca3878b1dd985b47 Mon Sep 17 00:00:00 2001
+From 4347c9284e12636dc30dfc0a9aa31ba9f610b4c0 Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:17 +0800
 Subject: [PATCH 2/4] Basic gn file modification
 
 ---
- .gn      | 3 +++
- BUILD.gn | 2 ++
- 2 files changed, 5 insertions(+)
+ .gn | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/.gn b/.gn
-index 44a11ec90ec9b..9b31f73540b45 100644
+index 3f65718281973..87767e81a5cba 100644
 --- a/.gn
 +++ b/.gn
 @@ -3,6 +3,7 @@
@@ -20,25 +19,12 @@ index 44a11ec90ec9b..9b31f73540b45 100644
  import("//third_party/angle/dotfile_settings.gni")
  
  # The location of the build configuration file.
-@@ -173,3 +174,5 @@ exec_script_whitelist =
+@@ -173,3 +174,5 @@ exec_script_allowlist =
        "//tools/grit/grit_rule.gni",
        "//tools/gritsettings/BUILD.gn",
      ]
 +
-+exec_script_whitelist += radium_dotfile_settings.exec_script_whitelist
-diff --git a/BUILD.gn b/BUILD.gn
-index 7fc86eacb67b1..3ea27523eaedb 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -882,6 +882,8 @@ group("gn_all") {
-   if (checkout_src_internal) {
-     deps += [ "//internal:all" ]
-   }
-+
-+  deps += [ "//radium:all" ]
- }
- 
- # All Rust targets. This is provided for convenience while developing Rust to
++exec_script_allowlist += radium_dotfile_settings.exec_script_allowlist
 -- 
 2.34.1
 

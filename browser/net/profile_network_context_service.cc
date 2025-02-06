@@ -122,14 +122,6 @@ BASE_FEATURE(kTriggerNetworkDataMigration,
 #endif
 );
 
-#if BUILDFLAG(IS_WIN)
-// Enables locking the cookie database for profiles.
-// TODO(crbug.com/40901624): Remove after fully launched.
-BASE_FEATURE(kLockProfileCookieDatabase,
-             "LockProfileCookieDatabase",
-             base::FEATURE_ENABLED_BY_DEFAULT);
-#endif  // BUILDFLAG(IS_WIN)
-
 std::vector<std::string> TranslateStringArray(const base::Value::List& list) {
   std::vector<std::string> strings;
   for (const base::Value& value : list) {
@@ -1132,14 +1124,6 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
         base::FilePath(radium::kNetworkPersistentStateFilename);
     network_context_params->file_paths->cookie_database_name =
         base::FilePath(radium::kCookieFilename);
-
-#if BUILDFLAG(IS_WIN)
-    // If this feature is enabled, then the cookie database used by this profile
-    // will be locked for exclusive access by sqlite3 implementation in the
-    // network service.
-    network_context_params->enable_locking_cookie_database =
-        base::FeatureList::IsEnabled(kLockProfileCookieDatabase);
-#endif  // BUILDFLAG(IS_WIN)
 
     BrowserProcess::Get()
         ->system_network_context_manager()

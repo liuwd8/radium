@@ -217,7 +217,7 @@ bool UnloadController::RemoveFromSet(UnloadListenerSet* set,
                                      content::WebContents* web_contents) {
   DCHECK(is_attempting_to_close_browser_);
 
-  auto iter = base::ranges::find(*set, web_contents);
+  auto iter = std::ranges::find(*set, web_contents);
   if (iter != set->end()) {
     set->erase(iter);
     return true;

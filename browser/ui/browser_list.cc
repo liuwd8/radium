@@ -57,7 +57,7 @@ BrowserList::~BrowserList() = default;
 // static
 void BrowserList::RemoveBrowserFrom(Browser* browser,
                                     BrowserVector* browser_list) {
-  auto remove_browser = base::ranges::find(*browser_list, browser);
+  auto remove_browser = std::ranges::find(*browser_list, browser);
   if (remove_browser != browser_list->end()) {
     browser_list->erase(remove_browser);
   }

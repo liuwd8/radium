@@ -6,5 +6,5 @@
 # to make it easier to roll new versions of //build in.
 
 radium_dotfile_settings = {
-  exec_script_whitelist = [ "//radium/build/branding.gni" ]
+  exec_script_allowlist = [ "//radium/build/branding.gni" ]
 }
