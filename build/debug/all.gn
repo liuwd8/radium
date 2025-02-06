@@ -1,4 +1,6 @@
 # Set build arguments here. See `gn help buildargs`.
+root_extra_deps = [ "//radium" ]
+
 is_clang = true
 is_component_ffmpeg = true
 dcheck_always_on = true
