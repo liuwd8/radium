@@ -1,4 +1,4 @@
-From dde2316cabadf73c5b02c537bbf0acd29052c945 Mon Sep 17 00:00:00 2001
+From e2c752465fd526105607fa41f4a81d695cabf1c7 Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:55 +0800
 Subject: [PATCH 3/4] Resource file changes
@@ -9,10 +9,10 @@ Subject: [PATCH 3/4] Resource file changes
  2 files changed, 21 insertions(+), 3 deletions(-)
 
 diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
-index cd7541adbbbbe..5e24d91d7f50b 100644
+index 60e844376f968..21b4112628331 100644
 --- a/tools/gritsettings/resource_ids.spec
 +++ b/tools/gritsettings/resource_ids.spec
-@@ -1395,11 +1395,29 @@
+@@ -1461,11 +1461,29 @@
    "<(SHARED_INTERMEDIATE_DIR)/third_party/blink/public/strings/permission_element_generated_strings.grd": {
      "META": {"sizes": {"messages": [2000],}},
      "messages": [10080],

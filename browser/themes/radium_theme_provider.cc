@@ -44,7 +44,7 @@ bool RadiumThemeProvider::ShouldUseNativeFrame() const {
 }
 
 bool RadiumThemeProvider::HasCustomImage(int id) const {
-  return base::ranges::find_if(
+  return std::ranges::find_if(
       kThemeResources,
       [id](const webui::ResourcePath& path) { return path.id == id; });
 }

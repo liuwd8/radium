@@ -104,11 +104,13 @@ if (is_android) {
 
     deps = [
       ":dependencies",
+      "//components/crash/android:crash_android",
       "//components/minidump_uploader",
       "//components/safe_browsing:buildflags",
       "//components/safe_browsing/android:safe_browsing_api_handler",
       "//components/safe_browsing/android:safe_browsing_mobile",
       "//components/stylus_handwriting/android",
+      "//components/variations:variations_associated_data",
       "//content/public/app",
       "//radium/common:version_header",
       "//radium/renderer",
@@ -116,16 +118,12 @@ if (is_android) {
 
     # Explicit dependency required for JNI registration to be able to
     # find the native side functions.
-    if (is_android && is_component_build) {
+    if (is_component_build) {
       deps += [
         "//components/viz/service",
         "//device/gamepad",
         "//ui/events/devices",
       ]
-    }
-
-    if (is_android) {
-      deps += [ "//components/crash/android:crash_android" ]
     }
   }
 }

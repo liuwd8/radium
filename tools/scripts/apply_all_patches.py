@@ -83,6 +83,7 @@ def main():
         return
 
     run_command(['git', 'reset', '--hard', args.revision])
+    mtime = {}
     for i in paths:
         run_command(['git', 'am', i])
         mtime[i] = os.path.getmtime(i)
