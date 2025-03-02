@@ -1,14 +1,14 @@
-From 8642376a377285acd67f6b3929bb7b6ed44acce2 Mon Sep 17 00:00:00 2001
+From 6d1b7f0194fb39673b48cf5309d3020f1c0b4f0e Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:36 +0800
-Subject: [PATCH 4/4] lit visibility changes
+Subject: [PATCH] lit visibility changes
 
 ---
- third_party/lit/v3_0/BUILD.gn | 4 ++++
- 1 file changed, 4 insertions(+)
+ third_party/lit/v3_0/BUILD.gn | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/third_party/lit/v3_0/BUILD.gn b/third_party/lit/v3_0/BUILD.gn
-index 2380b3f217230..d7eb8640d5899 100644
+index 0d86a9b9fa190..82e820a54d034 100644
 --- a/third_party/lit/v3_0/BUILD.gn
 +++ b/third_party/lit/v3_0/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -19,16 +19,15 @@ index 2380b3f217230..d7eb8640d5899 100644
  import("//tools/typescript/ts_library.gni")
  import("//ui/webui/resources/tools/bundle_js.gni")
  import("//ui/webui/resources/tools/generate_grd.gni")
-@@ -99,6 +100,9 @@ ts_library("build_ts") {
+@@ -106,6 +107,8 @@ ts_library("build_ts") {
      "//ui/webui/resources/cr_components/theme_color_picker:build_ts",
      "//ui/webui/resources/cr_elements:build_ts",
    ]
-+
 +  visibility += radium_lit_visibility
 +
+   tsconfig_base = "tsconfig_base.json"
    composite = true
    in_files = [
-     "lit.ts",
 -- 
 2.34.1
 

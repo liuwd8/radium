@@ -342,8 +342,7 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
   base::FilePath locales;
   base::PathService::Get(base::DIR_ASSETS, &locales);
   base::PathService::Override(
-      ui::DIR_LOCALES,
-      locales.Append(FILE_PATH_LITERAL("radium_locales")));
+      ui::DIR_LOCALES, locales.Append(FILE_PATH_LITERAL("radium_locales")));
 #endif
 
   ContentSettingsPattern::SetNonWildcardDomainNonPortSchemes(
@@ -380,7 +379,7 @@ void RadiumMainDelegate::PreSandboxStartup() {
     // the --lang flag to pass the value of the PrefService in here. Maybe
     // this value could be passed in a different way.
     std::string locale = command_line.GetSwitchValueASCII(switches::kLang);
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
     if (process_type == switches::kZygoteProcess) {
       DUMP_WILL_BE_CHECK(locale.empty());
       // See comment at ReadAppLocale() for why we do this.
@@ -462,28 +461,8 @@ void RadiumMainDelegate::PreSandboxStartup() {
 
     base::FilePath resources_pack_path;
     base::PathService::Get(radium::FILE_RESOURCES_PACK, &resources_pack_path);
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-    if (command_line.HasSwitch(switches::kEnableResourcesFileSharing)) {
-      // If LacrosResourcesFileSharing feature is enabled, Lacros refers to ash
-      // resources pak file.
-      base::FilePath ash_resources_pack_path;
-      base::PathService::Get(chrome::FILE_ASH_RESOURCES_PACK,
-                             &ash_resources_pack_path);
-      base::FilePath shared_resources_pack_path;
-      base::PathService::Get(chrome::FILE_RESOURCES_FOR_SHARING_PACK,
-                             &shared_resources_pack_path);
-      ui::ResourceBundle::GetSharedInstance()
-          .AddDataPackFromPathWithAshResources(
-              shared_resources_pack_path, ash_resources_pack_path,
-              resources_pack_path, ui::kScaleFactorNone);
-    } else {
-      ui::ResourceBundle::GetSharedInstance().AddDataPackFromPath(
-          resources_pack_path, ui::kScaleFactorNone);
-    }
-#else
     ui::ResourceBundle::GetSharedInstance().AddDataPackFromPath(
         resources_pack_path, ui::kScaleFactorNone);
-#endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
 #endif  // BUILDFLAG(IS_ANDROID)
     CHECK(!loaded_locale.empty()) << "Locale could not be found for " << locale;
   }

@@ -161,7 +161,7 @@ void SigninFrameView::Init(views::Widget* widget,
                           views::Builder<views::LabelButton>()
                               .SetBackground(views::CreateRoundedRectBackground(
                                   0xFF49b558, 4))
-                              .SetEnabledTextColorIds(
+                              .SetEnabledTextColors(
                                   kColorFrameTitleBarBackground)
                               .SetProperty(views::kBoxLayoutFlexKey,
                                            views::BoxLayoutFlexSpecification())

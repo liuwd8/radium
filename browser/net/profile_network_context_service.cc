@@ -906,7 +906,7 @@ ProfileNetworkContextService::CreateClientCertStore() {
   }
 #endif
 
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
   bool use_system_key_slot = false;
   // Enable client certificates for the Chrome OS sign-in frame, if this feature
   // is not disabled by a flag.
@@ -948,23 +948,6 @@ ProfileNetworkContextService::CreateClientCertStore() {
       std::make_unique<net::ClientCertStoreNSS>(
           base::BindRepeating(&CreateCryptoModuleBlockingPasswordDelegate,
                               kCryptoModulePasswordClientAuth));
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-
-  if (!Profile::FromBrowserContext(
-           GetBrowserContextRedirectedInIncognito(profile_))
-           ->IsMainProfile()) {
-    // TODO(crbug.com/40156976): At the moment client certs are only enabled for
-    // the main profile and its incognito profile (similarly to how it worked in
-    // Ash-Chrome). Return some cert store for secondary profiles in
-    // Lacros-Chrome when certs are supported there.
-    return nullptr;
-  }
-
-  CertDbInitializer* cert_db_initializer =
-      CertDbInitializerFactory::GetForBrowserContext(profile_);
-  store = std::make_unique<ClientCertStoreLacros>(
-      std::move(certificate_provider), cert_db_initializer, std::move(store));
-#endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
 #if BUILDFLAG(IS_LINUX)
   return GetWrappedCertStore(profile_, std::move(store));
 #else
@@ -1197,36 +1180,7 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
   //                 metrics::prefs::kMetricsReportingEnabled);
   // }
 
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-  // Configure cert verifier to use the same software NSS database as Chrome is
-  // currently using (secondary profiles don't have their own databases at the
-  // moment).
-  cert_verifier_creation_params->nss_full_path.reset();
-  if (profile_->IsMainProfile()) {
-    const crosapi::mojom::DefaultPathsPtr& default_paths =
-        chromeos::BrowserParamsProxy::Get()->DefaultPaths();
-    // `default_paths` can be nullptr in tests.
-    if (!default_paths) {
-      CHECK_IS_TEST();
-    }
-    // Populating `nss_full_path` will make cert verifier load
-    // and use the corresponding NSS public slot. Kiosk sessions don't have
-    // the UI that could result in interactions with the public slot. Kiosk
-    // users are also not owner users and can't have the owner key in the
-    // public slot. Leaving it empty will make cert verifier ignore the
-    // public slot. This is done mainly because Chrome sometimes fails to
-    // load the public slot and has to crash because of that.
-    if (default_paths && default_paths->user_nss_database.has_value() &&
-        !chromeos::IsKioskSession()) {
-      cert_verifier_creation_params->nss_full_path =
-          default_paths->user_nss_database.value();
-    }
-  }
-
-  policy::PolicyCertServiceFactory::CreateAndStartObservingForProfile(profile_);
-#endif
-
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
   bool profile_supports_policy_certs = false;
   if (ash::ProfileHelper::IsSigninProfile(profile_) ||
       ash::ProfileHelper::IsLockScreenProfile(profile_)) {

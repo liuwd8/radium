@@ -5,14 +5,14 @@
 import '//resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
 import '//resources/cr_elements/cr_toggle/cr_toggle.js';
 
-import { ColorChangeUpdater, COLORS_CSS_SELECTOR } from '//resources/cr_components/color_change_listener/colors_css_updater.js';
-import type { CrMenuSelector } from '//resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
-import { assert } from '//resources/js/assert.js';
-import { CrRouter } from '//resources/js/cr_router.js';
-import { CrLitElement } from '//resources/lit/v3_0/lit.rollup.js';
+import {ColorChangeUpdater, COLORS_CSS_SELECTOR} from '//resources/cr_components/color_change_listener/colors_css_updater.js';
+import type {CrMenuSelector} from '//resources/cr_elements/cr_menu_selector/cr_menu_selector.js';
+import {assert} from '//resources/js/assert.js';
+import {CrRouter} from '//resources/js/cr_router.js';
+import {CrLitElement} from '//resources/lit/v3_0/lit.rollup.js';
 
-import { getCss } from './app.css.js';
-import { getHtml } from './app.html.js';
+import {getCss} from './app.css.js';
+import {getHtml} from './app.html.js';
 
 interface Demo {
   name: string;
@@ -42,7 +42,7 @@ export class WebuiGalleryAppElement extends CrLitElement {
 
   static override get properties() {
     return {
-      demos_: { type: Array },
+      demos_: {type: Array},
     };
   }
 
@@ -174,11 +174,11 @@ export class WebuiGalleryAppElement extends CrLitElement {
     const router = CrRouter.getInstance();
     this.onPathChanged_(router.getPath());
     router.addEventListener(
-      'cr-router-path-changed',
-      (e: Event) => this.onPathChanged_((e as CustomEvent<string>).detail));
+        'cr-router-path-changed',
+        (e: Event) => this.onPathChanged_((e as CustomEvent<string>).detail));
   }
 
-  protected onMenuItemSelect_(e: CustomEvent<{ item: HTMLAnchorElement }>): void {
+  protected onMenuItemSelect_(e: CustomEvent<{item: HTMLAnchorElement}>): void {
     const newUrl = new URL(e.detail.item.href);
     CrRouter.getInstance().setPath(newUrl.pathname);
     this.onPathChanged_(newUrl.pathname);
@@ -193,13 +193,13 @@ export class WebuiGalleryAppElement extends CrLitElement {
   private async onPathChanged_(newPath: string) {
     const path = newPath.substring(1);
     const demoIndex =
-      path === '' ? 0 : this.demos_.findIndex(demo => demo.path === path);
+        path === '' ? 0 : this.demos_.findIndex(demo => demo.path === path);
     assert(demoIndex !== -1);
     this.$.selector.selected = demoIndex;
 
     const demo = this.demos_[demoIndex]!;
 
-    const { tagName } = await import(`./demos/${demo.src}`);
+    const {tagName} = await import(`./demos/${demo.src}`);
     assert(tagName);
 
     const demoElement = document.createElement(tagName);

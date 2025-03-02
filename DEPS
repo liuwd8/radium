@@ -2,7 +2,7 @@ gclient_gn_args_from = 'src'
 
 
 vars = {
-    'chromium_revision': '43e67849e57bf024bea83e0aa9bd2342bc6ffab1',
+    'chromium_revision': 'b275c60ab548d69d10be3ce0f40aa963fbc97e7f',
     'chromium_git': 'https://chromium.googlesource.com',
 
     # To be able to build clean Chromium from sources.

@@ -60,8 +60,11 @@ class IconWrapper : public views::View {
   METADATA_HEADER(IconWrapper, views::View)
 
  public:
-  explicit IconWrapper(std::unique_ptr<views::View> icon, int vertical_spacing)
-      : icon_(AddChildView(std::move(icon))) {
+  explicit IconWrapper(std::unique_ptr<views::View> icon,
+                       int vertical_spacing,
+                       int icon_label_spacing)
+      : icon_(AddChildView(std::move(icon))),
+        icon_label_spacing_(icon_label_spacing) {
     SetLayoutManager(std::make_unique<views::BoxLayout>(
         views::BoxLayout::Orientation::kHorizontal));
     // Make sure hovering over the icon also hovers the |HoverButton|.
@@ -76,17 +79,16 @@ class IconWrapper : public views::View {
   // views::View:
   gfx::Size CalculatePreferredSize(
       const views::SizeBounds& available_size) const override {
-    const int icon_height = icon_->GetPreferredSize(available_size).height();
-    const int icon_label_spacing =
-        RadiumLayoutProvider::Get()->GetDistanceMetric(
-            views::DISTANCE_RELATED_LABEL_HORIZONTAL);
-    return gfx::Size(icon_height + icon_label_spacing, icon_height);
+    const gfx::Size icon_size = icon_->GetPreferredSize(available_size);
+    return gfx::Size(icon_size.width() + icon_label_spacing_,
+                     icon_size.height());
   }
 
   views::View* icon() { return icon_; }
 
  private:
   raw_ptr<views::View> icon_;
+  int icon_label_spacing_;
 };
 
 BEGIN_METADATA(IconWrapper)
@@ -94,12 +96,9 @@ END_METADATA
 
 }  // namespace
 
-HoverButton::HoverButton(PressedCallback callback, const std::u16string& text)
-    : views::LabelButton(
-          base::BindRepeating(&HoverButton::OnPressed, base::Unretained(this)),
-          text,
-          views::style::CONTEXT_BUTTON),
-      callback_(std::move(callback)) {
+HoverButton::HoverButton()
+    : views::LabelButton(base::BindRepeating(&HoverButton::OnPressed,
+                                             base::Unretained(this))) {
   SetButtonController(std::make_unique<HoverButtonController>(
       this,
       std::make_unique<views::Button::DefaultButtonControllerDelegate>(this)));
@@ -127,6 +126,12 @@ HoverButton::HoverButton(PressedCallback callback, const std::u16string& text)
       views::ButtonController::NotifyAction::kOnRelease);
 }
 
+HoverButton::HoverButton(PressedCallback callback, const std::u16string& text)
+    : HoverButton() {
+  SetCallback(std::move(callback));
+  SetText(text);
+}
+
 HoverButton::HoverButton(PressedCallback callback,
                          const ui::ImageModel& icon,
                          const std::u16string& text)
@@ -140,7 +145,9 @@ HoverButton::HoverButton(PressedCallback callback,
                          const std::u16string& subtitle,
                          std::unique_ptr<views::View> secondary_view,
                          bool add_vertical_label_spacing,
-                         const std::u16string& footer)
+                         const std::u16string& footer,
+                         int icon_label_spacing,
+                         bool multiline_subtitle)
     : HoverButton(std::move(callback), std::u16string()) {
   label()->SetHandlesTooltips(false);
 
@@ -156,8 +163,8 @@ HoverButton::HoverButton(PressedCallback callback,
   // vertically.
   const int vertical_spacing = GetVerticalSpacing();
   if (icon_view) {
-    icon_wrapper_ = AddChildView(
-        std::make_unique<IconWrapper>(std::move(icon_view), vertical_spacing));
+    icon_wrapper_ = AddChildView(std::make_unique<IconWrapper>(
+        std::move(icon_view), vertical_spacing, icon_label_spacing));
     icon_view_ = static_cast<IconWrapper*>(icon_wrapper_)->icon();
   }
 
@@ -183,6 +190,7 @@ HoverButton::HoverButton(PressedCallback callback,
   if (!subtitle.empty()) {
     std::unique_ptr<views::Label> subtitle_label =
         CreateSecondaryLabel(subtitle);
+    subtitle_label->SetMultiLine(multiline_subtitle);
     subtitle_ = label_wrapper->AddChildView(std::move(subtitle_label));
   }
   if (!footer.empty()) {
@@ -213,15 +221,13 @@ HoverButton::HoverButton(PressedCallback callback,
     // used in drawing ink drops.
     secondary_view->SetPaintToLayer();
     secondary_view->layer()->SetFillsBoundsOpaquely(false);
-    const int icon_label_spacing =
-        RadiumLayoutProvider::Get()->GetDistanceMetric(
-            views::DISTANCE_RELATED_LABEL_HORIZONTAL);
+    const int secondary_icon_label_spacing = icon_label_spacing;
 
     // Set vertical margins such that the vertical distance between HoverButtons
     // is maintained.
     secondary_view->SetProperty(
         views::kMarginsKey,
-        gfx::Insets::TLBR(vertical_spacing, icon_label_spacing,
+        gfx::Insets::TLBR(vertical_spacing, secondary_icon_label_spacing,
                           vertical_spacing, 0));
     secondary_view_ = AddChildView(std::move(secondary_view));
   }
@@ -232,6 +238,12 @@ HoverButton::HoverButton(PressedCallback callback,
 }
 
 HoverButton::~HoverButton() = default;
+
+void HoverButton::SetCallback(PressedCallback callback) {
+  // TODO(pkasting): Why does HoverButton have its own callback -- to disable
+  // special handling of the label? Can we remove this member and override?
+  callback_ = std::move(callback);
+}
 
 gfx::Size HoverButton::CalculatePreferredSize(
     const views::SizeBounds& available_size) const {

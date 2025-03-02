@@ -20,7 +20,6 @@ import org.chromium.base.CommandLine;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.IntentUtils;
-import org.chromium.base.JNIUtils;
 import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
 import org.chromium.base.library_loader.LibraryLoader;
@@ -50,9 +49,10 @@ public class RadiumApplication extends Application {
         ContextUtils.initApplicationContext(this);
 
         Log.i(TAG,
-            "version=%s (%s) minSdkVersion=%s isBundle=%s processName=%s isIsolatedProcess=%s",
-            VersionConstants.PRODUCT_VERSION, BuildConfig.VERSION_CODE, BuildConfig.MIN_SDK_VERSION,
-            BundleUtils.isBundle(), ContextUtils.getProcessName(), isIsolatedProcess);
+                "version=%s (%s) minSdkVersion=%s isBundle=%s processName=%s isIsolatedProcess=%s",
+                VersionConstants.PRODUCT_VERSION, BuildConfig.VERSION_CODE,
+                BuildConfig.MIN_SDK_VERSION, BundleUtils.isBundle(), ContextUtils.getProcessName(),
+                isIsolatedProcess);
 
         // if (isBrowserProcess) {
         // // This must come as early as possible to avoid early loading of the native
@@ -86,7 +86,6 @@ public class RadiumApplication extends Application {
         maybeInitProcessType();
 
         AsyncTask.takeOverAndroidThreadPool();
-        JNIUtils.setClassLoader(getClassLoader());
         ResourceBundle.setAvailablePakLocales(ProductConfig.LOCALES);
         LibraryLoader.getInstance().setLinkerImplementation(ProductConfig.USE_CHROMIUM_LINKER);
 

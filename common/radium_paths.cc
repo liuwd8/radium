@@ -2,12 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "radium/common/radium_paths.h"
+
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/no_destructor.h"
 #include "base/path_service.h"
+#include "base/system/sys_info.h"
+#include "base/threading/thread_restrictions.h"
 #include "build/build_config.h"
 #include "build/buildflag.h"
+#include "build/chromeos_buildflags.h"
 #include "components/policy/core/common/policy_paths.h"
+#include "media/media_buildflags.h"
+#include "ppapi/buildflags/buildflags.h"
 #include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
@@ -24,18 +32,31 @@
 #include "base/apple/foundation_util.h"
 #endif
 
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_OPENBSD)
+#include "components/policy/core/common/policy_paths.h"
+#endif
+
+#if BUILDFLAG(IS_WIN)
+#include "base/win/registry.h"
+#endif
+
 #if BUILDFLAG(ENABLE_WIDEVINE)
 #include "third_party/widevine/cdm/widevine_cdm_common.h"  // nogncheck
 #endif
 
 namespace {
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 // The path to the external extension <id>.json files.
 // /usr/share seems like a good choice, see: http://www.pathname.com/fhs/
 const base::FilePath::CharType kFilepathSinglePrefExtensions[] =
-    FILE_PATH_LITERAL("/usr/share/radium/extensions");
-#endif
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+    FILE_PATH_LITERAL("/usr/share/google-chrome/extensions");
+#else
+    FILE_PATH_LITERAL("/usr/share/chromium/extensions");
+#endif  // BUILDFLAG(GOOGLE_CHROME_BRANDING)
+
+#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 
 #if BUILDFLAG(ENABLE_WIDEVINE)
 // The name of the hint file that tells the latest component updated Widevine
@@ -45,9 +66,71 @@ const base::FilePath::CharType kComponentUpdatedWidevineCdmHint[] =
     FILE_PATH_LITERAL("latest-component-updated-widevine-cdm");
 #endif  // BUILDFLAG(ENABLE_WIDEVINE)
 
+#if BUILDFLAG(IS_CHROMEOS)
+const base::FilePath::CharType kChromeOSTPMFirmwareUpdateLocation[] =
+    FILE_PATH_LITERAL("/run/tpm_firmware_update_location");
+const base::FilePath::CharType kChromeOSTPMFirmwareUpdateSRKVulnerableROCA[] =
+    FILE_PATH_LITERAL("/run/tpm_firmware_update_srk_vulnerable_roca");
+const base::FilePath::CharType kDeviceRefreshTokenFilePath[] =
+    FILE_PATH_LITERAL("/home/chronos/device_refresh_token");
+#if BUILDFLAG(IS_CHROMEOS_DEVICE)
+const base::FilePath::CharType kChromeOSCryptohomeMountRoot[] =
+    FILE_PATH_LITERAL("/home/user");
+#else
+const base::FilePath::CharType kFakeCryptohomeMountRootDirname[] =
+    FILE_PATH_LITERAL(".home_user");
+#endif  // BUILDFLAG(IS_CHROMEOS_DEVICE)
+
+bool GetChromeOsCrdDataDirInternal(base::FilePath* result,
+                                   bool* should_be_created) {
+#if BUILDFLAG(IS_CHROMEOS_DEVICE)
+  *result = base::FilePath::FromASCII("/run/crd");
+  // The directory is created by ChromeOS (since we do not have the permissions
+  // to create anything in /run).
+  *should_be_created = false;
+  return true;
+#else
+  // On glinux-ChromeOS builds `/run/` doesn't exist, so we simply use the temp
+  // directory.
+  base::FilePath temp_directory;
+  if (!base::PathService::Get(base::DIR_TEMP, &temp_directory)) {
+    return false;
+  }
+
+  *result = temp_directory.Append(FILE_PATH_LITERAL("crd"));
+  *should_be_created = true;
+  return true;
+#endif  // BUILDFLAG(IS_CHROMEOS_DEVICE)
+}
+
+#endif  // BUILDFLAG(IS_CHROMEOS)
+
+base::FilePath& GetInvalidSpecifiedUserDataDirInternal() {
+  static base::NoDestructor<base::FilePath> s;
+  return *s;
+}
+
 // Gets the path for internal plugins.
 bool GetInternalPluginsDirectory(base::FilePath* result) {
+#if BUILDFLAG(ENABLE_PPAPI)
+#if BUILDFLAG(IS_MAC)
+  // If called from Chrome, get internal plugins from a subdirectory of the
+  // framework.
+  if (base::apple::AmIBundled()) {
+    *result = radium::GetFrameworkBundlePath();
+    DCHECK(!result->empty());
+    *result = result->Append("Internet Plug-Ins");
+    return true;
+  }
+  // In tests, just look in the module directory (below).
+#endif  //  BUILDFLAG(IS_MAC)
+
+  // The rest of the world expects plugins in the module directory.
+  return base::PathService::Get(base::DIR_MODULE, result);
+#else  // BUILDFLAG(ENABLE_PPAPI)
+  // PPAPI plugins are not enabled, so don't return an internal plugins path.
   return false;
+#endif
 }
 
 // Gets the path for bundled implementations of components. Note that these
@@ -149,25 +232,17 @@ bool PathProvider(int key, base::FilePath* result) {
 #endif
       break;
     case radium::DIR_CRASH_METRICS:
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-      cur = base::FilePath(kLacrosLogDirectory);
-#else
       if (!base::PathService::Get(radium::DIR_USER_DATA, &cur)) {
         return false;
       }
-#endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
       break;
     case radium::DIR_CRASH_DUMPS:
-// Only use /var/log/{chrome,lacros} on IS_CHROMEOS_DEVICE builds. For
-// non-device builds we fall back to the #else below and store relative to the
+// Only use /var/log/chrome on IS_CHROMEOS_DEVICE builds. For non-device
+// ChromeOS builds we fall back to the #else below and store relative to the
 // default user-data directory.
 #if BUILDFLAG(IS_CHROMEOS_DEVICE)
-#if BUILDFLAG(IS_CHROMEOS_ASH)
       // ChromeOS uses a separate directory. See http://crosbug.com/25089
       cur = base::FilePath("/var/log/chrome");
-#elif BUILDFLAG(IS_CHROMEOS_LACROS)
-      cur = base::FilePath(kLacrosLogDirectory);
-#endif  // BUILDFlAG(IS_CHROMEOS_ASH)
 #elif BUILDFLAG(IS_ANDROID)
       if (!base::android::GetCacheDirectory(&cur)) {
         return false;
@@ -319,13 +394,7 @@ bool PathProvider(int key, base::FilePath* result) {
       break;
 
     case radium::DIR_COMPONENT_UPDATED_WIDEVINE_CDM: {
-      int components_dir =
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-          static_cast<int>(chromeos::lacros_paths::LACROS_SHARED_DIR);
-#else
-          radium::DIR_USER_DATA;
-#endif  // BUILDFLAG(IS_CHROMEOS_LACROS)
-      if (!base::PathService::Get(components_dir, &cur)) {
+      if (!base::PathService::Get(radium::DIR_USER_DATA, &cur)) {
         return false;
       }
       cur = cur.AppendASCII(kWidevineCdmBaseDirectory);
@@ -367,23 +436,7 @@ bool PathProvider(int key, base::FilePath* result) {
 #endif
       break;
 
-#if BUILDFLAG(IS_CHROMEOS_LACROS)
-    case radium::FILE_RESOURCES_FOR_SHARING_PACK:
-      if (!GetDefaultUserDataDirectory(&cur)) {
-        return false;
-      }
-      cur = cur.Append(FILE_PATH_LITERAL(crosapi::kSharedResourcesPackName));
-      break;
-    case radium::FILE_ASH_RESOURCES_PACK:
-      if (!base::PathService::Get(chromeos::lacros_paths::ASH_RESOURCES_DIR,
-                                  &cur)) {
-        return false;
-      }
-      cur = cur.Append("resources.pak");
-      break;
-#endif
-
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
     case radium::DIR_CHROMEOS_WALLPAPERS:
       if (!base::PathService::Get(radium::DIR_USER_DATA, &cur)) {
         return false;
@@ -443,18 +496,20 @@ bool PathProvider(int key, base::FilePath* result) {
         return false;
       }
       break;
+#if BUILDFLAG(IS_MAC)
+    case radium::DIR_OUTER_BUNDLE: {
+      cur = base::apple::OuterBundlePath();
+      break;
+    }
+#endif
 #if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_OPENBSD)
     case radium::DIR_POLICY_FILES: {
       cur = base::FilePath(policy::kPolicyPath);
       break;
     }
 #endif
-// TODO(crbug.com/40118868): Revisit once build flag switch of lacros-chrome is
-// complete.
-#if BUILDFLAG(IS_CHROMEOS_ASH) ||                              \
-    ((BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS_LACROS)) && \
-     BUILDFLAG(CHROMIUM_BRANDING)) ||                          \
-    BUILDFLAG(IS_MAC)
+#if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC) || \
+    (BUILDFLAG(IS_LINUX) && BUILDFLAG(CHROMIUM_BRANDING))
     case radium::DIR_USER_EXTERNAL_EXTENSIONS: {
       if (!base::PathService::Get(radium::DIR_USER_DATA, &cur)) {
         return false;
@@ -504,15 +559,20 @@ bool PathProvider(int key, base::FilePath* result) {
     (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_MAC))
     case radium::DIR_NATIVE_MESSAGING:
 #if BUILDFLAG(IS_MAC)
+#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
+      cur = base::FilePath(
+          FILE_PATH_LITERAL("/Library/Google/Chrome/NativeMessagingHosts"));
+#else
       cur = base::FilePath(FILE_PATH_LITERAL(
           "/Library/Application Support/Radium/NativeMessagingHosts"));
+#endif
 #else  // BUILDFLAG(IS_MAC)
 #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
       cur = base::FilePath(
           FILE_PATH_LITERAL("/etc/opt/chrome/native-messaging-hosts"));
 #else
       cur = base::FilePath(
-          FILE_PATH_LITERAL("/etc/chromium/native-messaging-hosts"));
+          FILE_PATH_LITERAL("/etc/radium/native-messaging-hosts"));
 #endif
 #endif  // !BUILDFLAG(IS_MAC)
       break;
@@ -532,12 +592,15 @@ bool PathProvider(int key, base::FilePath* result) {
       cur = cur.Append(kGCMStoreDirname);
       break;
 #endif  // !BUILDFLAG(IS_ANDROID)
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
     case radium::FILE_CHROME_OS_TPM_FIRMWARE_UPDATE_LOCATION:
       cur = base::FilePath(kChromeOSTPMFirmwareUpdateLocation);
       break;
     case radium::FILE_CHROME_OS_TPM_FIRMWARE_UPDATE_SRK_VULNERABLE_ROCA:
       cur = base::FilePath(kChromeOSTPMFirmwareUpdateSRKVulnerableROCA);
+      break;
+    case radium::FILE_CHROME_OS_DEVICE_REFRESH_TOKEN:
+      cur = base::FilePath(kDeviceRefreshTokenFilePath);
       break;
     case radium::DIR_CHROMEOS_HOMEDIR_MOUNT:
 #if BUILDFLAG(IS_CHROMEOS_DEVICE)
@@ -549,7 +612,7 @@ bool PathProvider(int key, base::FilePath* result) {
       cur = cur.Append(kFakeCryptohomeMountRootDirname);
 #endif  // BUILDFLAG(IS_CHROMEOS_DEVICE)
       break;
-#endif  // BUILDFLAG(IS_CHROMEOS_ASH)
+#endif  // BUILDFLAG(IS_CHROMEOS)
     case radium::DIR_OPTIMIZATION_GUIDE_PREDICTION_MODELS:
       if (!base::PathService::Get(radium::DIR_USER_DATA, &cur)) {
         return false;
@@ -574,6 +637,14 @@ bool PathProvider(int key, base::FilePath* result) {
 // eliminate this object file if there is no direct entry point into it.
 void RegisterPathProvider() {
   base::PathService::RegisterProvider(PathProvider, PATH_START, PATH_END);
+}
+
+void SetInvalidSpecifiedUserDataDir(const base::FilePath& user_data_dir) {
+  GetInvalidSpecifiedUserDataDirInternal() = user_data_dir;
+}
+
+const base::FilePath& GetInvalidSpecifiedUserDataDir() {
+  return GetInvalidSpecifiedUserDataDirInternal();
 }
 
 }  // namespace radium
