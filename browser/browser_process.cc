@@ -145,10 +145,10 @@ void BrowserProcess::RegisterPrefs(PrefRegistrySimple* registry) {
 
   registry->RegisterStringPref(language::prefs::kApplicationLocale,
                                std::string());
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
   registry->RegisterStringPref(prefs::kOwnerLocale, std::string());
   registry->RegisterStringPref(prefs::kHardwareKeyboardLayout, std::string());
-#endif  // BUILDFLAG(IS_CHROMEOS_ASH)
+#endif  // BUILDFLAG(IS_CHROMEOS)
 
   // registry->RegisterBooleanPref(prefs::kDevToolsRemoteDebuggingAllowed,
   // true);

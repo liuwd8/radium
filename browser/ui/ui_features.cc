@@ -9,7 +9,6 @@
 #include "base/time/time.h"
 #include "build/build_config.h"
 #include "build/chromeos_buildflags.h"
-#include "components/flags_ui/feature_entry.h"
 #include "ui/base/ui_base_features.h"
 
 namespace features {
@@ -387,7 +386,7 @@ BASE_FEATURE(kWebUITabStrip,
 // TODO(crbug.com/40796475): Enable this flag for all platforms after launch.
 BASE_FEATURE(kWebUITabStripContextMenuAfterTap,
              "WebUITabStripContextMenuAfterTap",
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
              base::FEATURE_DISABLED_BY_DEFAULT
 #else
              base::FEATURE_ENABLED_BY_DEFAULT

@@ -68,7 +68,7 @@ void RadiumBrowserMainPartsLinux::PostCreateMainMessageLoop() {
 }
 
 void RadiumBrowserMainPartsLinux::PreProfileInit() {
-#if !BUILDFLAG(IS_CHROMEOS_ASH)
+#if !BUILDFLAG(IS_CHROMEOS)
   // Needs to be called after we have chrome::DIR_USER_DATA and
   // g_browser_process.  This happens in PreCreateThreads.
   // base::GetLinuxDistro() will initialize its value if needed.

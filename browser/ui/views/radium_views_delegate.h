@@ -35,7 +35,7 @@ class RadiumViewsDelegate : public views::ViewsDelegate {
                              base::OnceClosure callback) override;
 #endif
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS_LACROS)
+#if BUILDFLAG(IS_LINUX)
   bool WindowManagerProvidesTitleBar(bool maximized) override;
 #endif
 

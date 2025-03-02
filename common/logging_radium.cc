@@ -225,7 +225,7 @@ void InitRadiumLogging(const base::CommandLine& command_line,
     } else {
       log_path = GetLogFileName(command_line);
 
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
       // For BWSI (Incognito) logins, we want to put the logs in the user
       // profile directory that is created for the temporary session instead
       // of in the system log directory, for privacy reasons.
@@ -243,7 +243,7 @@ void InitRadiumLogging(const base::CommandLine& command_line,
       // the link, it shouldn't remove the old file in the logging code,
       // since that will remove the newly created link instead.
       delete_old_log_file = APPEND_TO_OLD_LOG_FILE;
-#endif  // BUILDFLAG(IS_CHROMEOS_ASH)
+#endif  // BUILDFLAG(IS_CHROMEOS)
     }
   } else {
     log_locking_state = DONT_LOCK_LOG_FILE;
@@ -265,7 +265,7 @@ void InitRadiumLogging(const base::CommandLine& command_line,
   settings.delete_old = delete_old_log_file;
   bool success = InitLogging(settings);
 
-#if BUILDFLAG(IS_CHROMEOS_ASH)
+#if BUILDFLAG(IS_CHROMEOS)
   if (!success) {
     DPLOG(ERROR) << "Unable to initialize logging to " << log_path.value()
                  << " (which should be a link to " << target_path.value()
@@ -274,13 +274,13 @@ void InitRadiumLogging(const base::CommandLine& command_line,
     radium_logging_failed_ = true;
     return;
   }
-#else   // BUILDFLAG(IS_CHROMEOS_ASH)
+#else   // BUILDFLAG(IS_CHROMEOS)
   if (!success) {
     DPLOG(ERROR) << "Unable to initialize logging to " << log_path.value();
     radium_logging_failed_ = true;
     return;
   }
-#endif  // BUILDFLAG(IS_CHROMEOS_ASH)
+#endif  // BUILDFLAG(IS_CHROMEOS)
 
   // We call running in unattended mode "headless", and allow headless mode to
   // be configured either by the Environment Variable or by the Command Line

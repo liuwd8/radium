@@ -27,10 +27,7 @@ void RadiumBrowserMainExtraPartsOzone::PostCreateMainMessageLoop() {
 }
 
 void RadiumBrowserMainExtraPartsOzone::PostMainMessageLoopRun() {
-#if !BUILDFLAG(IS_CHROMEOS_LACROS) && !BUILDFLAG(IS_LINUX)
-  // Lacros's `PostMainMessageLoopRun` must be called at the very end of
-  // `PostMainMessageLoopRun` in
-  // `ChromeBrowserMainPartsLacros::PostMainMessageLoopRun`.
+#if !BUILDFLAG(IS_LINUX)
   ui::OzonePlatform::GetInstance()->PostMainMessageLoopRun();
 #endif
 }
