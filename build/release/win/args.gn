@@ -1,4 +1,2 @@
 # Set build arguments here. See `gn help buildargs`.
 import("//radium/build/release/all.gn")
-
-use_siso = false

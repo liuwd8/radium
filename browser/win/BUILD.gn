@@ -5,6 +5,7 @@
 static_library("win") {
   public = [
     "radium_elf_init.h",
+    "radium_process_finder.h",
     "remove_app_compat_entries.h",
   ]
 
@@ -12,6 +13,7 @@ static_library("win") {
     "parental_controls.cc",
     "parental_controls.h",
     "radium_elf_init.cc",
+    "radium_process_finder.cc",
     "remove_app_compat_entries.cc",
   ]
 

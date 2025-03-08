@@ -8,12 +8,15 @@ import("//crypto/features.gni")
 static_library("ui") {
   public = [
     "browser.h",
+    "simple_message_box.h",
     "startup/startup_browser_creator.h",
     "ui_features.h",
   ]
 
   sources = [
     "browser.cc",
+    "simple_message_box_internal.cc",
+    "simple_message_box_internal.h",
     "startup/startup_browser_creator.cc",
     "ui_features.cc",
   ]
@@ -57,6 +60,8 @@ static_library("ui") {
       "views/devtools_process_observer.h",
       "views/hover_button_controller.cc",
       "views/hover_button_controller.h",
+      "views/message_box_dialog.cc",
+      "views/message_box_dialog.h",
       "views/radium_browser_main_extra_parts_views.cc",
       "views/radium_browser_main_extra_parts_views.h",
       "views/radium_constrained_window_views_client.cc",
@@ -78,13 +83,18 @@ static_library("ui") {
     ]
 
     if (is_linux) {
-      sources += [ "views/radium_views_delegate_linux.cc" ]
+      sources += [
+        "views/process_singleton_dialog_linux.cc",
+        "views/radium_views_delegate_linux.cc",
+      ]
     } else if (is_win) {
       sources += [ "views/radium_views_delegate_win.cc" ]
     } else if (is_mac) {
       sources += [
         "cocoa/l10n_util.h",
         "cocoa/l10n_util.mm",
+        "cocoa/simple_message_box_cocoa.h",
+        "cocoa/simple_message_box_cocoa.mm",
         "views/radium_views_delegate_mac.cc",
       ]
 

@@ -15,6 +15,7 @@
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/prefs/pref_service.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/buildflags.h"
 #include "radium/browser/global_features.h"
 #include "radium/browser/profiles/profile_manager.h"
 #include "radium/browser/profiles/profiles_state.h"
@@ -39,7 +40,16 @@
 #include "ui/aura/env.h"
 #endif
 
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+#include "radium/browser/radium_process_singleton.h"
+
+#if BUILDFLAG(IS_LINUX)
+#include "base/nix/xdg_util.h"
+#endif
+#endif
+
 namespace {
+
 StartupProfileInfo CreateInitialProfile(
     const base::FilePath& cur_dir,
     const base::CommandLine& parsed_command_line) {
@@ -55,6 +65,42 @@ StartupProfileInfo CreateInitialProfile(
   profile_info.mode = StartupProfileMode::kBrowserWindow;
   return profile_info;
 }
+
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+void ProcessSingletonNotificationCallbackImpl(
+    base::CommandLine command_line,
+    const base::FilePath& current_directory) {
+  // Drop the request if the browser process is already shutting down.
+  if (!BrowserProcess::Get() || BrowserProcess::Get()->IsShuttingDown()) {
+    return;
+  }
+
+#if BUILDFLAG(IS_LINUX)
+  // Set the global activation token sent as a command line switch by another
+  // browser process. This also removes the switch after use to prevent any side
+  // effects of leaving it in the command line after this point.
+  base::nix::ExtractXdgActivationTokenFromCmdLine(command_line);
+#endif
+
+  //   StartupProfilePathInfo startup_profile_path_info =
+  //       GetStartupProfilePath(current_directory, command_line,
+  //                             /*ignore_profile_picker=*/false);
+  //   DCHECK_NE(startup_profile_path_info.reason,
+  //   StartupProfileModeReason::kError); base::UmaHistogramEnumeration(
+  //       "ProfilePicker.StartupMode.NotificationCallback",
+  //       StartupProfileModeFromReason(startup_profile_path_info.reason));
+  //   base::UmaHistogramEnumeration(
+  //       "ProfilePicker.StartupReason.NotificationCallback",
+  //       startup_profile_path_info.reason);
+
+  //   StartupBrowserCreator::ProcessCommandLineAlreadyRunning(
+  //       command_line, current_directory, startup_profile_path_info);
+
+  LOG(ERROR) << "Another process wants to start command_line: "
+             << command_line.GetCommandLineString() << ", "
+             << "current_directory: " << current_directory;
+}
+#endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)
 
 #if !BUILDFLAG(IS_ANDROID)
 // Initialized in PreMainMessageLoopRun() and handed off to content:: in
@@ -90,6 +136,32 @@ void StartWatchingForProcessShutdownHangs() {
 
 }  // namespace
 
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+// static
+bool RadiumBrowserMainParts::ProcessSingletonNotificationCallback(
+    base::CommandLine command_line,
+    const base::FilePath& current_directory) {
+  // Drop the request if the browser process is already shutting down.
+  // Note that we're going to post an async task below. Even if the browser
+  // process isn't shutting down right now, it could be by the time the task
+  // starts running. So, an additional check needs to happen when it starts.
+  // But regardless of any future check, there is no reason to post the task
+  // now if we know we're already shutting down.
+  if (!BrowserProcess::Get() || BrowserProcess::Get()->IsShuttingDown()) {
+    return false;
+  }
+
+  // In order to handle this request on Windows, there is platform specific
+  // code in browser_finder.cc that requires making outbound COM calls to
+  // cross-apartment shell objects (via IVirtualDesktopManager). That is not
+  // allowed within a SendMessage handler, which this function is a part of.
+  // So, we post a task to asynchronously finish the command line processing.
+  return base::SingleThreadTaskRunner::GetCurrentDefault()->PostTask(
+      FROM_HERE, base::BindOnce(&ProcessSingletonNotificationCallbackImpl,
+                                std::move(command_line), current_directory));
+}
+#endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+
 RadiumBrowserMainParts::RadiumBrowserMainParts(
     RadiumFeatureListCreator* radium_feature_list_creator)
     : radium_feature_list_creator_(radium_feature_list_creator) {}
@@ -114,10 +186,11 @@ int RadiumBrowserMainParts::PreEarlyInitialization() {
 
   // Create BrowserProcess in PreEarlyInitialization() so that we can load
   // field trials (and all it depends upon).
-  browser_process_ = std::make_unique<BrowserProcess>(radium_feature_list_creator_);
+  browser_process_ =
+      std::make_unique<BrowserProcess>(radium_feature_list_creator_);
 
   if (!base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir_)) {
-    return radium::RESULT_CODE_MISSING_DATA;
+    return RADIUM_RESULT_CODE_MISSING_DATA;
   }
 
 #if BUILDFLAG(IS_ANDROID)
@@ -185,6 +258,16 @@ int RadiumBrowserMainParts::PreCreateThreads() {
   BrowserProcess::Get()->gpu_mode_manager();
 
   return result_code_;
+}
+
+void RadiumBrowserMainParts::PostCreateThreads() {
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  RadiumProcessSingleton::GetInstance()->StartWatching();
+#endif
+
+  for (auto& radium_extra_part : radium_extra_parts_) {
+    radium_extra_part->PostCreateThreads();
+  }
 }
 
 int RadiumBrowserMainParts::PreCreateThreadsImpl() {
@@ -266,6 +349,10 @@ void RadiumBrowserMainParts::PostMainMessageLoopRun() {
     radium_extra_part->PostMainMessageLoopRun();
   }
 
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  RadiumProcessSingleton::GetInstance()->Cleanup();
+#endif
+
   browser_process_->PostDestroyThreads();
 
   browser_process_->StartTearDown();
@@ -296,6 +383,14 @@ void RadiumBrowserMainParts::PostBrowserStart() {
   for (auto& radium_extra_part : radium_extra_parts_) {
     radium_extra_part->PostBrowserStart();
   }
+
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  // Allow ProcessSingleton to process messages.
+  // This is done here instead of just relying on the main message loop's start
+  // to avoid rendezvous in RunLoops that may precede MainMessageLoopRun.
+  RadiumProcessSingleton::GetInstance()->Unlock(base::BindRepeating(
+      &RadiumBrowserMainParts::ProcessSingletonNotificationCallback));
+#endif
 }
 
 int RadiumBrowserMainParts::PreMainMessageLoopRunImpl() {

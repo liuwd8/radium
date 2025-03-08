@@ -14,7 +14,10 @@ namespace switches {
 
 #if BUILDFLAG(IS_WIN)
 inline constexpr char kNoPreReadMainDll[] = "no-pre-read-main-dll";
+inline constexpr char kSourceShortcut[] = "source-shortcut";
 #endif  // BUILDFLAG(IS_WIN)
+
+inline constexpr char kProfileDirectory[] = "profile-directory";
 
 // TLS 1.2 mode for |kSSLVersionMax| and |kSSLVersionMin| switches.
 inline constexpr char kSSLVersionTLSv12[] = "tls1.2";

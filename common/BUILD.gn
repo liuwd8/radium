@@ -37,6 +37,13 @@ static_library("common_lib") {
     "radium_result_codes.h",
   ]
 
+  if (is_posix && !is_android) {
+    sources += [
+      "process_singleton_lock_posix.cc",
+      "process_singleton_lock_posix.h",
+    ]
+  }
+
   deps = [
     ":channel_info",
     ":constants",

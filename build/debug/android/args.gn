@@ -1,5 +1,5 @@
 # Set build arguments here. See `gn help buildargs`.
-import("//radium/build/release/all.gn")
+import("//radium/build/debug/all.gn")
 
 target_cpu = "arm64"
 target_os = "android"

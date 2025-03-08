@@ -8,12 +8,18 @@
 #include "base/files/file_path.h"
 #include "content/public/browser/browser_main_parts.h"
 #include "content/public/common/result_codes.h"
+#include "radium/browser/buildflags.h"
 
 class BrowserProcess;
 class RadiumBrowserMainExtraParts;
 class RadiumFeatureListCreator;
 class StartupBrowserCreator;
 class Profile;
+
+namespace base {
+class CommandLine;
+class RunLoop;
+}  // namespace base
 
 class RadiumBrowserMainParts : public content::BrowserMainParts {
  public:
@@ -27,6 +33,17 @@ class RadiumBrowserMainParts : public content::BrowserMainParts {
   // Add additional ChromeBrowserMainExtraParts.
   void AddParts(std::unique_ptr<RadiumBrowserMainExtraParts> parts);
 
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  // Handles notifications from other processes. The function receives the
+  // command line and directory with which the other Chrome process was
+  // launched. Return true if the command line will be handled within the
+  // current browser instance or false if the remote process should handle it
+  // (i.e., because the current process is shutting down).
+  static bool ProcessSingletonNotificationCallback(
+      base::CommandLine command_line,
+      const base::FilePath& current_directory);
+#endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+
  protected:
   // content::BrowserMainParts:
   int PreEarlyInitialization() override;
@@ -34,6 +51,7 @@ class RadiumBrowserMainParts : public content::BrowserMainParts {
   void PreCreateMainMessageLoop() override;
   void PostCreateMainMessageLoop() override;
   int PreCreateThreads() override;
+  void PostCreateThreads() override;
   int PreMainMessageLoopRun() override;
 #if !BUILDFLAG(IS_ANDROID)
   bool ShouldInterceptMainMessageLoopRun() override;

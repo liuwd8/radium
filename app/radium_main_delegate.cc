@@ -9,9 +9,11 @@
 #include "base/functional/overloaded.h"
 #include "base/i18n/rtl.h"
 #include "base/logging.h"
+#include "base/metrics/histogram_macros.h"
 #include "base/path_service.h"
 #include "base/process/memory.h"
 #include "base/process/process.h"
+#include "base/strings/sys_string_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/task/thread_pool/thread_pool_instance.h"
 #include "base/threading/hang_watcher.h"
@@ -27,6 +29,7 @@
 #include "content/public/common/url_constants.h"
 #include "net/http/http_cache.h"
 #include "net/url_request/url_request.h"
+#include "radium/browser/buildflags.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/radium_content_browser_client.h"
 #include "radium/browser/radium_resource_bundle_helper.h"
@@ -38,12 +41,31 @@
 #include "radium/common/radium_result_codes.h"
 #include "radium/common/radium_version.h"
 #include "radium/common/webui_url_constants.h"
+#include "radium/grit/radium_strings.h"
 #include "services/tracing/public/cpp/stack_sampling/tracing_sampler_profiler.h"
+#include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "ui/base/resource/scoped_startup_resource_bundle.h"
 #include "ui/base/ui_base_paths.h"
 #include "ui/base/ui_base_switches.h"
 #include "ui/linux/display_server_utils.h"
 #include "ui/ozone/public/ozone_platform.h"
+
+#if BUILDFLAG(IS_ANDROID)
+#include "radium/common/radium_descriptors.h"
+#endif
+
+#if BUILDFLAG(IS_LINUX)
+#include "base/nix/scoped_xdg_activation_token_injector.h"
+#include "ui/linux/display_server_utils.h"
+#endif
+
+#if BUILDFLAG(IS_MAC)
+#include "base/apple/foundation_util.h"
+#include "components/crash/core/common/objc_zombie.h"
+#include "radium/browser/radium_browser_application_mac.h"
+#include "ui/base/l10n/l10n_util_mac.h"
+#endif
 
 #if BUILDFLAG(IS_WIN)
 #include <malloc.h>
@@ -62,16 +84,10 @@
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
 
-#if BUILDFLAG(IS_MAC)
-#include "base/apple/foundation_util.h"
-#include "components/crash/core/common/objc_zombie.h"
-#include "radium/browser/radium_browser_application_mac.h"
-#include "ui/base/l10n/l10n_util_mac.h"
-#endif
-
-#if BUILDFLAG(IS_ANDROID)
-#include "radium/common/radium_descriptors.h"
-#endif
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+#include "radium/browser/process_singleton.h"
+#include "radium/browser/radium_process_singleton.h"
+#endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)
 
 const char* const RadiumMainDelegate::kNonWildcardDomainNonPortSchemes[] = {
     radium::kRadiumUIScheme,
@@ -195,6 +211,62 @@ void SetUpProfilingShutdownHandler() {
 
 #endif  // BUILDFLAG(IS_POSIX)
 
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+std::optional<int> AcquireProcessSingleton(
+    const base::FilePath& user_data_dir) {
+  // Take the Chrome process singleton lock. The process can become the
+  // Browser process if it succeed to take the lock. Otherwise, the
+  // command-line is sent to the actual Browser process and the current
+  // process can be exited.
+  RadiumProcessSingleton::CreateInstance(user_data_dir);
+
+#if BUILDFLAG(IS_LINUX)
+  // Read the xdg-activation token and set it in the command line for the
+  // duration of the notification in order to ensure this is propagated to an
+  // already running browser process if it exists.
+  // If this is the only browser process the global token will be available for
+  // use after this as well.
+  // The activation token received from the launching app is used later when
+  // activating an existing browser window.
+  base::nix::ScopedXdgActivationTokenInjector activation_token_injector(
+      *base::CommandLine::ForCurrentProcess(), *base::Environment::Create());
+#endif
+  ProcessSingleton::NotifyResult notify_result =
+      RadiumProcessSingleton::GetInstance()->NotifyOtherProcessOrCreate();
+  UMA_HISTOGRAM_ENUMERATION("Radium.ProcessSingleton.NotifyResult",
+                            notify_result, ProcessSingleton::kNumNotifyResults);
+
+  switch (notify_result) {
+    case ProcessSingleton::PROCESS_NONE:
+      break;
+
+    case ProcessSingleton::PROCESS_NOTIFIED: {
+      // Ensure there is an instance of ResourceBundle that is initialized for
+      // localized string resource accesses.
+      ui::ScopedStartupResourceBundle startup_resource_bundle;
+      printf("%s\n", base::SysWideToNativeMB(
+                         base::UTF16ToWide(l10n_util::GetStringUTF16(
+                             IDS_USED_EXISTING_BROWSER)))
+                         .c_str());
+      return RADIUM_RESULT_CODE_NORMAL_EXIT_PROCESS_NOTIFIED;
+    }
+
+    case ProcessSingleton::PROFILE_IN_USE:
+      return RADIUM_RESULT_CODE_PROFILE_IN_USE;
+
+    case ProcessSingleton::LOCK_ERROR:
+      LOG(ERROR) << "Failed to create a ProcessSingleton for your profile "
+                    "directory. This means that running multiple instances "
+                    "would start multiple browser processes rather than "
+                    "opening a new window in the existing process. Aborting "
+                    "now to avoid profile corruption.";
+      return RADIUM_RESULT_CODE_PROFILE_IN_USE;
+  }
+
+  return std::nullopt;
+}
+#endif
+
 #if !BUILDFLAG(IS_ANDROID)
 void InitLogging(const std::string& process_type) {
   logging::OldFileDeletionState file_state = logging::APPEND_TO_OLD_LOG_FILE;
@@ -265,7 +337,7 @@ void OnResourceExhausted() {
     ::MessageBox(nullptr, kOnResourceExhaustedMessage, kMessageBoxTitle, MB_OK);
   }
   base::Process::TerminateCurrentProcessImmediately(
-      radium::RESULT_CODE_SYSTEM_RESOURCE_EXHAUSTED);
+      RADIUM_RESULT_CODE_SYSTEM_RESOURCE_EXHAUSTED);
 }
 #endif
 
@@ -303,7 +375,7 @@ std::optional<int> RadiumMainDelegate::BasicStartupComplete() {
 #if BUILDFLAG(IS_WIN)
   // Browser should not be sandboxed.
   if (is_browser && IsSandboxedProcess()) {
-    return radium::RESULT_CODE_INVALID_SANDBOX_STATE;
+    return RADIUM_RESULT_CODE_INVALID_SANDBOX_STATE;
   }
 #endif
 
@@ -544,6 +616,10 @@ void RadiumMainDelegate::SandboxInitialized(const std::string& process_type) {
 }
 
 void RadiumMainDelegate::ProcessExiting(const std::string& process_type) {
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  RadiumProcessSingleton::DeleteInstance();
+#endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+
   if (SubprocessNeedsResourceBundle(process_type)) {
     ui::ResourceBundle::CleanupSharedInstance();
   }
@@ -586,6 +662,25 @@ std::optional<int> RadiumMainDelegate::PostEarlyInitialization(
     CommonEarlyInitialization(invoked_in);
     return std::nullopt;
   }
+
+#if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
+  // The User Data dir is guaranteed to be valid as per InitializeUserDataDir.
+  base::FilePath user_data_dir =
+      base::PathService::CheckedGet(radium::DIR_USER_DATA);
+
+  // On platforms that support the process rendezvous, acquire the process
+  // singleton. In case of failure, it means there is already a running browser
+  // instance that handled the command-line.
+  if (auto process_singleton_result = AcquireProcessSingleton(user_data_dir);
+      process_singleton_result.has_value()) {
+    // To ensure that the histograms emitted in this process are reported in
+    // case of early exit, report the metrics accumulated this session with a
+    // future session's metrics.
+    DeferBrowserMetrics(user_data_dir);
+
+    return process_singleton_result;
+  }
+#endif
 
 #if BUILDFLAG(IS_WIN)
   // Initialize the cleaner of left-behind tmp files now that the main thread
