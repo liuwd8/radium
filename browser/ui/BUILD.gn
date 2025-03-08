@@ -93,6 +93,8 @@ static_library("ui") {
       sources += [
         "cocoa/l10n_util.h",
         "cocoa/l10n_util.mm",
+        "cocoa/simple_message_box_cocoa.h",
+        "cocoa/simple_message_box_cocoa.mm",
         "views/radium_views_delegate_mac.cc",
       ]
 

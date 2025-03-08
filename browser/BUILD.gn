@@ -229,6 +229,7 @@ static_library("browser") {
       "mac/exception_processor.h",
       "mac/exception_processor.mm",
       "platform_util_mac.mm",
+      "process_singleton_mac.mm",
       "radium_browser_application_mac.h",
       "radium_browser_application_mac.mm",
       "radium_browser_main_extra_parts_mac.h",

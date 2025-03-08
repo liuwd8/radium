@@ -43,8 +43,6 @@ const base::FilePath::CharType kHelperProcessExecutableName[] = FPL("exe");
 #endif
 
 #if BUILDFLAG(IS_MAC)
-const base::FilePath::CharType kHelperProcessExecutableName[] =
-    FPL(PRODUCT_FULLNAME_STRING " Helper");
 const base::FilePath::CharType kBrowserProcessExecutablePath[] =
     FPL(PRODUCT_FULLNAME_STRING ".app/Contents/MacOS/" PRODUCT_FULLNAME_STRING);
 const base::FilePath::CharType kHelperProcessExecutablePath[] =
