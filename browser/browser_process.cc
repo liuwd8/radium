@@ -253,6 +253,10 @@ void BrowserProcess::PreMainMessageLoopRun() {
       std::make_unique<os_crypt_async::OSCryptAsync>(std::move(providers));
 }
 
+bool BrowserProcess::IsShuttingDown() {
+  return KeepAliveRegistry::GetInstance()->IsShuttingDown();
+}
+
 #if !BUILDFLAG(IS_ANDROID)
 void BrowserProcess::StartTearDown() {
   // Debugger must be cleaned up before ProfileManager.

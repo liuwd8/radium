@@ -178,7 +178,7 @@ int MainDllLoader::Launch(HINSTANCE instance,
   dll_ =
       Load(&file, cmd_line, is_browser, preread_begin_ticks, preread_end_ticks);
   if (!dll_) {
-    return radium::RESULT_CODE_MISSING_DATA;
+    return RADIUM_RESULT_CODE_MISSING_DATA;
   }
 
   if (!is_browser) {

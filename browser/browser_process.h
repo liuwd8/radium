@@ -61,6 +61,7 @@ class BrowserProcess : public KeepAliveStateObserver {
 
   void CreateDevToolsProtocolHandler();
 
+  bool IsShuttingDown();
   // Most cleanup is done by these functions, driven from
   // ChromeBrowserMain based on notifications from the content
   // framework, rather than in the destructor, so that we can

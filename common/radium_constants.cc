@@ -20,9 +20,29 @@ extern const wchar_t kUserDataDirname[];
 const base::FilePath::CharType kCacheDirname[] = FPL("Cache");
 const base::FilePath::CharType kCookieFilename[] = FPL("Cookies");
 
-#if BUILDFLAG(IS_MAC)
+#if BUILDFLAG(IS_WIN)
+const base::FilePath::CharType kBrowserProcessExecutableName[] =
+    FPL("radium.exe");
+const base::FilePath::CharType kHelperProcessExecutableName[] =
+    FPL("radium.exe");
+#elif BUILDFLAG(IS_MAC)
 const base::FilePath::CharType kBrowserProcessExecutableName[] =
     FPL(PRODUCT_FULLNAME_STRING);
+const base::FilePath::CharType kHelperProcessExecutableName[] =
+    FPL(PRODUCT_FULLNAME_STRING " Helper");
+#elif BUILDFLAG(IS_ANDROID)
+// NOTE: Keep it synced with the process names defined in AndroidManifest.xml.
+const base::FilePath::CharType kBrowserProcessExecutableName[] = FPL("radium");
+const base::FilePath::CharType kHelperProcessExecutableName[] =
+    FPL("sandboxed_process");
+#elif BUILDFLAG(IS_POSIX)
+const base::FilePath::CharType kBrowserProcessExecutableName[] = FPL("radium");
+// Helper processes end up with a name of "exe" due to execing via
+// /proc/self/exe.  See bug 22703.
+const base::FilePath::CharType kHelperProcessExecutableName[] = FPL("exe");
+#endif
+
+#if BUILDFLAG(IS_MAC)
 const base::FilePath::CharType kHelperProcessExecutableName[] =
     FPL(PRODUCT_FULLNAME_STRING " Helper");
 const base::FilePath::CharType kBrowserProcessExecutablePath[] =

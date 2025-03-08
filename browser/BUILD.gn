@@ -2,6 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/buildflag_header.gni")
 import("//components/enterprise/buildflags/buildflags.gni")
 import("//crypto/features.gni")
 import("//ui/base/ui_features.gni")
@@ -13,6 +14,39 @@ if (is_win) {
     libs = [
       "imm32.lib",  # radium_elf_init.cc
     ]
+  }
+}
+
+buildflag_header("buildflags") {
+  header = "buildflags.h"
+  flags = [
+    # "ENABLE_UPDATER=$enable_updater",
+    # "ENABLE_UPDATE_NOTIFICATIONS=$enable_update_notifications",
+  ]
+
+  # if (is_win) {
+  #   flags += [ "ENABLE_SEGMENT_HEAP=$enable_segment_heap" ]
+  # }
+
+  # Android and ChromeOS don't support multiple browser processes, so they don't
+  # employ ProcessSingleton.
+  if (is_android || is_chromeos) {
+    flags += [ "ENABLE_PROCESS_SINGLETON=0" ]
+  } else {
+    flags += [ "ENABLE_PROCESS_SINGLETON=1" ]
+  }
+}
+
+# All generated files in //radium/browser/ depended on by
+# //radium/browser:browser or targets that circularly depend on
+# //radium/browser:browser should be listed here. This ensures that the build
+# graph is correct and that all headers are generated before any translation
+# units are compiled.
+static_library("browser_generated_files") {
+  public_deps = [ ":buildflags" ]
+
+  if (is_win) {
+    arflags = [ "/llvmlibempty" ]
   }
 }
 
@@ -55,6 +89,9 @@ static_library("browser") {
     "net/system_network_context_manager.cc",
     "net/system_network_context_manager.h",
     "platform_util.h",
+    "process_singleton.h",
+    "process_singleton_internal.cc",
+    "process_singleton_internal.h",
     "radium_browser_interface_binders.cc",
     "radium_browser_interface_binders.h",
     "radium_browser_main_extra_parts.h",
@@ -69,6 +106,7 @@ static_library("browser") {
   ]
 
   deps = [
+    ":browser_generated_files",
     "//base/version_info",
     "//components/certificate_transparency",
     "//components/color",
@@ -115,6 +153,13 @@ static_library("browser") {
       "//radium/browser/tab",
     ]
   } else {
+    sources += [
+      "process_singleton_startup_lock.cc",
+      "process_singleton_startup_lock.h",
+      "radium_process_singleton.cc",
+      "radium_process_singleton.h",
+    ]
+
     deps += [
       "//components/keep_alive_registry",
       "//radium/browser/themes",
@@ -123,6 +168,7 @@ static_library("browser") {
 
     if (!is_win) {
       sources += [
+        "process_singleton_posix.cc",
         "radium_browser_main_parts_posix.cc",
         "radium_browser_main_parts_posix.h",
       ]
@@ -130,6 +176,7 @@ static_library("browser") {
       sources += [
         "net/radium_mojo_proxy_resolver_win.cc",
         "net/radium_mojo_proxy_resolver_win.h",
+        "process_singleton_win.cc",
         "radium_browser_main_parts_win.cc",
         "radium_browser_main_parts_win.h",
       ]

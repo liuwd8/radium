@@ -128,7 +128,7 @@ int RadiumMain(int argc, const char** argv) {
 
   int rv = content::ContentMain(std::move(params));
 
-  if (radium::IsNormalResultCode(static_cast<radium::ResultCode>(rv))) {
+  if (IsNormalResultCode(static_cast<ResultCode>(rv))) {
     return content::RESULT_CODE_NORMAL_EXIT;
   }
   return rv;
