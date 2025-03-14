@@ -5,6 +5,7 @@
 import("//build/config/ui.gni")
 import("//build/config/win/console_app.gni")
 import("//build/config/win/manifest.gni")
+import("//components/optimization_guide/features.gni")
 import("//radium/build/branding.gni")
 import("//radium/process_version_rc_template.gni")
 import("//radium/radium_paks.gni")
@@ -293,11 +294,11 @@ if (is_win) {
   radium_framework_version = radium_version_full
   verify_dynamic_libraries = !is_component_build && !is_asan && !is_ubsan_any
 
-  # if (host_os == "mac") {
-  #   objdump_path = mac_bin_path
-  # } else {
-  #   objdump_path = rebase_path("$clang_base_path/bin/", root_build_dir)
-  # }
+  if (host_os == "mac") {
+    objdump_path = mac_bin_path
+  } else {
+    objdump_path = rebase_path("$clang_base_path/bin/", root_build_dir)
+  }
 
   group("radium") {
     deps = [ ":radium_app" ]
@@ -364,21 +365,40 @@ if (is_win) {
                   rebase_path("app/app.exports", root_build_dir) ]
     }
 
-    # if (is_component_build) {
-    #   # In a component build, the framework is directly linked to the
-    #   # executable because dlopen() and loading all the dependent dylibs
-    #   # is time-consuming, see https://crbug.com/1197495.
-    #   deps += [ ":radium_framework+link" ]
-    #   ldflags = [ "-Wl,-rpath,@executable_path/../Frameworks" ]
+    if (is_component_build) {
+      # In a component build, the framework is directly linked to the
+      # executable because dlopen() and loading all the dependent dylibs
+      # is time-consuming, see https://crbug.com/1197495.
+      deps += [ ":radium_framework+link" ]
+      ldflags = [ "-Wl,-rpath,@executable_path/../Frameworks" ]
 
-    #   # The Framework is packaged inside the .app bundle. But when using the
-    #   # component build, all the dependent shared libraries of :radium_dll are
-    #   # not packaged within the framework. This data_deps line makes all of
-    #   # those dependent libraries runtime dependencies of the .app bundle.
-    #   # This is a bit of a hack, since GN deliberately terminates its search
-    #   # for runtime_deps at create_bundle nodes (https://crbug.com/1010347).
-    #   data_deps = [ ":radium_framework" ]
-    # }
+      # The Framework is packaged inside the .app bundle. But when using the
+      # component build, all the dependent shared libraries of :radium_dll are
+      # not packaged within the framework. This data_deps line makes all of
+      # those dependent libraries runtime dependencies of the .app bundle.
+      # This is a bit of a hack, since GN deliberately terminates its search
+      # for runtime_deps at create_bundle nodes (https://crbug.com/1010347).
+      data_deps = [ ":radium_framework" ]
+    }
+  }
+
+  if (verify_dynamic_libraries) {
+    action("verify_libraries_radium_app") {
+      script = "//chrome/tools/build/mac/verify_dynamic_libraries.py"
+      inputs = [ "${root_out_dir}/${radium_product_full_name}.app/Contents/MacOS/${radium_product_full_name}" ]
+      outputs = [ "$target_out_dir/run_$target_name.stamp" ]
+      args = [
+        "--stamp",
+        rebase_path(outputs[0], root_out_dir),
+        "-B",
+        objdump_path,
+        "--image",
+        rebase_path(inputs[0], root_out_dir),
+        "--allow",
+        "/usr/lib/libSystem.B.dylib",
+      ]
+      deps = [ ":radium_app" ]
+    }
   }
 
   compiled_action("radium_app_strings") {
@@ -469,14 +489,41 @@ if (is_win) {
     ]
   }
 
-  group("verify_radium_framework_order") {
-    if (is_component_build) {
-      # In a component build, the framework is directly linked to the
-      # executable because dlopen() and loading all the dependent dylibs
-      # is time-consuming, see https://crbug.com/1197495.
-      public_deps = [ ":radium_framework+link" ]
-    } else {
+  _framework_binary_path = "$root_out_dir/$radium_framework_name.framework/Versions/$radium_framework_version/$radium_framework_name"
+  assert(_framework_binary_path != "",
+         "Ignore configuration-dependent unused variable warning")
+
+  # TOOD(crbug/1163903#c8) - thakis@ look into why profile and coverage
+  # instrumentation adds these symbols in different orders
+  if (!is_component_build && chrome_pgo_phase != 1 && !using_sanitizer) {
+    action("verify_radium_framework_order") {
+      script = "//chrome/tools/build/mac/verify_order.py"
+      stamp_file = "$target_out_dir/run_$target_name.stamp"
+      inputs = [ script ]
+      args = [
+        "--stamp=" + rebase_path(stamp_file, root_out_dir),
+        "--binary=" + rebase_path(_framework_binary_path, root_out_dir),
+        "--symbol-file=" + rebase_path("app/framework.order", root_build_dir),
+      ]
+      if (host_os == "mac") {
+        args += [ "--nm-path=$mac_bin_path/nm" ]
+      } else {
+        args += [ "--nm-path=" +
+                  rebase_path("$clang_base_path/bin/llvm-nm", root_build_dir) ]
+      }
+      outputs = [ stamp_file ]
       public_deps = [ ":radium_framework" ]
+    }
+  } else {
+    group("verify_radium_framework_order") {
+      if (is_component_build) {
+        # In a component build, the framework is directly linked to the
+        # executable because dlopen() and loading all the dependent dylibs
+        # is time-consuming, see https://crbug.com/1197495.
+        public_deps = [ ":radium_framework+link" ]
+      } else {
+        public_deps = [ ":radium_framework" ]
+      }
     }
   }
 
@@ -589,6 +636,36 @@ if (is_win) {
     }
   }
 
+  if (verify_dynamic_libraries) {
+    foreach(helper_params, radium_mac_helpers) {
+      _helper_target = helper_params[0]
+      _helper_bundle_id = helper_params[1]
+      _helper_suffix = helper_params[2]
+
+      action("verify_libraries_radium_helper_app_${_helper_target}") {
+        script = "//chrome/tools/build/mac/verify_dynamic_libraries.py"
+        inputs = [ "${root_out_dir}/${radium_helper_name}${_helper_suffix}.app/Contents/MacOS/${radium_helper_name}${_helper_suffix}" ]
+        outputs = [ "$target_out_dir/run_$target_name.stamp" ]
+        args = [
+          "--stamp",
+          rebase_path(outputs[0], root_out_dir),
+          "-B",
+          objdump_path,
+          "--image",
+          rebase_path(inputs[0], root_out_dir),
+
+          # Do not --allow more libraries here without consulting with the
+          # security team (security-dev@chromium.org).
+          "--allow",
+          "/usr/lib/libsandbox.1.dylib",
+          "--allow",
+          "/usr/lib/libSystem.B.dylib",
+        ]
+        deps = [ ":radium_helper_app_${_helper_target}" ]
+      }
+    }
+  }
+
   bundle_data("radium_framework_helpers") {
     sources = [ "$root_out_dir/chrome_crashpad_handler" ]
 
@@ -601,10 +678,10 @@ if (is_win) {
           [ "$root_out_dir/${radium_helper_name}${helper_params[2]}.app" ]
       public_deps += [ ":radium_helper_app_${helper_params[0]}" ]
 
-      # if (verify_dynamic_libraries) {
-      #   public_deps +=
-      #       [ ":verify_libraries_radium_helper_app_${helper_params[0]}" ]
-      # }
+      if (verify_dynamic_libraries) {
+        public_deps +=
+            [ ":verify_libraries_radium_helper_app_${helper_params[0]}" ]
+      }
     }
   }
 
@@ -658,6 +735,24 @@ if (is_win) {
     ]
   }
 
+  # Limit the exported symbols of the framework library.
+  config("radium_dll_symbol_exports") {
+    inputs = [ rebase_path("app/framework.exports") ]
+    ldflags = [
+      "-Wl,-exported_symbols_list",
+      "-Wl," + rebase_path("app/framework.exports", root_build_dir),
+    ]
+  }
+
+  # Control the order of exported symbols in the framework library.
+  config("radium_dll_symbol_order") {
+    inputs = [ rebase_path("app/framework.order") ]
+    ldflags = [
+      "-Wl,-order_file",
+      "-Wl," + rebase_path("app/framework.order", root_build_dir),
+    ]
+  }
+
   # On Mac, speed up the component build by not re-bundling the framework
   # every time it changes. Instead, place all the sources and their deps in
   # a library that the bundled framework links (and re-exports). That way
@@ -699,7 +794,13 @@ if (is_win) {
 
     ldflags = [ "-ObjC" ]
 
-    configs += [ "//build/config/compiler:wexit_time_destructors" ]
+    configs += [
+      ":radium_dll_symbol_order",
+      "//build/config/compiler:wexit_time_destructors",
+    ]
+    if (!is_component_build && !using_sanitizer) {
+      configs += [ ":radium_dll_symbol_exports" ]
+    }
   }
 
   # Add the ANGLE .dylibs in the MODULE_DIR of Chromium.app
@@ -752,10 +853,10 @@ if (is_win) {
       "//components/privacy_sandbox/privacy_sandbox_attestations/preload:component_bundle",
     ]
 
-    # configs += [ ":radium_dll_symbol_order" ]
-    # if (!is_component_build && !using_sanitizer) {
-    #   configs += [ ":radium_dll_symbol_exports" ]
-    # }
+    configs += [ ":radium_dll_symbol_order" ]
+    if (!is_component_build && !using_sanitizer) {
+      configs += [ ":radium_dll_symbol_exports" ]
+    }
 
     ldflags = [
       "-compatibility_version",
@@ -780,6 +881,125 @@ if (is_win) {
       ]
 
       data_deps = [ ":radium_dll" ]
+    }
+  }
+
+  if (enable_dsyms && !is_component_build) {
+    # It is possible to run dump_syms on unstripped products without dSYMs, but
+    # doing so isn't logical and won't happen in practice. It's also pointless
+    # to run dump_syms or archive dSYMs in a component build, where all of the
+    # interesting symbols and debug info are tucked away in other libraries
+    # beyond the set explicitly listed here.
+
+    # This list must be updated with the two targets' deps list below, and
+    # the list of _dsyms in :chrome_dsym_archive.
+    _radium_symbols_sources = [
+      "$root_out_dir/$radium_product_full_name.app/Contents/MacOS/$radium_product_full_name",
+      "$root_out_dir/chrome_crashpad_handler",
+      "$root_out_dir/libEGL.dylib",
+      "$root_out_dir/libGLESv2.dylib",
+      "$root_out_dir/libvk_swiftshader.dylib",
+      _framework_binary_path,
+    ]
+    if (build_with_internal_optimization_guide) {
+      _radium_symbols_sources +=
+          [ "$root_out_dir/liboptimization_guide_internal.dylib" ]
+    }
+
+    foreach(helper_params, radium_mac_helpers) {
+      _radium_symbols_sources += [ "$root_out_dir/${radium_helper_name}${helper_params[2]}.app/Contents/MacOS/${radium_helper_name}${helper_params[2]}" ]
+    }
+
+    action_foreach("radium_dump_syms") {
+      script = "//build/redirect_stdout.py"
+
+      sources = _radium_symbols_sources
+
+      outputs = [ "$root_out_dir/dump_syms/{{source_file_part}}-$radium_version_full.breakpad" ]
+
+      dump_syms =
+          "//third_party/breakpad:dump_syms($host_system_allocator_toolchain)"
+      args = rebase_path(outputs, root_build_dir) + [
+               rebase_path(get_label_info(dump_syms, "root_out_dir") + "/" +
+                               get_label_info(dump_syms, "name"),
+                           root_build_dir),
+               "-d",
+               "-m",
+               "-g",
+               rebase_path(
+                   "$root_out_dir/{{source_file_part}}.dSYM/Contents/Resources/DWARF/{{source_file_part}}",
+                   root_build_dir),
+               "{{source}}",
+             ]
+
+      deps = [
+        ":radium_app",
+        ":radium_framework",
+        "//components/crash/core/app:chrome_crashpad_handler",
+        "//third_party/angle:libEGL",
+        "//third_party/angle:libGLESv2",
+        "//third_party/swiftshader/src/Vulkan:swiftshader_libvulkan",
+        dump_syms,
+      ]
+      if (build_with_internal_optimization_guide) {
+        deps += [ "//components/optimization_guide/internal:optimization_guide_internal" ]
+      }
+
+      foreach(helper_params, radium_mac_helpers) {
+        deps += [ ":radium_helper_app_${helper_params[0]}" ]
+      }
+    }
+
+    action("radium_dsym_archive") {
+      script = "//chrome/tools/build/mac/archive_symbols.py"
+
+      # These are the dSYMs that will be archived. The sources list must be
+      # the target outputs that correspond to the dSYMs (since a dSYM is a
+      # directory it cannot be listed as a source file). The targets that
+      # generate both the dSYM and binary image are listed in deps.
+      _dsyms = [
+        "$root_out_dir/$radium_framework_name.dSYM",
+        "$root_out_dir/$radium_product_full_name.dSYM",
+        "$root_out_dir/chrome_crashpad_handler.dSYM",
+        "$root_out_dir/libEGL.dylib.dSYM",
+        "$root_out_dir/libGLESv2.dylib.dSYM",
+        "$root_out_dir/libvk_swiftshader.dylib.dSYM",
+      ]
+      if (build_with_internal_optimization_guide) {
+        _dsyms += [ "$root_out_dir/liboptimization_guide_internal.dylib.dSYM" ]
+      }
+
+      deps = [
+        ":radium_app",
+        ":radium_framework",
+        "//components/crash/core/app:chrome_crashpad_handler",
+        "//third_party/angle:libEGL",
+        "//third_party/angle:libGLESv2",
+        "//third_party/swiftshader/src/Vulkan:swiftshader_libvulkan",
+      ]
+      if (build_with_internal_optimization_guide) {
+        deps += [ "//components/optimization_guide/internal:optimization_guide_internal" ]
+      }
+
+      foreach(helper_params, radium_mac_helpers) {
+        _dsyms +=
+            [ "$root_out_dir/${radium_helper_name}${helper_params[2]}.dSYM" ]
+        deps += [ ":radium_helper_app_${helper_params[0]}" ]
+      }
+
+      sources = _radium_symbols_sources
+
+      _output = "$root_out_dir/$radium_product_full_name.dSYM.tar.bz2"
+
+      outputs = [ _output ]
+
+      args = [ rebase_path(_output, root_out_dir) ] +
+             rebase_path(_dsyms, root_out_dir)
+    }
+  } else {
+    group("radium_dump_syms") {
+    }
+    group("radium_dsym_archive") {
     }
   }
 }
