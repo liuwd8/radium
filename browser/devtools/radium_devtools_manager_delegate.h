@@ -47,7 +47,8 @@ class RadiumDevToolsManagerDelegate : public content::DevToolsManagerDelegate {
       content::DevToolsAgentHostClientChannel* channel) override;
   scoped_refptr<content::DevToolsAgentHost> CreateNewTarget(
       const GURL& url,
-      TargetType target_type) override;
+      TargetType target_type,
+      bool new_window) override;
   bool HasBundledFrontendResources() override;
 
  private:

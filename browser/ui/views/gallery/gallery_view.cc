@@ -181,7 +181,7 @@ void GalleryView::OnWidgetShowStateChanged(views::Widget* widget) {
   maximize_button_->SetVisible(!is_maximize);
   restore_button_->SetVisible(is_maximize);
 
-  SetBackground(views::CreateThemedRoundedRectBackground(
+  SetBackground(views::CreateRoundedRectBackground(
       kColorFrameTitleBarBackground,
       is_maximize ? 0
                   : RadiumLayoutProvider::Get()->GetCornerRadiusMetric(

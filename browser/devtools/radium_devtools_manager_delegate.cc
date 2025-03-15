@@ -116,7 +116,8 @@ void RadiumDevToolsManagerDelegate::ClientDetached(
 
 scoped_refptr<content::DevToolsAgentHost>
 RadiumDevToolsManagerDelegate::CreateNewTarget(const GURL& url,
-                                               TargetType target_type) {
+                                               TargetType target_type,
+                                               bool new_window) {
   return nullptr;
 }
 

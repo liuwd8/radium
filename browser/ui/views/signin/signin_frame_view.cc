@@ -145,8 +145,8 @@ void SigninFrameView::Init(views::Widget* widget,
                   views::BoxLayout::CrossAxisAlignment::kCenter)
               .SetProperty(views::kBoxLayoutFlexKey,
                            views::BoxLayoutFlexSpecification())
-              .SetBackground(views::CreateThemedSolidBackground(
-                  kColorFrameTitleBarBackground))
+              .SetBackground(
+                  views::CreateSolidBackground(kColorFrameTitleBarBackground))
               .AddChildren(
                   views::Builder<views::ImageView>()
                       .CopyAddressTo(&qr_code_image_)
