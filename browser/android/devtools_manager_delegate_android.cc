@@ -83,9 +83,9 @@ DevToolsAgentHost::List DevToolsManagerDelegateAndroid::RemoteDebuggingTargets(
 }
 
 scoped_refptr<DevToolsAgentHost>
-DevToolsManagerDelegateAndroid::CreateNewTarget(
-    const GURL& url,
-    DevToolsManagerDelegate::TargetType target_type) {
+DevToolsManagerDelegateAndroid::CreateNewTarget(const GURL& url,
+                                                TargetType target_type,
+                                                bool new_window) {
   return nullptr;
 }
 

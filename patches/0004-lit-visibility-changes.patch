@@ -1,6 +1,6 @@
-From 6d1b7f0194fb39673b48cf5309d3020f1c0b4f0e Mon Sep 17 00:00:00 2001
+From e7d432e92eb0a7c7663443057107c99c961d3c14 Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
-Date: Fri, 8 Nov 2024 21:46:36 +0800
+Date: Fri, 14 Mar 2025 21:02:39 +0800
 Subject: [PATCH] lit visibility changes
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] lit visibility changes
  1 file changed, 3 insertions(+)
 
 diff --git a/third_party/lit/v3_0/BUILD.gn b/third_party/lit/v3_0/BUILD.gn
-index 0d86a9b9fa190..82e820a54d034 100644
+index 385e67972c753..4092043588fac 100644
 --- a/third_party/lit/v3_0/BUILD.gn
 +++ b/third_party/lit/v3_0/BUILD.gn
 @@ -2,6 +2,7 @@
@@ -18,8 +18,8 @@ index 0d86a9b9fa190..82e820a54d034 100644
 +import("//radium/browser/ui/webui/webui.gni")
  import("//tools/typescript/ts_library.gni")
  import("//ui/webui/resources/tools/bundle_js.gni")
- import("//ui/webui/resources/tools/generate_grd.gni")
-@@ -106,6 +107,8 @@ ts_library("build_ts") {
+ import("//ui/webui/resources/tools/generate_code_cache.gni")
+@@ -108,6 +109,8 @@ ts_library("build_ts") {
      "//ui/webui/resources/cr_components/theme_color_picker:build_ts",
      "//ui/webui/resources/cr_elements:build_ts",
    ]
