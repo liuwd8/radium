@@ -10,14 +10,15 @@
 
 #include "base/check.h"
 #import "radium/browser/radium_browser_application_mac.h"
+#include "ui/gfx/native_widget_types.h"
 #include "ui/views/widget/widget.h"
 
 namespace radium {
 
 void CloseAllTopWidgetForPlatform() {
   for (NSWindow* window : [NSApp windows]) {
-    if (views::Widget* widget =
-            views::Widget::GetWidgetForNativeWindow(window)) {
+    if (views::Widget* widget = views::Widget::GetWidgetForNativeWindow(
+            gfx::NativeWindow(window))) {
       if (!widget->is_secondary_widget()) {
         widget->Close();
       }

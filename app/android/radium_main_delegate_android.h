@@ -24,7 +24,7 @@ class RadiumMainDelegateAndroid : public RadiumMainDelegate {
 
  private:
   void PreSandboxStartup() override;
-  absl::variant<int, content::MainFunctionParams> RunProcess(
+  std::variant<int, content::MainFunctionParams> RunProcess(
       const std::string& process_type,
       content::MainFunctionParams main_function_params) override;
 
