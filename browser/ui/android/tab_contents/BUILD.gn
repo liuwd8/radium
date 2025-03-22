@@ -1,0 +1,15 @@
+# Copyright 2025 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("tab_contents") {
+  sources = [
+    "radium_web_contents_view_delegate_android.cc",
+    "radium_web_contents_view_delegate_android.h",
+  ]
+
+  deps = [
+    "//base",
+    "//content/public/browser",
+  ]
+}

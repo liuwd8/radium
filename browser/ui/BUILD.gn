@@ -28,6 +28,7 @@ static_library("ui") {
     "//radium/browser/ui/color",
     "//radium/browser/ui/prefs:impl",
     "//radium/browser/ui/signin",
+    "//radium/browser/ui/tab_contents",
     "//radium/browser/ui/webui",
     "//third_party/inspector_protocol:crdtp",
   ]

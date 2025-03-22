@@ -13,6 +13,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/web_contents_view_delegate.h"
 #include "content/public/common/content_descriptors.h"
 #include "content/public/common/url_utils.h"
 #include "radium/browser/browser_process.h"
@@ -28,6 +29,7 @@
 #include "radium/browser/radium_browser_main_parts.h"
 #include "radium/browser/themes/theme_service.h"
 #include "radium/browser/themes/theme_service_factory.h"
+#include "radium/browser/ui/tab_contents/radium_web_contents_view_delegate.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views.h"
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_paths.h"
@@ -310,6 +312,12 @@ RadiumContentBrowserClient::CreateDevToolsManagerDelegate() {
 #else
   return std::make_unique<RadiumDevToolsManagerDelegate>();
 #endif
+}
+
+std::unique_ptr<content::WebContentsViewDelegate>
+RadiumContentBrowserClient::GetWebContentsViewDelegate(
+    content::WebContents* web_contents) {
+  return CreateWebContentsViewDelegate(web_contents);
 }
 
 void RadiumContentBrowserClient::OverrideWebPreferences(
