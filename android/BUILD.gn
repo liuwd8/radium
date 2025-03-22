@@ -16,7 +16,7 @@ radium_public_apk_or_module_tmpl("radium_public_apk") {
   target_type = "android_apk"
   apk_name = "Radium"
 
-  if (android_64bit_target_cpu) {
+  if (defined(android_app_secondary_abi)) {
     # Ensure 64-bit chrome does not depend on 32-bit things.
     assert_no_deps = [ "//build/config:toolchain_marker_" +
                        get_label_info(android_secondary_abi_toolchain, "name") ]
