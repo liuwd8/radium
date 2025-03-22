@@ -1,0 +1,23 @@
+# Copyright 2025 The Radium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+
+assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+
+source_set("tab_contents") {
+  sources = [ "radium_web_contents_view_delegate.h" ]
+
+  public_deps = [
+    "//base",
+    "//content/public/browser",
+    "//radium/browser/ui/views/tab_contents",
+  ]
+
+  if (is_android) {
+    public_deps += [ "//radium/browser/ui/android/tab_contents" ]
+  } else if (toolkit_views) {
+    public_deps += [ "//radium/browser/ui/views/tab_contents" ]
+  }
+}

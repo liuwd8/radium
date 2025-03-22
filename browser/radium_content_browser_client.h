@@ -34,6 +34,8 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       std::vector<std::string>* additional_schemes) override;
   std::unique_ptr<content::DevToolsManagerDelegate>
   CreateDevToolsManagerDelegate() override;
+  std::unique_ptr<content::WebContentsViewDelegate> GetWebContentsViewDelegate(
+      content::WebContents* web_contents) override;
   void OverrideWebPreferences(content::WebContents* web_contents,
                               content::SiteInstance& main_frame_site,
                               blink::web_pref::WebPreferences* prefs) override;
