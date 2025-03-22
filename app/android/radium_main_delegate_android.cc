@@ -48,7 +48,7 @@ void RadiumMainDelegateAndroid::PreSandboxStartup() {
   base::PoissonAllocationSampler::Init();
 }
 
-absl::variant<int, content::MainFunctionParams>
+std::variant<int, content::MainFunctionParams>
 RadiumMainDelegateAndroid::RunProcess(
     const std::string& process_type,
     content::MainFunctionParams main_function_params) {
