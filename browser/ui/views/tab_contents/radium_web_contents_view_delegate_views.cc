@@ -22,6 +22,7 @@
 #include "components/renderer_context_menu/context_menu_delegate.h"
 #include "components/renderer_context_menu/render_view_context_menu_base.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/web_drag_dest_delegate.h"
 #include "content/public/common/drop_data.h"
 #include "radium/browser/ui/browser.h"
 #include "radium/browser/ui/views/tab_contents/radium_web_contents_view_focus_helper.h"
