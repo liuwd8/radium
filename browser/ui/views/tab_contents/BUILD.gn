@@ -32,8 +32,8 @@ source_set("tab_contents") {
     deps += [ "//components/remote_cocoa/browser" ]
   } else if (use_aura) {
     sources += [
+      "radium_web_contents_view_delegate_views.cc",
       "radium_web_contents_view_delegate_views.h",
-      "radium_web_contents_view_delegate_views.mm",
     ]
   }
 }
