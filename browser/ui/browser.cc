@@ -12,6 +12,7 @@
 #include "base/supports_user_data.h"
 #include "components/keep_alive_registry/keep_alive_types.h"
 #include "components/keep_alive_registry/scoped_keep_alive.h"
+#include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_user_data.h"
@@ -81,6 +82,16 @@ void Browser::RemoveObserver(BrowserObserver* observer) {
   observers_.RemoveObserver(observer);
 }
 
+content::WebContents* Browser::CreateWebContents() {
+  content::WebContents::CreateParams params(profile_);
+  std::unique_ptr<content::WebContents> web_contents =
+      content::WebContents::Create(std::move(params));
+  content::WebContents* web_contents_ptr = web_contents.get();
+  AddWebContents(std::move(web_contents));
+
+  return web_contents_ptr;
+}
+
 void Browser::AddWebContents(
     std::unique_ptr<content::WebContents> web_contents) {
   web_contents->SetDelegate(this);
@@ -112,14 +123,36 @@ std::unique_ptr<content::WebContents> Browser::RemoveWebContents(
   return value;
 }
 
-content::WebContents* Browser::CreateWebContents() {
-  content::WebContents::CreateParams params(profile_);
-  std::unique_ptr<content::WebContents> web_contents =
-      content::WebContents::Create(std::move(params));
-  content::WebContents* web_contents_ptr = web_contents.get();
-  AddWebContents(std::move(web_contents));
+void Browser::OnWindowClosing() {
+  std::vector<content::WebContents*> tabs;
+  tabs.reserve(tabs_.size());
+  std::ranges::for_each(tabs_,
+                        [&tabs](auto& tab) { tabs.push_back(tab.get()); });
 
-  return web_contents_ptr;
+  // Construct a map of processes to the number of associated tabs that are
+  // closing.
+  base::flat_map<content::RenderProcessHost*, size_t> processes;
+  for (auto& contents : tabs) {
+    if (contents->NeedToFireBeforeUnloadOrUnloadEvents() ||
+        unload_controller_.ShouldRunUnloadEventsHelper(contents)) {
+      continue;
+    }
+    content::RenderProcessHost* process =
+        contents->GetPrimaryMainFrame()->GetProcess();
+    ++processes[process];
+  }
+
+  // Try to fast shutdown the tabs that can close.
+  for (const auto& pair : processes) {
+    pair.first->FastShutdownIfPossible(pair.second, false);
+  }
+
+  for (auto& contents : tabs) {
+    if (unload_controller_.RunUnloadEventsHelper(contents)) {
+      continue;
+    }
+    contents->Close();
+  }
 }
 
 void Browser::CloseContents(content::WebContents* source) {

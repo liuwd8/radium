@@ -43,7 +43,7 @@ RadiumWebContentsViewDelegateViewsMac::
 gfx::NativeWindow RadiumWebContentsViewDelegateViewsMac::GetNativeWindow() {
   // Browser* browser = chrome::FindBrowserWithTab(web_contents_);
   // return browser ? browser->window()->GetNativeWindow() : nullptr;
-  return nullptr;
+  return gfx::NativeWindow();
 }
 
 NSObject<RenderWidgetHostViewMacDelegate>*

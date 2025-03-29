@@ -43,6 +43,29 @@ bool UnloadController::CanCloseContents(content::WebContents* contents) {
          is_calling_before_unload_handlers();
 }
 
+bool UnloadController::ShouldRunUnloadEventsHelper(
+    content::WebContents* contents) {
+  // If |contents| is being inspected, devtools needs to intercept beforeunload
+  // events.
+  return true;
+}
+
+bool UnloadController::RunUnloadEventsHelper(content::WebContents* contents) {
+  // If the WebContents is not connected yet, then there's no unload
+  // handler we can fire even if the WebContents has an unload listener.
+  // One case where we hit this is in a tab that has an infinite loop
+  // before load.
+  if (contents->NeedToFireBeforeUnloadOrUnloadEvents()) {
+    // If the page has unload listeners, then we tell the renderer to fire
+    // them. Once they have fired, we'll get a message back saying whether
+    // to proceed closing the page or not, which sends us back to this method
+    // with the NeedToFireBeforeUnloadOrUnloadEvents bit cleared.
+    contents->DispatchBeforeUnload(false /* auto_cancel */);
+    return true;
+  }
+  return false;
+}
+
 bool UnloadController::BeforeUnloadFired(content::WebContents* contents,
                                          bool proceed) {
   if (!is_attempting_to_close_browser_) {
