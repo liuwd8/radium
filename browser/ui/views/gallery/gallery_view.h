@@ -5,6 +5,8 @@
 #ifndef RADIUM_BROWSER_UI_VIEWS_GALLERY_GALLERY_VIEW_H_
 #define RADIUM_BROWSER_UI_VIEWS_GALLERY_GALLERY_VIEW_H_
 
+#include "base/scoped_observation.h"
+#include "radium/browser/ui/browser_observer.h"
 #include "radium/browser/ui/browser_window.h"
 #include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "ui/views/view_targeter_delegate.h"
@@ -19,7 +21,8 @@ class WebView;
 class GalleryView : public UntitledWidgetDelegateView,
                     public views::ViewTargeterDelegate,
                     public BrowserWindow,
-                    public views::WidgetObserver {
+                    public views::WidgetObserver,
+                    public BrowserObserver {
  public:
   static BrowserWindow* Show(std::unique_ptr<Browser> browser);
 
@@ -37,6 +40,7 @@ class GalleryView : public UntitledWidgetDelegateView,
   void RemovedFromWidget() override;
   gfx::Size CalculatePreferredSize(
       const views::SizeBounds& available_size) const override;
+  bool OnCloseRequested(views::Widget::ClosedReason close_reason) override;
 
   // BrowserWindow:
   views::Widget* GetWidget() override;
@@ -45,6 +49,9 @@ class GalleryView : public UntitledWidgetDelegateView,
 
   // WidgetObserver:
   void OnWidgetShowStateChanged(views::Widget* widget) override;
+
+  // BrowserObserver:
+  void OnWebContentsEmpty() override;
 
  private:
   void OnButtonPressed(int hit_component);
@@ -55,6 +62,9 @@ class GalleryView : public UntitledWidgetDelegateView,
   raw_ptr<views::View> maximize_button_;
   raw_ptr<views::View> restore_button_;
   raw_ptr<views::WebView> webview_;
+
+  base::ScopedObservation<Browser, BrowserObserver> scoped_browser_observer_{
+      this};
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_GALLERY_GALLERY_VIEW_H_

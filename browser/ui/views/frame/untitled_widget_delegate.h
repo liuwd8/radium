@@ -23,6 +23,7 @@ class UntitledWidgetDelegate : public views::WidgetDelegate {
   ~UntitledWidgetDelegate() override;
 
   virtual int NonClientHitTest(const gfx::Point& point);
+  views::ClientView* CreateClientView(views::Widget* widget) override;
 };
 
 class UntitledWidgetDelegateView : public UntitledWidgetDelegate,

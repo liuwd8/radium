@@ -64,6 +64,8 @@ BrowserWindow* GalleryView::Show(std::unique_ptr<Browser> browser) {
 
 GalleryView::GalleryView(std::unique_ptr<Browser> browser)
     : browser_(std::move(browser)) {
+  scoped_browser_observer_.Observe(browser_.get());
+
   SetHasWindowSizeControls(true);
   SetTitle(u"WebUI Gallery");
   views::BoxLayout* layout =
@@ -164,6 +166,19 @@ gfx::Size GalleryView::CalculatePreferredSize(
   return size;
 }
 
+bool GalleryView::OnCloseRequested(views::Widget::ClosedReason close_reason) {
+  if (!browser_) {
+    return true;
+  }
+
+  if (browser_->tabs().empty()) {
+    return true;
+  }
+
+  browser_->OnWindowClosing();
+  return false;
+}
+
 views::Widget* GalleryView::GetWidget() {
   return views::View::GetWidget();
 }
@@ -187,6 +202,10 @@ void GalleryView::OnWidgetShowStateChanged(views::Widget* widget) {
                   : RadiumLayoutProvider::Get()->GetCornerRadiusMetric(
                         views::Emphasis::kHigh),
       0, 0));
+}
+
+void GalleryView::OnWebContentsEmpty() {
+  GetWidget()->Close();
 }
 
 void GalleryView::OnButtonPressed(int hit_component) {

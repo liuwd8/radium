@@ -61,6 +61,10 @@ class Browser : public content::WebContentsDelegate,
   std::unique_ptr<content::WebContents> RemoveWebContents(
       content::WebContents* web_contents);
 
+  // Invoked when the window containing us is closing. Performs the necessary
+  // cleanup.
+  void OnWindowClosing();
+
  private:
   // content::WebContentsDelegate:
   void CloseContents(content::WebContents* source) override;

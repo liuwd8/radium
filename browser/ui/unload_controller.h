@@ -35,6 +35,13 @@ class UnloadController : public BrowserObserver,
   // renderer.
   bool CanCloseContents(content::WebContents* contents);
 
+  // Returns true if we need to run unload events for the |contents|.
+  bool ShouldRunUnloadEventsHelper(content::WebContents* contents);
+
+  // Helper function to run beforeunload listeners on a WebContents.
+  // Returns true if |contents| beforeunload listeners were invoked.
+  bool RunUnloadEventsHelper(content::WebContents* contents);
+
   // Called when a BeforeUnload handler is fired for |contents|. |proceed|
   // indicates the user's response to the Y/N BeforeUnload handler dialog. If
   // this parameter is false, any pending attempt to close the whole browser
