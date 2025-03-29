@@ -646,7 +646,7 @@ void RadiumMainDelegate::ZygoteForked() {
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 
 bool RadiumMainDelegate::ShouldCreateFeatureList(InvokedIn invoked_in) {
-  return absl::holds_alternative<InvokedInChildProcess>(invoked_in);
+  return std::holds_alternative<InvokedInChildProcess>(invoked_in);
 }
 
 bool RadiumMainDelegate::ShouldInitializeMojo(InvokedIn invoked_in) {
@@ -657,7 +657,7 @@ std::optional<int> RadiumMainDelegate::PostEarlyInitialization(
     InvokedIn invoked_in) {
   DUMP_WILL_BE_CHECK(base::ThreadPoolInstance::Get());
   const auto* invoked_in_browser =
-      absl::get_if<InvokedInBrowserProcess>(&invoked_in);
+      std::get_if<InvokedInBrowserProcess>(&invoked_in);
   if (!invoked_in_browser) {
     CommonEarlyInitialization(invoked_in);
     return std::nullopt;
