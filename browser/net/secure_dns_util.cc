@@ -29,15 +29,15 @@ namespace {
 
 const char kAlternateErrorPagesBackup[] = "alternate_error_pages.backup";
 
-bool EntryIsForCountry(const net::DohProviderEntry* entry, int country_id) {
+bool EntryIsForCountry(const net::DohProviderEntry* entry,
+                       country_codes::CountryId country_id) {
   if (entry->display_globally) {
     return true;
   }
   const auto& countries = entry->display_countries;
   bool matches = std::ranges::any_of(
       countries, [country_id](const std::string& country_code) {
-        return country_codes::CountryStringToCountryID(country_code) ==
-               country_id;
+        return country_codes::CountryId(country_code) == country_id;
       });
   if (matches) {
     DCHECK(!entry->ui_name.empty());
@@ -75,7 +75,7 @@ void MigrateProbesSettingToOrFromBackup(PrefService* prefs) {
 
 net::DohProviderEntry::List ProvidersForCountry(
     const net::DohProviderEntry::List& providers,
-    int country_id) {
+    country_codes::CountryId country_id) {
   net::DohProviderEntry::List local_providers;
   std::ranges::copy_if(providers, std::back_inserter(local_providers),
                        [country_id](const net::DohProviderEntry* entry) {

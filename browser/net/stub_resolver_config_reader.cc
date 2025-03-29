@@ -351,12 +351,16 @@ SecureDnsConfig StubResolverConfigReader::GetAndUpdateConfiguration(
   }
   if (update_network_service) {
     content::GetNetworkService()->ConfigureStubHostResolver(
-        GetInsecureStubResolverEnabled(), secure_dns_mode, doh_config,
-        additional_dns_query_types_enabled);
+        GetInsecureStubResolverEnabled(), GetHappyEyeballsV3Enabled(),
+        secure_dns_mode, doh_config, additional_dns_query_types_enabled);
   }
 
   return SecureDnsConfig(secure_dns_mode, std::move(doh_config),
                          forced_management_mode);
+}
+
+bool StubResolverConfigReader::GetHappyEyeballsV3Enabled() const {
+  return base::FeatureList::IsEnabled(net::features::kHappyEyeballsV3);
 }
 
 #if BUILDFLAG(IS_ANDROID)
