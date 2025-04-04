@@ -34,6 +34,7 @@ class DesktopUntitledFrameMac : public views::NativeWidgetMac,
       remote_cocoa::mojom::CreateWindowParams* params) override;
   void GetWindowFrameTitlebarHeight(bool* override_titlebar_height,
                                     float* titlebar_height) override;
+  void OnWindowFullscreenTransitionComplete() override;
 
  private:
   raw_ptr<UntitledWidget> untitled_widget_;  // Weak. Our ClientView.

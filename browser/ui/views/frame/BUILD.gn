@@ -45,6 +45,8 @@ source_set("frame") {
     sources += [
       "desktop_untitled_frame_mac.h",
       "desktop_untitled_frame_mac.mm",
+      "traffic_utils.h",
+      "traffic_utils.mm",
       "untitled_widget_frame_view_mac.h",
       "untitled_widget_frame_view_mac.mm",
       "untitled_widget_non_client_frame_view_mac.mm",
