@@ -194,7 +194,7 @@ bool SubprocessNeedsResourceBundle(const std::string& process_type) {
 void SIGTERMProfilingShutdown(int signal) {
   content::Profiling::Stop();
   struct sigaction sigact;
-  memset(&sigact, 0, sizeof(sigact));
+  UNSAFE_BUFFERS(memset(&sigact, 0, sizeof(sigact)));
   sigact.sa_handler = SIG_DFL;
   CHECK_EQ(sigaction(SIGTERM, &sigact, nullptr), 0);
   raise(signal);
