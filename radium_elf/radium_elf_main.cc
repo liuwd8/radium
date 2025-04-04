@@ -8,6 +8,7 @@
 
 #include <assert.h>
 
+#include "base/compiler_specific.h"
 #include "radium/install_static/install_util.h"
 #include "radium/install_static/product_install_details.h"
 #include "radium/install_static/user_data_dir.h"
@@ -41,10 +42,10 @@ bool GetUserDataDirectoryThunk(wchar_t* user_data_dir,
                                                   &invalid_user_data_dir_str);
   assert(ret);
   (void)ret;
-  wcsncpy_s(user_data_dir, user_data_dir_length, user_data_dir_str.c_str(),
-            _TRUNCATE);
-  wcsncpy_s(invalid_user_data_dir, invalid_user_data_dir_length,
-            invalid_user_data_dir_str.c_str(), _TRUNCATE);
+  UNSAFE_TODO(wcsncpy_s(user_data_dir, user_data_dir_length,
+                        user_data_dir_str.c_str(), _TRUNCATE));
+  UNSAFE_TODO(wcsncpy_s(invalid_user_data_dir, invalid_user_data_dir_length,
+                        invalid_user_data_dir_str.c_str(), _TRUNCATE));
 
   return true;
 }

@@ -15,19 +15,6 @@ windows_manifest("radium_elf_manifest") {
   sources = [ as_invoker_manifest ]
 }
 
-static_library("hook_util") {
-  sources = [
-    "hook_util/hook_util.cc",
-    "hook_util/hook_util.h",
-  ]
-  deps = [
-    "//base:base_static",  # pe_image
-  ]
-
-  # raw_ptr check
-  configs -= [ "//build/config/clang:find_bad_constructs" ]
-}
-
 # This target contains utility functions which must only depend on
 # kernel32 or ntdll. Please don't add dependencies on other system libraries.
 static_library("nt_registry") {
@@ -56,13 +43,13 @@ static_library("crash") {
   ]
   deps = [
     ":constants",
-    ":hook_util",
     "//base",  # This needs to go.  DEP of app, crash_keys, client.
     "//base:base_static",  # pe_image
     "//components/crash/core/app",
     "//components/crash/core/common",  # crash_keys
     "//components/version_info:channel",
     "//content/public/common:result_codes",
+    "//sandbox/policy:win_hook_util",
     "//third_party/crashpad/crashpad/client",  # DumpWithoutCrash
 
     # "//radium/install_static:install_static_util",
@@ -119,12 +106,12 @@ source_set("third_party_dlls") {
   public_deps = [
     ":constants",
     ":crash",
-    ":hook_util",
     ":nt_registry",
     ":pe_image_safe",
     ":sha1",
     ":third_party_shared_defines",
-    "//chrome/install_static:install_static_util",
+    "//radium/install_static:install_static_util",
+    "//sandbox/policy:win_hook_util",
   ]
 }
 
@@ -163,7 +150,6 @@ shared_library("radium_elf") {
   deps = [
     ":constants",
     ":crash",
-    ":hook_util",
     ":nt_registry",
     ":pe_image_safe",
     ":radium_elf_manifest",
@@ -173,6 +159,7 @@ shared_library("radium_elf") {
     "//components/crash/core/app:crash_export_thunks",
     "//radium/install_static:install_static_util",
     "//radium/install_static:primary_module",
+    "//sandbox/policy:win_hook_util",
   ]
 
   configs += [ "//build/config/win:windowed" ]

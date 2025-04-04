@@ -17,7 +17,6 @@
 
 #include "base/compiler_specific.h"
 #include "radium/radium_elf/crash/crash_helper.h"
-#include "radium/radium_elf/hook_util/hook_util.h"
 #include "radium/radium_elf/pe_image_safe/pe_image_safe.h"
 #include "radium/radium_elf/sha1/sha1.h"
 #include "radium/radium_elf/third_party_dlls/hardcoded_blocklist.h"
@@ -109,8 +108,9 @@ bool UTF16ToUTF8(const std::wstring& utf16, std::string* utf8) {
   int size_needed_bytes = ::WideCharToMultiByte(CP_UTF8, 0, &utf16[0],
                                                 static_cast<int>(utf16.size()),
                                                 nullptr, 0, nullptr, nullptr);
-  if (!size_needed_bytes)
+  if (!size_needed_bytes) {
     return false;
+  }
 
   utf8->resize(size_needed_bytes);
   return ::WideCharToMultiByte(CP_UTF8, 0, &utf16[0],
@@ -167,27 +167,30 @@ bool GetDataFromImage(PVOID buffer,
   if (exports && exports->Name + MAX_PATH <= buffer_size) {
     const char* name =
         reinterpret_cast<const char*>(image.RVAToAddr(exports->Name));
-    *image_name = std::string(name, ::strnlen(name, MAX_PATH));
+    *image_name = std::string(name, UNSAFE_TODO(::strnlen(name, MAX_PATH)));
   }
 
   // Lowercase |image_name|.
   const auto tolower = [](auto c) {
     return (c >= 'A' && c <= 'Z') ? (c + ('a' - 'A')) : c;
   };
-  for (size_t i = 0; i < image_name->size(); i++)
+  for (size_t i = 0; i < image_name->size(); i++) {
     (*image_name)[i] = tolower((*image_name)[i]);
+  }
 
   std::wstring temp_section_path = GetSectionName(buffer);
 
   // For now, consider it a success if at least one source results in a name.
   // Allow for the rare case of one or the other not being there.
   // (E.g.: a module could have no export directory.)
-  if (image_name->empty() && temp_section_path.empty())
+  if (image_name->empty() && temp_section_path.empty()) {
     return false;
+  }
 
   // There is further processing to do on the section path now.
-  if (temp_section_path.empty())
+  if (temp_section_path.empty()) {
     return true;
+  }
 
   // Extract the section basename from the section path.
   std::wstring temp_section_basename;
@@ -199,8 +202,9 @@ bool GetDataFromImage(PVOID buffer,
   }
 
   // Lowercase |section_basename|.
-  for (size_t i = 0; i < temp_section_basename.size(); i++)
+  for (size_t i = 0; i < temp_section_basename.size(); i++) {
     temp_section_basename[i] = tolower(temp_section_basename[i]);
+  }
 
   // Convert section strings from UTF-16 to UTF-8.
   return UTF16ToUTF8(temp_section_path, section_path) &&
@@ -241,8 +245,9 @@ NTSTATUS NewNtMapViewOfSectionImpl(
                                        commit_size, offset, view_size, inherit,
                                        allocation_type, protect);
 
-  if (g_hook_disabled.load(std::memory_order_relaxed))
+  if (g_hook_disabled.load(std::memory_order_relaxed)) {
     return ret;
+  }
 
   // If there was an OS-level failure, if the mapping target is NOT this
   // process, or if the section is not a (valid) Portable Executable,
@@ -272,11 +277,13 @@ NTSTATUS NewNtMapViewOfSectionImpl(
 
   // Note that one of either image_name or section_basename can be empty.
   elf_sha1::Digest image_name_hash;
-  if (!image_name.empty())
+  if (!image_name.empty()) {
     image_name_hash = elf_sha1::SHA1HashString(image_name);
+  }
   elf_sha1::Digest section_basename_hash;
-  if (!section_basename.empty())
+  if (!section_basename.empty()) {
     section_basename_hash = elf_sha1::SHA1HashString(section_basename);
+  }
   elf_sha1::Digest fingerprint_hash = elf_sha1::SHA1HashString(
       GetFingerprintString(time_date_stamp, image_size));
 

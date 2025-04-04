@@ -60,7 +60,7 @@ char* ProductDirNameForBundle(NSBundle* chrome_bundle) {
 
     // Leaked, but the only caller initializes a static with this result, so it
     // only happens once, and that's OK.
-    return strdup(product_dir_name);
+    return UNSAFE_BUFFERS(strdup(product_dir_name));
   }
 }
 
@@ -217,4 +217,4 @@ bool ProcessNeedsProfileDir(const std::string& process_type) {
   return true;
 }
 
-}  // namespace chrome
+}  // namespace radium

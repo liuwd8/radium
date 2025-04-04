@@ -142,7 +142,7 @@ int RadiumBrowserMainPartsPosix::PreEarlyInitialization() {
   // We need to accept SIGCHLD, even though our handler is a no-op because
   // otherwise we cannot wait on children. (According to POSIX 2001.)
   struct sigaction action;
-  memset(&action, 0, sizeof(action));
+  UNSAFE_BUFFERS(memset(&action, 0, sizeof(action)));
   action.sa_handler = SIGCHLDHandler;
   CHECK_EQ(0, sigaction(SIGCHLD, &action, nullptr));
 

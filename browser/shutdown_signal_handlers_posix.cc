@@ -34,7 +34,7 @@ int g_shutdown_pipe_read_fd = -1;
 void GracefulShutdownHandler(int signal) {
   // Reinstall the default handler.  We had one shot at graceful shutdown.
   struct sigaction action;
-  memset(&action, 0, sizeof(action));
+  UNSAFE_BUFFERS(memset(&action, 0, sizeof(action)));
   action.sa_handler = SIG_DFL;
   RAW_CHECK(sigaction(signal, &action, nullptr) == 0);
 
@@ -191,7 +191,7 @@ void InstallShutdownSignalHandlers(
   // We need to handle SIGTERM, because that is how many POSIX-based distros
   // ask processes to quit gracefully at shutdown time.
   struct sigaction action;
-  memset(&action, 0, sizeof(action));
+  UNSAFE_BUFFERS(memset(&action, 0, sizeof(action)));
   action.sa_handler = SIGTERMHandler;
   CHECK_EQ(0, sigaction(SIGTERM, &action, nullptr));
 
