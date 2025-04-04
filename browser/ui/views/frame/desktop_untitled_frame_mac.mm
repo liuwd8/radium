@@ -69,6 +69,10 @@ void DesktopUntitledFrameMac::GetWindowFrameTitlebarHeight(
   }
 }
 
+void DesktopUntitledFrameMac::OnWindowFullscreenTransitionComplete() {
+  GetWidget()->OnNativeWidgetWindowShowStateChanged();
+}
+
 NativeUntitledFrame* NativeUntitledFrameFactory::CreateNativeUntitledFrame(
     UntitledWidget* untitled_widget) {
   return new DesktopUntitledFrameMac(untitled_widget);
