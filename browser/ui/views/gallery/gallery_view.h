@@ -43,9 +43,10 @@ class GalleryView : public UntitledWidgetDelegateView,
   bool OnCloseRequested(views::Widget::ClosedReason close_reason) override;
 
   // BrowserWindow:
+  void Close() override;
+  Browser* GetBrowser() override;
   views::Widget* GetWidget() override;
   void Show() override;
-  void Close() override;
 
   // WidgetObserver:
   void OnWidgetShowStateChanged(views::Widget* widget) override;

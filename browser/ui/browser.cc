@@ -19,6 +19,7 @@
 #include "radium/browser/profiles/profile.h"
 #include "radium/browser/ui/browser_list.h"
 #include "radium/browser/ui/browser_observer.h"
+#include "radium/browser/ui/browser_window.h"
 
 namespace {
 
@@ -155,15 +156,24 @@ void Browser::OnWindowClosing() {
   }
 }
 
+void Browser::BeforeUnloadFired(content::WebContents* web_contents,
+                                bool proceed,
+                                bool* proceed_to_fire_unload) {
+  *proceed_to_fire_unload =
+      unload_controller_.BeforeUnloadFired(web_contents, proceed);
+}
+
 void Browser::CloseContents(content::WebContents* source) {
   if (unload_controller_.CanCloseContents(source)) {
     RemoveWebContents(source);
   }
 }
 
-void Browser::BeforeUnloadFired(content::WebContents* web_contents,
-                                bool proceed,
-                                bool* proceed_to_fire_unload) {
-  *proceed_to_fire_unload =
-      unload_controller_.BeforeUnloadFired(web_contents, proceed);
+bool Browser::ShouldFocusLocationBarByDefault(content::WebContents* source) {
+  return window_ && window_->ShouldFocusLocationBarByDefault();
+}
+
+void Browser::SetFocusToLocationBar() {
+  CHECK(window_);
+  window_->SetFocusToLocationBar();
 }

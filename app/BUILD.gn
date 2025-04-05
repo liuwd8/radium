@@ -27,7 +27,7 @@ action("generate_xtb_file") {
 
   sources = [ "radium_strings.grd" ]
 
-  outputs = [ "${target_gen_dir}/generate_translations.xtb" ]
+  outputs = [ "${target_gen_dir}/generate_translations.stamp" ]
 
   args = [
            "-i",
@@ -38,6 +38,8 @@ action("generate_xtb_file") {
            rebase_path("translations"),
            "-o",
            rebase_path("translations"),
+           "-E",
+           "target_gen_dir=" + rebase_path("${target_gen_dir}"),
          ] + grit_args + xtb_locales
 }
 

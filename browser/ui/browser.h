@@ -67,10 +67,12 @@ class Browser : public content::WebContentsDelegate,
 
  private:
   // content::WebContentsDelegate:
-  void CloseContents(content::WebContents* source) override;
   void BeforeUnloadFired(content::WebContents* source,
                          bool proceed,
                          bool* proceed_to_fire_unload) override;
+  void CloseContents(content::WebContents* source) override;
+  bool ShouldFocusLocationBarByDefault(content::WebContents* source) override;
+  void SetFocusToLocationBar() override;
 
  private:
   explicit Browser(CreateParams params);

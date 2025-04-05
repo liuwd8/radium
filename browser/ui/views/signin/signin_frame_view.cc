@@ -189,6 +189,10 @@ void SigninFrameView::Init(views::Widget* widget,
   UpdateQRContent();
 }
 
+std::string SigninFrameView::GetWindowName() const {
+  return "signin_window";
+}
+
 int SigninFrameView::NonClientHitTest(const gfx::Point& point) {
   return views::GetHitTestComponent(this, point);
 }
