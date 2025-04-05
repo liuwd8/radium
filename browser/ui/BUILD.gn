@@ -41,6 +41,7 @@ static_library("ui") {
       "browser_list_observer.h",
       "browser_observer.h",
       "browser_user_data.h",
+      "browser_window.cc",
       "browser_window.h",
       "unload_controller.cc",
       "unload_controller.h",
@@ -71,6 +72,8 @@ static_library("ui") {
       "views/radium_layout_provider.h",
       "views/radium_views_delegate.cc",
       "views/radium_views_delegate.h",
+      "window_finder.cc",
+      "window_finder.h",
     ]
 
     public_deps += [ "//ui/base/mojom:ui_base_types" ]
@@ -79,6 +82,7 @@ static_library("ui") {
       "//components/constrained_window",
       "//components/ui_devtools/views",
       "//radium/browser/ui/gallery",
+      "//radium/browser/ui/views/dragging",
       "//ui/views",
       "//ui/views:buildflags",
     ]

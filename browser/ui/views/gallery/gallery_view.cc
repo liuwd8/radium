@@ -179,6 +179,10 @@ bool GalleryView::OnCloseRequested(views::Widget::ClosedReason close_reason) {
   return false;
 }
 
+Browser* GalleryView::GetBrowser() {
+  return browser_.get();
+}
+
 views::Widget* GalleryView::GetWidget() {
   return views::View::GetWidget();
 }

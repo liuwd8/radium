@@ -140,6 +140,17 @@ def Main():
     for local in options.locals:
         GenerateLocalXTB(options, ids, local)
 
+    envs = {}
+    for string in options.build_env:
+        key, value = str(string).split('=')
+        envs[key] = value
+
+    target_gen_dir = envs['target_gen_dir']
+    out_file = f'{target_gen_dir}/generate_translations.stamp'
+    with open(out_file, "w", encoding='utf-8') as f:
+        f.write('\n')
+
+
 
 if __name__ == '__main__':
     sys.exit(Main())

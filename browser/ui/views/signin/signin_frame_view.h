@@ -9,8 +9,6 @@
 #include "radium/browser/ui/views/frame/untitled_widget_delegate.h"
 #include "ui/views/view_targeter_delegate.h"
 
-class Profile;
-
 namespace views {
 class ImageView;
 }
@@ -32,6 +30,7 @@ class SigninFrameView : public UntitledWidgetDelegateView,
   friend class SigninWindow;
 
   // UntitledWidgetDelegateView:
+  std::string GetWindowName() const override;
   int NonClientHitTest(const gfx::Point& point) override;
 
   // Updates and formats QR code, text, and controls.
