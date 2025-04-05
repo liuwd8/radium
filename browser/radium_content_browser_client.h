@@ -68,6 +68,15 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
   std::string GetProduct() override;
   std::string GetUserAgent() override;
+  base::FilePath GetLoggingFileName(
+      const base::CommandLine& command_line) override;
+  std::vector<base::FilePath> GetNetworkContextsParentDirectory() override;
+  bool IsShuttingDown() override;
+#if BUILDFLAG(IS_MAC)
+  bool SetupEmbedderSandboxParameters(
+      sandbox::mojom::Sandbox sandbox_type,
+      sandbox::SandboxSerializer* serializer) override;
+#endif  // BUILDFLAG(IS_MAC)
 
  private:
   // Initializes `network_contexts_parent_directory_` and

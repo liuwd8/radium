@@ -15,6 +15,9 @@ class FilePath;
 
 namespace logging {
 
+// Returns the fully-qualified name of the log file.
+base::FilePath GetLogFileName(const base::CommandLine& command_line);
+
 // Call to initialize logging for Chrome. This sets up the chrome-specific
 // logfile naming scheme and might do other things like log modules and
 // setting levels in the future.
