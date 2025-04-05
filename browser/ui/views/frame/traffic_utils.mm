@@ -43,6 +43,11 @@ class TrafficLightsTracker : views::WidgetObserver {
   void Observe(views::Widget* widget) { scoped_observation_.Observe(widget); }
 
  private:
+  void OnWidgetBoundsChanged(views::Widget* widget,
+                             const gfx::Rect& new_bounds) override {
+    [buttons_proxy_ redraw];
+  }
+
   void OnWidgetShowStateChanged(views::Widget* widget) override {
     [buttons_proxy_ redraw];
   }
@@ -160,7 +165,7 @@ void SetTrafficLightsMargin(views::Widget* widget, const gfx::Insets& insets) {
   }
   WindowButtonsProxy* buttons_proxy =
       [[WindowButtonsProxy alloc] initWithWindow:window];
-  gfx::Point p(insets.top(), insets.left());
+  gfx::Point p(insets.left(), insets.top());
   [buttons_proxy setMargin:p];
   (new TrafficLightsTracker(buttons_proxy))->Observe(widget);
 }

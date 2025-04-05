@@ -85,18 +85,6 @@ ui::ColorProviderKey::ThemeInitializerSupplier* UntitledWidget::GetCustomTheme()
   return nullptr;
 }
 
-#if BUILDFLAG(IS_WIN)
-void UntitledWidget::OnNativeWidgetSizeChanged(const gfx::Size& new_size) {
-  views::Widget::OnNativeWidgetSizeChanged(new_size);
-
-  ui::mojom::WindowShowState show_state = GetShowState(this);
-  if (last_show_state_ != show_state) {
-    OnNativeWidgetWindowShowStateChanged();
-    last_show_state_ = show_state;
-  }
-}
-#endif
-
 BEGIN_METADATA(UntitledWidget)
 ADD_PROPERTY_METADATA(int, TitleBarBackgroundHeight)
 ADD_READONLY_PROPERTY_METADATA(std::optional<ui::ColorId>,
