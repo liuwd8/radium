@@ -66,9 +66,6 @@ class UntitledWidget : public views::Widget {
   const ui::ThemeProvider* GetThemeProvider() const override;
   ui::ColorProviderKey::ThemeInitializerSupplier* GetCustomTheme()
       const override;
-#if BUILDFLAG(IS_WIN)
-  void OnNativeWidgetSizeChanged(const gfx::Size& new_size) override;
-#endif
 
  private:
   raw_ptr<UntitledWidgetDelegate> delegate_;
