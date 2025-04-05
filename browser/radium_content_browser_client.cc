@@ -10,6 +10,7 @@
 #include "base/version_info/version_info_values.h"
 #include "build/build_config.h"
 #include "components/embedder_support/user_agent_utils.h"
+#include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
@@ -31,6 +32,7 @@
 #include "radium/browser/themes/theme_service_factory.h"
 #include "radium/browser/ui/tab_contents/radium_web_contents_view_delegate.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views.h"
+#include "radium/common/logging_radium.h"
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
@@ -489,3 +491,26 @@ void RadiumContentBrowserClient::InitOnUIThread() {
 const ui::NativeTheme* RadiumContentBrowserClient::GetWebTheme() const {
   return ui::NativeTheme::GetInstanceForWeb();
 }
+
+base::FilePath RadiumContentBrowserClient::GetLoggingFileName(
+    const base::CommandLine& command_line) {
+  return logging::GetLogFileName(command_line);
+}
+
+std::vector<base::FilePath>
+RadiumContentBrowserClient::GetNetworkContextsParentDirectory() {
+  DCHECK(!network_contexts_parent_directory_.empty());
+  return network_contexts_parent_directory_;
+}
+
+bool RadiumContentBrowserClient::IsShuttingDown() {
+  return KeepAliveRegistry::GetInstance()->IsShuttingDown();
+}
+
+#if BUILDFLAG(IS_MAC)
+bool RadiumContentBrowserClient::SetupEmbedderSandboxParameters(
+    sandbox::mojom::Sandbox sandbox_type,
+    sandbox::SandboxSerializer* serializer) {
+  return false;
+}
+#endif  // BUILDFLAG(IS_MAC)

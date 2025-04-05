@@ -97,45 +97,6 @@ base::win::ScopedHandle GetLogInheritedHandle(
 }
 #endif
 
-base::FilePath GetLogFileName(const base::CommandLine& command_line) {
-  // Try the command line.
-  auto filename = command_line.GetSwitchValueNative(switches::kLogFile);
-  if (!filename.empty()) {
-    base::FilePath candidate_path(filename);
-#if BUILDFLAG(IS_WIN)
-    // Windows requires an absolute path for the --log-file switch. Windows
-    // cannot log to the current directory as it cds() to the exe's directory
-    // earlier than this function runs.
-    candidate_path = candidate_path.NormalizePathSeparators();
-    if (candidate_path.IsAbsolute()) {
-      return candidate_path;
-    } else {
-      PLOG(ERROR) << "Invalid logging destination: " << filename;
-    }
-#else
-    return candidate_path;
-#endif  // BUILDFLAG(IS_WIN)
-  }
-
-  // If command line and environment do not provide a log file we can use,
-  // fallback to the default.
-  const base::FilePath log_filename(FILE_PATH_LITERAL("radium_debug.log"));
-  base::FilePath log_path;
-
-  if (base::PathService::Get(radium::DIR_LOGS, &log_path)) {
-    log_path = log_path.Append(log_filename);
-    return log_path;
-  } else {
-#if BUILDFLAG(IS_WIN)
-    // On Windows we cannot use a non-absolute path so we cannot provide a file.
-    return base::FilePath();
-#else
-    // Error with path service, just use the default in our current directory.
-    return log_filename;
-#endif  // BUILDFLAG(IS_WIN)
-  }
-}
-
 // `filename_is_handle`, will be set to `true` if the log-file switch contains
 // an inherited handle value rather than a filepath, and `false` otherwise.
 LoggingDestination LoggingDestFromCommandLine(
@@ -195,6 +156,45 @@ LoggingDestination LoggingDestFromCommandLine(
 }
 
 }  // namespace
+
+base::FilePath GetLogFileName(const base::CommandLine& command_line) {
+  // Try the command line.
+  auto filename = command_line.GetSwitchValueNative(switches::kLogFile);
+  if (!filename.empty()) {
+    base::FilePath candidate_path(filename);
+#if BUILDFLAG(IS_WIN)
+    // Windows requires an absolute path for the --log-file switch. Windows
+    // cannot log to the current directory as it cds() to the exe's directory
+    // earlier than this function runs.
+    candidate_path = candidate_path.NormalizePathSeparators();
+    if (candidate_path.IsAbsolute()) {
+      return candidate_path;
+    } else {
+      PLOG(ERROR) << "Invalid logging destination: " << filename;
+    }
+#else
+    return candidate_path;
+#endif  // BUILDFLAG(IS_WIN)
+  }
+
+  // If command line and environment do not provide a log file we can use,
+  // fallback to the default.
+  const base::FilePath log_filename(FILE_PATH_LITERAL("radium_debug.log"));
+  base::FilePath log_path;
+
+  if (base::PathService::Get(radium::DIR_LOGS, &log_path)) {
+    log_path = log_path.Append(log_filename);
+    return log_path;
+  } else {
+#if BUILDFLAG(IS_WIN)
+    // On Windows we cannot use a non-absolute path so we cannot provide a file.
+    return base::FilePath();
+#else
+    // Error with path service, just use the default in our current directory.
+    return log_filename;
+#endif  // BUILDFLAG(IS_WIN)
+  }
+}
 
 void InitRadiumLogging(const base::CommandLine& command_line,
                        OldFileDeletionState delete_old_log_file) {
