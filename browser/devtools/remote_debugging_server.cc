@@ -5,6 +5,8 @@
 #include "radium/browser/devtools/remote_debugging_server.h"
 
 #include "base/command_line.h"
+#include "base/path_service.h"
+#include "components/prefs/pref_service.h"
 #include "content/public/browser/devtools_agent_host.h"
 #include "content/public/browser/devtools_socket_factory.h"
 #include "content/public/common/content_switches.h"
@@ -12,6 +14,9 @@
 #include "net/socket/tcp_server_socket.h"
 #include "radium/browser/browser_process.h"
 #include "radium/browser/global_features.h"
+#include "radium/common/pref_names.h"
+#include "radium/common/radium_paths.h"
+#include "radium/common/radium_paths_internal.h"
 
 namespace {
 
@@ -51,21 +56,61 @@ class TCPServerSocketFactory : public content::DevToolsSocketFactory {
   uint16_t port_;
 };
 
+// Returns true, or a reason why remote debugging is not allowed.
+base::expected<bool, RemoteDebuggingServer::NotStartedReason>
+IsRemoteDebuggingAllowed(const std::optional<bool>& is_default_user_data_dir,
+                         PrefService* local_state) {
+  if (!local_state->GetBoolean(prefs::kDevToolsRemoteDebuggingAllowed)) {
+    return base::unexpected(
+        RemoteDebuggingServer::NotStartedReason::kDisabledByPolicy);
+  }
+
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+  if (is_default_user_data_dir.value_or(true)) {
+    return base::unexpected(
+        RemoteDebuggingServer::NotStartedReason::kDisabledByDefaultUserDataDir);
+  }
+#endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
+  return true;
+}
+
 }  // namespace
 
-RemoteDebuggingServer::RemoteDebuggingServer() {
+RemoteDebuggingServer::RemoteDebuggingServer() = default;
+
+// static
+base::expected<std::unique_ptr<RemoteDebuggingServer>,
+               RemoteDebuggingServer::NotStartedReason>
+RemoteDebuggingServer::GetInstance(PrefService* local_state) {
+  std::optional<bool> is_default_user_data_dir =
+      radium::IsUsingDefaultDataDirectory();
+  if (const auto maybe_allow_debugging =
+          IsRemoteDebuggingAllowed(is_default_user_data_dir, local_state);
+      !maybe_allow_debugging.has_value()) {
+    return base::unexpected(maybe_allow_debugging.error());
+  }
+
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
+
+  // Track whether debugging was started. This determines whether or not to
+  // return an instance of the class.
+  bool being_debugged = false;
   std::string port_str =
       command_line.GetSwitchValueASCII(::switches::kRemoteDebuggingPort);
   int port;
-  if (!base::StringToInt(port_str, &port) || port < 0 || port >= 65535) {
-    return;
+  if (base::StringToInt(port_str, &port) && port >= 0 && port < 65535) {
+    being_debugged = true;
+    content::DevToolsAgentHost::StartRemoteDebuggingServer(
+        std::make_unique<TCPServerSocketFactory>(port), base::FilePath(),
+        base::FilePath());
   }
 
-  content::DevToolsAgentHost::StartRemoteDebuggingServer(
-      std::make_unique<TCPServerSocketFactory>(port), base::FilePath(),
-      base::FilePath());
+  if (being_debugged) {
+    return base::WrapUnique(new RemoteDebuggingServer);
+  }
+
+  return base::unexpected(NotStartedReason::kNotRequested);
 }
 
 RemoteDebuggingServer::~RemoteDebuggingServer() {

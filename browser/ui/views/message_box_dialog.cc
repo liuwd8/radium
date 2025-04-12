@@ -278,7 +278,7 @@ MessageBoxDialog::MessageBoxDialog(std::u16string_view title,
   SetCloseCallback(base::BindOnce(&MessageBoxDialog::Done,
                                   base::Unretained(this),
                                   radium::MESSAGE_BOX_RESULT_NO));
-  SetOwnedByWidget(true);
+  SetOwnedByWidget(OwnedByWidgetPassKey());
 
   std::u16string ok_text(yes_text);
   if (ok_text.empty()) {

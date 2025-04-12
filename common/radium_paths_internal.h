@@ -5,6 +5,7 @@
 #ifndef RADIUM_COMMON_RADIUM_PATHS_INTERNAL_H_
 #define RADIUM_COMMON_RADIUM_PATHS_INTERNAL_H_
 
+#include <optional>
 #include <string>
 
 #include "build/build_config.h"
@@ -24,6 +25,11 @@ namespace radium {
 // Get the path to the user's data directory, regardless of whether
 // DIR_USER_DATA has been overridden by a command-line option.
 bool GetDefaultUserDataDirectory(base::FilePath* result);
+
+// Returns true if the current user data directory is the default user data
+// directory. Returns `std::nullopt` if this could not be determined e.g. API
+// calls failed.
+std::optional<bool> IsUsingDefaultDataDirectory();
 
 #if BUILDFLAG(IS_WIN)
 // Get the path to the roaming user's data directory, regardless of whether

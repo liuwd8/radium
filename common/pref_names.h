@@ -126,6 +126,10 @@ inline constexpr char kCorsNonWildcardRequestHeadersSupport[] =
 inline constexpr char kDefaultBrowserSettingEnabled[] =
     "browser.default_browser_setting_enabled";
 
+// Defines administrator-set availability of developer tools remote debugging.
+inline constexpr char kDevToolsRemoteDebuggingAllowed[] =
+    "devtools.remote_debugging.allowed";
+
 // Boolean that specifies whether to disable CNAME lookups when generating
 // Kerberos SPN.
 inline constexpr char kDisableAuthNegotiateCnameLookup[] =

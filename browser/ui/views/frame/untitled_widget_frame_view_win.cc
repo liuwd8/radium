@@ -183,7 +183,8 @@ void UntitledWidgetFrameViewWin::OnPaint(gfx::Canvas* canvas) {
 int UntitledWidgetFrameViewWin::FrameBorderThickness() const {
   return IsFrameCondensed()
              ? 0
-             : display::win::ScreenWin::GetSystemMetricsInDIP(SM_CXSIZEFRAME);
+             : display::win::GetScreenWin()->GetSystemMetricsInDIP(
+                   SM_CXSIZEFRAME);
 }
 
 BEGIN_METADATA(UntitledWidgetFrameViewWin)
