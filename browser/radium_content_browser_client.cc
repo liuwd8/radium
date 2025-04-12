@@ -7,10 +7,12 @@
 #include <memory>
 
 #include "base/path_service.h"
+#include "base/version_info/channel.h"
 #include "base/version_info/version_info_values.h"
 #include "build/build_config.h"
 #include "components/embedder_support/user_agent_utils.h"
 #include "components/keep_alive_registry/keep_alive_registry.h"
+#include "components/net_log/chrome_net_log.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
@@ -32,6 +34,7 @@
 #include "radium/browser/themes/theme_service_factory.h"
 #include "radium/browser/ui/tab_contents/radium_web_contents_view_delegate.h"
 #include "radium/browser/ui/views/radium_browser_main_extra_parts_views.h"
+#include "radium/common/channel_info.h"
 #include "radium/common/logging_radium.h"
 #include "radium/common/pref_names.h"
 #include "radium/common/radium_paths.h"
@@ -451,8 +454,58 @@ void RadiumContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
 }
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 
+base::FilePath RadiumContentBrowserClient::GetFirstPartySetsDirectory() {
+  base::FilePath user_data_dir;
+  base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
+  DCHECK(!user_data_dir.empty());
+  return user_data_dir;
+}
+
+base::FilePath RadiumContentBrowserClient::GetGrShaderDiskCacheDirectory() {
+  base::FilePath user_data_dir;
+  base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
+  DCHECK(!user_data_dir.empty());
+  return user_data_dir.Append(FILE_PATH_LITERAL("GrShaderCache"));
+}
+
+base::FilePath RadiumContentBrowserClient::GetGraphiteDawnDiskCacheDirectory() {
+  base::FilePath user_data_dir;
+  base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
+  return user_data_dir.Append(FILE_PATH_LITERAL("GraphiteDawnCache"));
+}
+
+std::optional<base::FilePath>
+RadiumContentBrowserClient::GetLocalTracesDirectory() {
+  base::FilePath user_data_dir;
+  if (!base::PathService::Get(radium::DIR_LOCAL_TRACES, &user_data_dir)) {
+    return std::nullopt;
+  }
+  DCHECK(!user_data_dir.empty());
+  return user_data_dir;
+}
+
+base::Value::Dict RadiumContentBrowserClient::GetNetLogConstants() {
+  return net_log::GetPlatformConstantsForNetLog(
+      base::CommandLine::ForCurrentProcess()->GetCommandLineString(),
+      std::string(version_info::GetChannelString(radium::GetChannel())));
+}
+
+base::FilePath RadiumContentBrowserClient::GetNetLogDefaultDirectory() {
+  base::FilePath user_data_dir;
+  base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
+  DCHECK(!user_data_dir.empty());
+  return user_data_dir;
+}
+
 std::string RadiumContentBrowserClient::GetProduct() {
   return PRODUCT_SHORTNAME_STRING "/" PRODUCT_VERSION;
+}
+
+base::FilePath RadiumContentBrowserClient::GetShaderDiskCacheDirectory() {
+  base::FilePath user_data_dir;
+  base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
+  DCHECK(!user_data_dir.empty());
+  return user_data_dir.Append(FILE_PATH_LITERAL("ShaderCache"));
 }
 
 std::string RadiumContentBrowserClient::GetUserAgent() {
