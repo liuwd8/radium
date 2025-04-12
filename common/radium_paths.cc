@@ -633,6 +633,20 @@ bool PathProvider(int key, base::FilePath* result) {
   return true;
 }
 
+std::optional<bool> IsUsingDefaultDataDirectory() {
+  base::FilePath user_data_dir;
+  if (!base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir)) {
+    return std::nullopt;
+  }
+
+  base::FilePath default_user_data_dir;
+  if (!radium::GetDefaultUserDataDirectory(&default_user_data_dir)) {
+    return std::nullopt;
+  }
+
+  return user_data_dir == default_user_data_dir;
+}
+
 // This cannot be done as a static initializer sadly since Visual Studio will
 // eliminate this object file if there is no direct entry point into it.
 void RegisterPathProvider() {

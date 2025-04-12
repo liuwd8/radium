@@ -4,6 +4,7 @@
 
 #include "radium/browser/browser_process.h"
 
+#include <iostream>
 #include <memory>
 
 #include "base/run_loop.h"
@@ -150,8 +151,7 @@ void BrowserProcess::RegisterPrefs(PrefRegistrySimple* registry) {
   registry->RegisterStringPref(prefs::kHardwareKeyboardLayout, std::string());
 #endif  // BUILDFLAG(IS_CHROMEOS)
 
-  // registry->RegisterBooleanPref(prefs::kDevToolsRemoteDebuggingAllowed,
-  // true);
+  registry->RegisterBooleanPref(prefs::kDevToolsRemoteDebuggingAllowed, true);
 
 #if BUILDFLAG(IS_LINUX)
   os_crypt_async::SecretPortalKeyProvider::RegisterLocalPrefs(registry);
@@ -205,10 +205,28 @@ void BrowserProcess::PreCreateThreads() {
 void BrowserProcess::CreateDevToolsProtocolHandler() {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
 #if !BUILDFLAG(IS_ANDROID)
-  // StartupBrowserCreator::LaunchBrowser can be run multiple times when browser
-  // is started with several profiles or existing browser process is reused.
-  if (!remote_debugging_server_) {
-    remote_debugging_server_ = std::make_unique<RemoteDebuggingServer>();
+  auto maybe_remote_debugging_server =
+      RemoteDebuggingServer::GetInstance(local_state_.get());
+  if (maybe_remote_debugging_server.has_value()) {
+    remote_debugging_server_ = std::move(*maybe_remote_debugging_server);
+    return;
+  }
+
+  // For errors, follow content/browser/devtools/devtools_http_handler.cc that
+  // reports its remote debugging port on stderr for symmetry.
+  switch (maybe_remote_debugging_server.error()) {
+    case RemoteDebuggingServer::NotStartedReason::kNotRequested:
+      break;
+    case RemoteDebuggingServer::NotStartedReason::kDisabledByPolicy:
+      std::cerr
+          << "\nDevTools remote debugging is disallowed by the system admin.\n"
+          << std::endl;
+      break;
+    case RemoteDebuggingServer::NotStartedReason::kDisabledByDefaultUserDataDir:
+      std::cerr << "\nDevTools remote debugging requires a non-default data "
+                   "directory. Specify this using --user-data-dir.\n"
+                << std::endl;
+      break;
   }
 #endif
 }

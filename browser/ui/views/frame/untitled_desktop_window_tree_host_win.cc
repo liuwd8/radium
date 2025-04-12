@@ -326,7 +326,7 @@ bool UntitledDesktopWindowTreeHostWin::GetDwmFrameInsetsInPixels(
   } else {
     // The glass should extend to the bottom of the tabstrip.
     gfx::Size tabstrip_region_size(1, untitled_widget_->GetGlassHeight());
-    tabstrip_region_size = display::win::ScreenWin::DIPToScreenSize(
+    tabstrip_region_size = display::win::GetScreenWin()->DIPToScreenSize(
         GetHWND(), tabstrip_region_size);
 
     *insets = gfx::Insets::TLBR(tabstrip_region_size.height(), 0, 0, 0);

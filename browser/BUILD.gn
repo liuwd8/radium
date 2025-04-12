@@ -130,6 +130,7 @@ static_library("browser") {
     "//radium/browser/profiles:profiles_extra_parts_impl",
     "//radium/browser/ui",
     "//services/cert_verifier:lib",
+    "//services/device/public/cpp/geolocation",
     "//services/network/public/cpp",
     "//services/network/public/mojom",
     "//services/proxy_resolver:lib",
