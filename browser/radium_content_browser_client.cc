@@ -15,6 +15,8 @@
 #include "components/net_log/chrome_net_log.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/permission_controller.h"
+#include "content/public/browser/permission_descriptor_util.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_view_delegate.h"
 #include "content/public/common/content_descriptors.h"
@@ -73,6 +75,10 @@
 #elif BUILDFLAG(IS_OZONE)
 #include "radium/browser/radium_browser_main_extra_parts_ozone.h"
 #endif
+
+#if BUILDFLAG(OS_LEVEL_GEOLOCATION_PERMISSION_SUPPORTED)
+#include "services/device/public/cpp/geolocation/geolocation_system_permission_manager.h"
+#endif  // BUILDFLAG(OS_LEVEL_GEOLOCATION_PERMISSION_SUPPORTED)
 
 namespace {
 
@@ -461,6 +467,13 @@ base::FilePath RadiumContentBrowserClient::GetFirstPartySetsDirectory() {
   return user_data_dir;
 }
 
+#if BUILDFLAG(OS_LEVEL_GEOLOCATION_PERMISSION_SUPPORTED)
+device::GeolocationSystemPermissionManager*
+RadiumContentBrowserClient::GetGeolocationSystemPermissionManager() {
+  return device::GeolocationSystemPermissionManager::GetInstance();
+}
+#endif
+
 base::FilePath RadiumContentBrowserClient::GetGrShaderDiskCacheDirectory() {
   base::FilePath user_data_dir;
   base::PathService::Get(radium::DIR_USER_DATA, &user_data_dir);
@@ -554,6 +567,34 @@ std::vector<base::FilePath>
 RadiumContentBrowserClient::GetNetworkContextsParentDirectory() {
   DCHECK(!network_contexts_parent_directory_.empty());
   return network_contexts_parent_directory_;
+}
+
+bool RadiumContentBrowserClient::IsClipboardPasteAllowed(
+    content::RenderFrameHost* render_frame_host) {
+  DCHECK(render_frame_host);
+
+  // Paste requires either (1) user activation, ...
+  if (content::WebContents::FromRenderFrameHost(render_frame_host)
+          ->HasRecentInteraction()) {
+    return true;
+  }
+
+  // (2) granted web permission, ...
+  content::BrowserContext* browser_context =
+      render_frame_host->GetBrowserContext();
+  content::PermissionController* permission_controller =
+      browser_context->GetPermissionController();
+  blink::mojom::PermissionStatus status =
+      permission_controller->GetPermissionStatusForCurrentDocument(
+          content::PermissionDescriptorUtil::
+              CreatePermissionDescriptorForPermissionType(
+                  blink::PermissionType::CLIPBOARD_READ_WRITE),
+          render_frame_host);
+  if (status == blink::mojom::PermissionStatus::GRANTED) {
+    return true;
+  }
+
+  return false;
 }
 
 bool RadiumContentBrowserClient::IsShuttingDown() {

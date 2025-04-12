@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "content/public/browser/content_browser_client.h"
+#include "services/device/public/cpp/geolocation/buildflags.h"
 
 class RadiumFeatureListCreator;
 
@@ -67,6 +68,10 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       content::PosixFileDescriptorInfo* mappings) override;
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
   base::FilePath GetFirstPartySetsDirectory() override;
+#if BUILDFLAG(OS_LEVEL_GEOLOCATION_PERMISSION_SUPPORTED)
+  device::GeolocationSystemPermissionManager*
+  GetGeolocationSystemPermissionManager() override;
+#endif
   base::FilePath GetGrShaderDiskCacheDirectory() override;
   base::FilePath GetGraphiteDawnDiskCacheDirectory() override;
   std::optional<base::FilePath> GetLocalTracesDirectory() override;
@@ -78,6 +83,8 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
   base::FilePath GetLoggingFileName(
       const base::CommandLine& command_line) override;
   std::vector<base::FilePath> GetNetworkContextsParentDirectory() override;
+  bool IsClipboardPasteAllowed(
+      content::RenderFrameHost* render_frame_host) override;
   bool IsShuttingDown() override;
 #if BUILDFLAG(IS_MAC)
   bool SetupEmbedderSandboxParameters(
