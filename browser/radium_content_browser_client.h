@@ -66,7 +66,14 @@ class RadiumContentBrowserClient : public content::ContentBrowserClient {
       int child_process_id,
       content::PosixFileDescriptorInfo* mappings) override;
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+  base::FilePath GetFirstPartySetsDirectory() override;
+  base::FilePath GetGrShaderDiskCacheDirectory() override;
+  base::FilePath GetGraphiteDawnDiskCacheDirectory() override;
+  std::optional<base::FilePath> GetLocalTracesDirectory() override;
+  base::Value::Dict GetNetLogConstants() override;
+  base::FilePath GetNetLogDefaultDirectory() override;
   std::string GetProduct() override;
+  base::FilePath GetShaderDiskCacheDirectory() override;
   std::string GetUserAgent() override;
   base::FilePath GetLoggingFileName(
       const base::CommandLine& command_line) override;
