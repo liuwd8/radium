@@ -1,12 +1,7 @@
 # Set build arguments here. See `gn help buildargs`.
 root_extra_deps = [ "//radium" ]
 
-is_clang = true
-dcheck_always_on = true
-devtools_skip_typecheck = false
 ffmpeg_branding = "Chrome"
-is_component_build = false
-is_debug = false
 proprietary_codecs = true
 is_official_build = true
 use_siso = true
