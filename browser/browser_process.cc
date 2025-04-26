@@ -11,7 +11,6 @@
 #include "base/sequence_checker.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/trace_event/trace_event.h"
-#include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/os_crypt/async/browser/key_provider.h"
 #include "components/os_crypt/async/browser/os_crypt_async.h"
@@ -20,6 +19,7 @@
 #include "radium/browser/browser_process_platform_part.h"
 #include "radium/browser/devtools/remote_debugging_server.h"
 #include "radium/browser/global_features.h"
+#include "radium/browser/lifetime/browser_shutdown.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/net/system_network_context_manager.h"
 #include "radium/browser/policy/radium_browser_policy_connector.h"
@@ -37,6 +37,7 @@
 #endif
 
 #if !BUILDFLAG(IS_ANDROID)
+#include "components/keep_alive_registry/keep_alive_registry.h"
 #include "radium/browser/lifetime/application_lifetime_desktop.h"
 #endif
 
@@ -272,7 +273,11 @@ void BrowserProcess::PreMainMessageLoopRun() {
 }
 
 bool BrowserProcess::IsShuttingDown() {
+#if !BUILDFLAG(IS_ANDROID)
   return KeepAliveRegistry::GetInstance()->IsShuttingDown();
+#else
+  return browser_shutdown::HasShutdownStarted();
+#endif
 }
 
 #if !BUILDFLAG(IS_ANDROID)

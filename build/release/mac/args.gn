@@ -1,2 +1,5 @@
 # Set build arguments here. See `gn help buildargs`.
 import("//radium/build/release/all.gn")
+
+enable_keystone_registration_framework = false
+ignore_missing_widevine_signing_cert = true

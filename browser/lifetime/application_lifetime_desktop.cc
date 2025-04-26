@@ -16,6 +16,7 @@
 #include "base/types/strong_alias.h"
 #include "build/build_config.h"
 #include "radium/browser/browser_process.h"
+#include "radium/browser/lifetime/browser_shutdown.h"
 
 #if BUILDFLAG(IS_WIN)
 #include "base/win/win_util.h"
@@ -63,6 +64,9 @@ void SessionEnding() {
     constexpr base::TimeDelta kShutdownHangDelay{base::Seconds(30)};
     watch_hangs_scope.emplace(kShutdownHangDelay);
   }
+
+  browser_shutdown::OnShutdownStarting(
+      browser_shutdown::ShutdownType::kEndSession);
 
   OnClosingAllBrowsers(true);
 

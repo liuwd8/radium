@@ -10,3 +10,5 @@ is_debug = false
 proprietary_codecs = true
 is_official_build = true
 use_siso = true
+strip_absolute_paths_from_debug_symbols = true
+symbol_level = 1
