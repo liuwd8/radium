@@ -2,12 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "radium/common/radium_paths.h"
+
 #include "base/environment.h"
 #include "base/files/file_path.h"
 #include "base/nix/xdg_util.h"
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
-#include "radium/common/radium_paths.h"
 
 namespace radium {
 namespace {
@@ -62,10 +63,11 @@ bool GetUserMediaDirectory(const std::string& xdg_name,
 bool GetDefaultUserDataDirectory(base::FilePath* result) {
   std::unique_ptr<base::Environment> env(base::Environment::Create());
   base::FilePath config_dir;
-  std::string radium_config_home_str;
-  if (env->GetVar("RADIUM_CONFIG_HOME", &radium_config_home_str) &&
-      base::IsStringUTF8(radium_config_home_str)) {
-    config_dir = base::FilePath::FromUTF8Unsafe(radium_config_home_str);
+  std::optional<std::string> radium_config_home_str =
+      env->GetVar("RADIUM_CONFIG_HOME");
+  if (radium_config_home_str &&
+      base::IsStringUTF8(radium_config_home_str.value())) {
+    config_dir = base::FilePath::FromUTF8Unsafe(radium_config_home_str.value());
   } else {
     config_dir = base::nix::GetXDGDirectory(
         env.get(), base::nix::kXdgConfigHomeEnvVar, base::nix::kDotConfigDir);

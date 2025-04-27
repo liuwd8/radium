@@ -8,9 +8,14 @@ source_set("lifetime") {
   sources = [
     "application_lifetime.cc",
     "application_lifetime.h",
+    "browser_shutdown.cc",
+    "browser_shutdown.h",
   ]
 
-  deps = [ "//base" ]
+  deps = [
+    "//base",
+    "//components/crash/core/common:crash_key",
+  ]
 
   if (!is_android) {
     sources += [

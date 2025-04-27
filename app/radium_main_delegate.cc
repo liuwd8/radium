@@ -30,6 +30,7 @@
 #include "net/http/http_cache.h"
 #include "net/url_request/url_request.h"
 #include "radium/browser/buildflags.h"
+#include "radium/browser/lifetime/browser_shutdown.h"
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 #include "radium/browser/radium_content_browser_client.h"
 #include "radium/browser/radium_resource_bundle_helper.h"
@@ -616,6 +617,15 @@ void RadiumMainDelegate::SandboxInitialized(const std::string& process_type) {
 }
 
 void RadiumMainDelegate::ProcessExiting(const std::string& process_type) {
+  // If not already set, set the shutdown type to be a clean process exit
+  // |kProcessExit|. These browser process shutdowns are clean shutdowns and
+  // their shutdown type must differ from |kNotValid|. If the shutdown type was
+  // already set (a.k.a closing window, end-session), this statement is a no-op.
+  if (process_type.empty()) {
+    browser_shutdown::OnShutdownStarting(
+        browser_shutdown::ShutdownType::kOtherExit);
+  }
+
 #if BUILDFLAG(ENABLE_PROCESS_SINGLETON)
   RadiumProcessSingleton::DeleteInstance();
 #endif  // BUILDFLAG(ENABLE_PROCESS_SINGLETON)

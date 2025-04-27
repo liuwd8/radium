@@ -11,7 +11,6 @@
 #include "base/version_info/version_info_values.h"
 #include "build/build_config.h"
 #include "components/embedder_support/user_agent_utils.h"
-#include "components/keep_alive_registry/keep_alive_registry.h"
 #include "components/net_log/chrome_net_log.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_thread.h"
@@ -598,7 +597,7 @@ bool RadiumContentBrowserClient::IsClipboardPasteAllowed(
 }
 
 bool RadiumContentBrowserClient::IsShuttingDown() {
-  return KeepAliveRegistry::GetInstance()->IsShuttingDown();
+  return BrowserProcess::Get()->IsShuttingDown();
 }
 
 #if BUILDFLAG(IS_MAC)

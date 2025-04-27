@@ -15,22 +15,6 @@
 #include "ui/base/metadata/metadata_impl_macros.h"
 #include "ui/views/widget/widget_delegate.h"
 
-#if BUILDFLAG(IS_WIN)
-namespace {
-ui::mojom::WindowShowState GetShowState(views::Widget* widget) {
-  if (widget->IsMaximized()) {
-    return ui::mojom::WindowShowState::kMaximized;
-  } else if (widget->IsMinimized()) {
-    return ui::mojom::WindowShowState::kMinimized;
-  } else if (widget->IsFullscreen()) {
-    return ui::mojom::WindowShowState::kFullscreen;
-  }
-
-  return ui::mojom::WindowShowState::kNormal;
-}
-}  // namespace
-#endif
-
 UntitledWidget::UntitledWidget(UntitledWidgetDelegate* delegate,
                                Profile* profile)
     : delegate_(delegate),

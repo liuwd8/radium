@@ -79,11 +79,6 @@ class UntitledWidget : public views::Widget {
 #endif
   std::optional<ui::ColorId> title_bar_background_color_;
   int title_bar_background_height_;
-
-#if BUILDFLAG(IS_WIN)
-  ui::mojom::WindowShowState last_show_state_ =
-      ui::mojom::WindowShowState::kDefault;
-#endif
 };
 
 #endif  // RADIUM_BROWSER_UI_VIEWS_FRAME_UNTITLED_WIDGET_H_
