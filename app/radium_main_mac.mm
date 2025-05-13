@@ -26,7 +26,8 @@ void SetUpBundleOverrides() {
         radium::GetFrameworkBundlePath());
 
     NSBundle* base_bundle = radium::OuterAppBundle();
-    base::apple::SetBaseBundleID(base_bundle.bundleIdentifier.UTF8String);
+    base::apple::SetBaseBundleIDOverride(
+        base::SysNSStringToUTF8(base_bundle.bundleIdentifier));
 
     base::FilePath child_exe_path =
         radium::GetFrameworkBundlePath().Append("Helpers").Append(
