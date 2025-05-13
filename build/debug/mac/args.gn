@@ -1,2 +1,4 @@
 # Set build arguments here. See `gn help buildargs`.
 import("//radium/build/debug/all.gn")
+
+load_webui_from_disk = true
