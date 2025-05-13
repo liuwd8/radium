@@ -143,7 +143,7 @@ if (!is_android && !is_mac) {
     deps = [ "//base" ]
 
     data = [ "$root_out_dir/radium_resources.pak" ]
-    data_deps = [ "//radium/app/version_assembly:version_assembly_manifest" ]
+    data_deps = []
     defines = []
 
     if (is_win) {
@@ -175,6 +175,8 @@ if (!is_android && !is_mac) {
         "//sandbox/policy/mojom",
         "//third_party/crashpad/crashpad/util",
       ]
+
+      data_deps += [ "//radium/app/version_assembly:version_assembly_manifest" ]
 
       if (win_console_app) {
         defines += [ "WIN_CONSOLE_APP" ]

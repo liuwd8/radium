@@ -47,16 +47,6 @@ void CancelTerminate() {
   [NSApp cancelTerminate:nil];
 }
 
-// A convenience function that activates `mode` if not already active in
-// `state`.
-void AddAccessibilityModeFlagsIfAbsent(
-    content::BrowserAccessibilityState* state,
-    ui::AXMode mode) {
-  if (!state->GetAccessibilityMode().has_mode(mode.flags())) {
-    state->AddAccessibilityModeFlags(mode);
-  }
-}
-
 }  // namespace radium_browser_application_mac
 
 namespace {
@@ -141,7 +131,10 @@ std::string DescriptionForNSEvent(NSEvent* event) {
   base::ObserverList<content::NativeEventProcessorObserver>::Unchecked
       _observers;
   BOOL _handlingSendEvent;
-  std::unique_ptr<content::ScopedAccessibilityMode> _scoped_accessibility_mode;
+  std::unique_ptr<content::ScopedAccessibilityMode>
+      _scoped_accessibility_mode_voiceover;
+  std::unique_ptr<content::ScopedAccessibilityMode>
+      _scoped_accessibility_mode_general;
 }
 
 + (void)initialize {
@@ -429,13 +422,15 @@ std::string DescriptionForNSEvent(NSEvent* event) {
 
 - (void)enableScreenReaderCompleteMode:(BOOL)enable {
   if (enable) {
-    if (!_scoped_accessibility_mode) {
-      _scoped_accessibility_mode =
+    if (!_scoped_accessibility_mode_voiceover) {
+      _scoped_accessibility_mode_voiceover =
           content::BrowserAccessibilityState::GetInstance()
-              ->CreateScopedModeForProcess(ui::kAXModeComplete);
+              ->CreateScopedModeForProcess(ui::kAXModeComplete |
+                                           ui::AXMode::kFromPlatform |
+                                           ui::AXMode::kScreenReader);
     }
   } else {
-    _scoped_accessibility_mode.reset();
+    _scoped_accessibility_mode_voiceover.reset();
   }
 }
 
@@ -528,19 +523,15 @@ std::string DescriptionForNSEvent(NSEvent* event) {
   // recommends turning on a11y when an AT accesses the 'accessibilityRole'
   // property. This function is accessed frequently, so we only change the
   // accessibility state when accessibility is already disabled.
-  content::BrowserAccessibilityState* accessibility_state =
-      content::BrowserAccessibilityState::GetInstance();
-
-  if (_sonomaAccessibilityRefinementsAreActive) {
-    if (!_voiceOverEnabled) {
-      radium_browser_application_mac::AddAccessibilityModeFlagsIfAbsent(
-          accessibility_state, ui::AXMode::kNativeAPIs);
-    }
-  } else {
-    if (!accessibility_state->GetAccessibilityMode().has_mode(
-            ui::kAXModeBasic.flags())) {
-      accessibility_state->AddAccessibilityModeFlags(ui::kAXModeBasic);
-    }
+  if (!_scoped_accessibility_mode_general &&
+      !_scoped_accessibility_mode_voiceover) {
+    ui::AXMode target_mode = _sonomaAccessibilityRefinementsAreActive
+                                 ? ui::AXMode::kNativeAPIs
+                                 : ui::kAXModeBasic;
+    _scoped_accessibility_mode_general =
+        content::BrowserAccessibilityState::GetInstance()
+            ->CreateScopedModeForProcess(target_mode |
+                                         ui::AXMode::kFromPlatform);
   }
 
   return [super accessibilityRole];

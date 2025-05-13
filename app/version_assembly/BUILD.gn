@@ -32,7 +32,7 @@ windows_manifest("radium_exe_manifest") {
     sources += [ segment_heap_manifest ]
   }
 
-  deps = [ ":radium_exe_version_manifest" ]
+  public_deps = [ ":radium_exe_version_manifest" ]
 }
 
 # Generates the manifest for the version assembly, which is the versioned
