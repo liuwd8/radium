@@ -143,6 +143,8 @@ static_library("browser") {
       "browser_process_platform_part_android.h",
       "radium_browser_main_parts_android.cc",
       "radium_browser_main_parts_android.h",
+      "radium_content_browser_client_android.cc",
+      "radium_content_browser_client_android.h",
     ]
 
     deps += [

@@ -36,6 +36,9 @@ static_library("common_lib") {
     "radium_result_codes.cc",
     "radium_result_codes.h",
   ]
+  if (is_android) {
+    sources += [ "radium_descriptors_android.h" ]
+  }
 
   if (is_posix && !is_android) {
     sources += [

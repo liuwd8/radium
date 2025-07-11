@@ -13,7 +13,6 @@
 #include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "base/win/scoped_co_mem.h"
-#include "components/nacl/common/nacl_switches.h"
 #include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths_internal.h"
 #include "radium/common/radium_switches.h"

@@ -19,6 +19,7 @@ const wchar_t kUserDataDirname[] = L"User Data";
 
 extern const base::FilePath::CharType kCacheDirname[];
 extern const base::FilePath::CharType kCookieFilename[];
+extern const base::FilePath::CharType kDeviceBoundSessionsFilename[];
 extern const base::FilePath::CharType kBrowserProcessExecutableName[];
 extern const base::FilePath::CharType kHelperProcessExecutableName[];
 #if BUILDFLAG(IS_MAC)

@@ -14,6 +14,7 @@
 #include "ui/base/win/hwnd_metrics.h"
 #include "ui/display/win/dpi.h"
 #include "ui/display/win/screen_win.h"
+#include "ui/gfx/color_utils.h"
 #include "ui/gfx/scoped_canvas.h"
 #include "ui/views/widget/widget_delegate.h"
 #include "ui/views/win/hwnd_util.h"
@@ -118,8 +119,8 @@ void UntitledWidgetFrameViewWin::OnPaint(gfx::Canvas* canvas) {
     // area. When restored it uses the system dsf instead of the per-monitor dsf
     // to match Windows' behavior.
     const int y = untitled_widget()->IsMaximized()
-                      ? ui::GetFrameThickness(MonitorFromWindow(
-                            HWNDForView(this), MONITOR_DEFAULTTONEAREST))
+                      ? ui::GetFrameThicknessFromWindow(
+                            HWNDForView(this), MONITOR_DEFAULTTONEAREST)
                       : std::floor(display::win::GetDPIScale());
 
     // Draw the top of the accent border.

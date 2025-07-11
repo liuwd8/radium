@@ -5,8 +5,6 @@
 #ifndef RADIUM_APP_ANDROID_RADIUM_JNI_ONLOAD_H_
 #define RADIUM_APP_ANDROID_RADIUM_JNI_ONLOAD_H_
 
-#include "base/android/base_jni_onload.h"
-
 namespace android {
 
 bool OnJNIOnLoadInit();

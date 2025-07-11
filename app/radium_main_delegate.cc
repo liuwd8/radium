@@ -6,7 +6,6 @@
 
 #include "base/command_line.h"
 #include "base/features.h"
-#include "base/functional/overloaded.h"
 #include "base/i18n/rtl.h"
 #include "base/logging.h"
 #include "base/metrics/histogram_macros.h"
@@ -53,7 +52,7 @@
 #include "ui/ozone/public/ozone_platform.h"
 
 #if BUILDFLAG(IS_ANDROID)
-#include "radium/common/radium_descriptors.h"
+#include "radium/common/radium_descriptors_android.h"
 #endif
 
 #if BUILDFLAG(IS_LINUX)
@@ -146,10 +145,8 @@ bool IsSandboxedProcess() {
 void AdjustLinuxOOMScore(const std::string& process_type) {
   int score = -1;
 
-  if (process_type == switches::kPpapiPluginProcess) {
-    score = content::kPluginOomScore;
-  } else if (process_type == switches::kUtilityProcess ||
-             process_type == switches::kGpuProcess) {
+  if (process_type == switches::kUtilityProcess ||
+      process_type == switches::kGpuProcess) {
     score = content::kMiscOomScore;
   } else if (process_type == switches::kZygoteProcess || process_type.empty()) {
     // For zygotes and unlabeled process types, we want to still make
@@ -183,12 +180,14 @@ bool SubprocessNeedsResourceBundle(const std::string& process_type) {
       process_type == switches::kZygoteProcess ||
 #endif
 #if BUILDFLAG(IS_MAC)
+      // Mac needs them too for scrollbar related images and for sandbox
+      // profiles.
       process_type == switches::kGpuProcess ||
 #endif
-      process_type == switches::kPpapiPluginProcess ||
       process_type == switches::kRendererProcess ||
       process_type == switches::kUtilityProcess;
 }
+
 #if BUILDFLAG(IS_POSIX)
 
 #if !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_ANDROID)
@@ -443,8 +442,7 @@ void RadiumMainDelegate::PreSandboxStartup() {
     // browser process as a command line flag.
     DUMP_WILL_BE_CHECK(command_line.HasSwitch(switches::kLang) ||
                        process_type == switches::kZygoteProcess ||
-                       process_type == switches::kGpuProcess ||
-                       process_type == switches::kPpapiPluginProcess);
+                       process_type == switches::kGpuProcess);
 
     // TODO(markusheintz): The command line flag --lang is actually processed
     // by the CommandLinePrefStore, and made available through the PrefService
@@ -468,22 +466,28 @@ void RadiumMainDelegate::PreSandboxStartup() {
     // Therefore file descriptors to the .pak files that we need are passed in
     // at process creation time.
     auto* global_descriptors = base::GlobalDescriptors::GetInstance();
-    int pak_fd = global_descriptors->Get(kAndroidLocalePakDescriptor);
+    int pak_fd =
+        global_descriptors->Get(kAndroidMainWebViewLocalePakDescriptor);
     base::MemoryMappedFile::Region pak_region =
-        global_descriptors->GetRegion(kAndroidLocalePakDescriptor);
+        global_descriptors->GetRegion(kAndroidMainWebViewLocalePakDescriptor);
     ui::ResourceBundle::InitSharedInstanceWithPakFileRegion(base::File(pak_fd),
                                                             pak_region);
 
-    // Load secondary locale .pak file if it exists.
-    pak_fd = global_descriptors->MaybeGet(kAndroidSecondaryLocalePakDescriptor);
-    if (pak_fd != -1) {
-      pak_region =
-          global_descriptors->GetRegion(kAndroidSecondaryLocalePakDescriptor);
-      ui::ResourceBundle::GetSharedInstance()
-          .LoadSecondaryLocaleDataWithPakFileRegion(base::File(pak_fd),
-                                                    pak_region);
+    int additional_locale_pak_keys[] = {
+        kAndroidMainNonWebViewLocalePakDescriptor,
+        kAndroidFallbackWebViewLocalePakDescriptor,
+        kAndroidFallbackNonWebViewLocalePakDescriptor,
+    };
+    for (int additional_locale_pak_key : additional_locale_pak_keys) {
+      // Load additional locale .pak file if it exists.
+      pak_fd = global_descriptors->MaybeGet(additional_locale_pak_key);
+      if (pak_fd != -1) {
+        pak_region = global_descriptors->GetRegion(additional_locale_pak_key);
+        ui::ResourceBundle::GetSharedInstance()
+            .LoadAdditionalLocaleDataWithPakFileRegion(base::File(pak_fd),
+                                                       pak_region);
+      }
     }
-
     int extra_pak_keys[] = {
         kAndroidChrome100PercentPakDescriptor,
         kAndroidUIResourcesPakDescriptor,

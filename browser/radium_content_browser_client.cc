@@ -62,9 +62,10 @@
 #include "components/crash/content/browser/crash_memory_metrics_collector_android.h"
 #include "radium/browser/android/devtools_manager_delegate_android.h"
 #include "radium/browser/radium_browser_main_parts_android.h"
+#include "radium/browser/radium_content_browser_client_android.h"
 #include "radium/browser/tab/tab_android.h"
 #include "radium/browser/tab/tab_web_contents_delegate_android.h"
-#include "radium/common/radium_descriptors.h"
+#include "radium/common/radium_descriptors_android.h"
 #include "ui/base/resource/resource_bundle_android.h"
 #include "ui/base/ui_base_paths.h"
 #endif
@@ -435,14 +436,7 @@ void RadiumContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
   fd = ui::GetCommonResourcesPackFd(&region);
   mappings->ShareWithRegion(kAndroidChrome100PercentPakDescriptor, fd, region);
 
-  fd = ui::GetLocalePackFd(&region);
-  mappings->ShareWithRegion(kAndroidLocalePakDescriptor, fd, region);
-
-  // Optional secondary locale .pak file.
-  fd = ui::GetSecondaryLocalePackFd(&region);
-  if (fd != -1) {
-    mappings->ShareWithRegion(kAndroidSecondaryLocalePakDescriptor, fd, region);
-  }
+  GetMappedLocalePacksForChildProcess(mappings);
 
   base::FilePath app_data_path;
   base::PathService::Get(base::DIR_ANDROID_APP_DATA, &app_data_path);

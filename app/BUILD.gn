@@ -8,18 +8,17 @@ import("//tools/grit/grit_args.gni")
 import("//tools/grit/grit_rule.gni")
 
 group("resources") {
-  deps = [ ":strings" ]
+  deps = [ ":radium_strings" ]
 }
 
 xtb_locales = support_locales - [ "en-US" ]
 
-grit("strings") {
+grit_strings("radium_strings") {
   source = "radium_strings.grd"
   defines = radium_grit_defines
   output_dir = "$root_gen_dir/radium"
-  outputs = [ "grit/radium_strings.h" ] +
-            process_file_template(support_locales,
-                                  [ "radium_strings_{{source_name_part}}.pak" ])
+  outputs = [ "grit/radium_strings.h" ]
+  locales = support_locales
 }
 
 action("generate_xtb_file") {
@@ -47,7 +46,11 @@ action("generate_xtb_file") {
 source_set("command_ids") {
   sources = [ "radium_command_ids.h" ]
   public_deps = [ "//build:branding_buildflags" ]
-  deps = [ "//ui/base:constants" ]
+  deps = [
+    "//build:chromeos_buildflags",
+    "//services/screen_ai/buildflags:buildflags",
+    "//ui/base:constants",
+  ]
 }
 
 # On Windows, links radium_dll.rc. On other platforms, does nothing so you can

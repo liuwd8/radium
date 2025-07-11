@@ -12,11 +12,11 @@ CookieEncryptionProviderImpl::CookieEncryptionProviderImpl() = default;
 CookieEncryptionProviderImpl::~CookieEncryptionProviderImpl() = default;
 
 void CookieEncryptionProviderImpl::GetEncryptor(GetEncryptorCallback callback) {
-  subscriptions_.push_back(
-      BrowserProcess::Get()->os_crypt_async()->GetInstance(base::BindOnce(
-          [](GetEncryptorCallback callback, os_crypt_async::Encryptor encryptor,
-             bool result) { std::move(callback).Run(std::move(encryptor)); },
-          std::move(callback))));
+  BrowserProcess::Get()->os_crypt_async()->GetInstance(base::BindOnce(
+      [](GetEncryptorCallback callback, os_crypt_async::Encryptor encryptor) {
+        std::move(callback).Run(std::move(encryptor));
+      },
+      std::move(callback)));
 }
 
 mojo::PendingRemote<network::mojom::CookieEncryptionProvider>

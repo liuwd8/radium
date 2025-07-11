@@ -48,11 +48,16 @@ public class RadiumApplication extends Application {
         super.attachBaseContext(base);
         ContextUtils.initApplicationContext(this);
 
-        Log.i(TAG,
-                "version=%s (%s) minSdkVersion=%s isBundle=%s processName=%s isIsolatedProcess=%s",
-                VersionConstants.PRODUCT_VERSION, BuildConfig.VERSION_CODE,
-                BuildConfig.MIN_SDK_VERSION, BundleUtils.isBundle(), ContextUtils.getProcessName(),
-                isIsolatedProcess);
+        Log.i(
+                TAG,
+                "version=%s (%s) minSdkVersion=%s processName=%s isIsolatedProcess=%s splits=%s",
+                VersionConstants.PRODUCT_VERSION,
+                BuildConfig.VERSION_CODE,
+                BuildConfig.MIN_SDK_VERSION,
+                ContextUtils.getProcessName(),
+                isIsolatedProcess,
+                // BundleUtils uses getApplicationContext, so logging after we init it.
+                BundleUtils.getInstalledSplitNamesForLogging());
 
         // if (isBrowserProcess) {
         // // This must come as early as possible to avoid early loading of the native

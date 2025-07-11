@@ -234,21 +234,30 @@ void UpdateCookieSettings(Profile* profile, ContentSettingsType type) {
 std::unique_ptr<net::ClientCertStore> GetWrappedCertStore(
     Profile* profile,
     std::unique_ptr<net::ClientCertStore> platform_store) {
-  if (!profile || !client_certificates::features::
-                      IsManagedClientCertificateForUserEnabled()) {
+  client_certificates::CertificateProvisioningService*
+      profile_provisioning_service = nullptr;
+  if (profile) {
+    // profile_provisioning_service = client_certificates::
+    //     CertificateProvisioningServiceFactory::GetForProfile(profile);
+  }
+
+  client_certificates::CertificateProvisioningService*
+      browser_provisioning_service = nullptr;
+  // if (client_certificates::features::
+  //         IsManagedBrowserClientCertificateEnabled()) {
+  //   browser_provisioning_service =
+  //       g_browser_process->browser_policy_connector()
+  //           ->chrome_browser_cloud_management_controller()
+  //           ->GetCertificateProvisioningService();
+  // }
+
+  if (!browser_provisioning_service && !profile_provisioning_service) {
     return platform_store;
   }
 
-  // auto* provisioning_service =
-  //     client_certificates::CertificateProvisioningServiceFactory::GetForProfile(
-  //         profile);
-  // if (!provisioning_service) {
-  //   return platform_store;
-  // }
-
-  // return client_certificates::ClientCertificatesService::Create(
-  //     provisioning_service, std::move(platform_store));
-  return platform_store;
+  return client_certificates::ClientCertificatesService::Create(
+      profile_provisioning_service, browser_provisioning_service,
+      std::move(platform_store));
 }
 #endif  // BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX)
 
@@ -1025,9 +1034,7 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
       ->system_network_context_manager()
       ->ConfigureDefaultNetworkContextParams(network_context_params);
 
-  network_context_params->enable_zstd =
-      BrowserProcess::Get()->local_state()->GetBoolean(
-          prefs::kZstdContentEncodingEnabled);
+  network_context_params->enable_zstd = true;
   network_context_params->accept_language = ComputeAcceptLanguage();
   network_context_params->enable_referrers = enable_referrers_.GetValue();
 
@@ -1124,6 +1131,8 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
         base::FilePath(radium::kTransportSecurityPersisterFilename);
     network_context_params->file_paths->sct_auditing_pending_reports_file_name =
         base::FilePath(radium::kSCTAuditingPendingReportsFileName);
+    network_context_params->file_paths->device_bound_sessions_database_name =
+        base::FilePath(radium::kDeviceBoundSessionsFilename);
   }
   const base::Value::List& hsts_policy_bypass_list =
       profile_->GetPrefs()->GetList(prefs::kHSTSPolicyBypassList);
@@ -1150,6 +1159,7 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
   // }
 
   network_context_params->ct_policy = GetCTPolicy();
+  cert_verifier_creation_params->ct_policy = GetCTPolicy();
 
   // if (domain_reliability::ShouldCreateService()) {
   //   network_context_params->enable_domain_reliability = true;
@@ -1269,8 +1279,9 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
       profile_->GetPrefs()->GetBoolean(
           prefs::kAccessControlAllowMethodsInCORSPreflightSpecConformant);
 
-  // IpProtectionCoreHost* ipp_core_host = IpProtectionCoreHost::Get(profile_);
-  // if (ipp_core_host) {
+  // IpProtectionCoreHost* ipp_core_host =
+  //     IpProtectionCoreHostFactory::GetForProfile(profile_);
+  // if (NeedsIpProtection(ipp_core_host, *profile_)) {
   //   ipp_core_host->AddNetworkService(
   //       network_context_params->ip_protection_core_host
   //           .InitWithNewPipeAndPassReceiver(),
@@ -1278,6 +1289,13 @@ void ProfileNetworkContextService::ConfigureNetworkContextParamsInternal(
   //           .InitWithNewPipeAndPassRemote());
   //   network_context_params->enable_ip_protection =
   //       ipp_core_host->IsIpProtectionEnabled();
+  //   network_context_params->ip_protection_incognito =
+  //       profile_->IsIncognitoProfile();
+  //   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+  //           network::switches::kStoreProbabilisticRevealTokens)) {
+  //     network_context_params->ip_protection_data_directory =
+  //         profile_->GetPath();
+  //   }
   // }
 
   network_context_params->device_bound_sessions_enabled =

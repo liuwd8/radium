@@ -63,7 +63,7 @@ group("all") {
 }
 
 group("strings") {
-  public_deps = [ "//radium/app:strings" ]
+  public_deps = [ "//radium/app:radium_strings" ]
 }
 
 if (!is_mac) {
@@ -436,7 +436,7 @@ if (is_win) {
           "main",
         ] + support_locales
 
-    deps = [ "//radium/app:strings" ]
+    deps = [ "//radium/app:radium_strings" ]
   }
 
   foreach(locale, support_locales_as_apple_outputs) {

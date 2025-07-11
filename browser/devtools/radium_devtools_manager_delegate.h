@@ -5,6 +5,8 @@
 #ifndef RADIUM_BROWSER_DEVTOOLS_RADIUM_DEVTOOLS_MANAGER_DELEGATE_H_
 #define RADIUM_BROWSER_DEVTOOLS_RADIUM_DEVTOOLS_MANAGER_DELEGATE_H_
 
+#include <map>
+
 #include "content/public/browser/devtools_manager_delegate.h"
 
 class RadiumDevToolsSession;
