@@ -1,4 +1,4 @@
-From af8f891d63cf2e35c95a97a3502b6a2f03dbf7e1 Mon Sep 17 00:00:00 2001
+From f43efda0da7c15c3faa52fcd65543cfc9fe082bf Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:55 +0800
 Subject: [PATCH 3/4] Resource file changes
@@ -9,34 +9,34 @@ Subject: [PATCH 3/4] Resource file changes
  2 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
-index 78d72ec8ed37f..a2b7a38fdb269 100644
+index f24d7bfb0baa8..22b35a87009cc 100644
 --- a/tools/gritsettings/resource_ids.spec
 +++ b/tools/gritsettings/resource_ids.spec
-@@ -1531,4 +1531,19 @@
+@@ -1546,4 +1546,19 @@
 
    # Thinking about appending to the end?
    # Please read the header and find the right section above instead.
 +
-+  ,"radium/app/radium_strings.grd": {
++  "radium/app/radium_strings.grd": {
 +    "messages": [20000],
 +  },
 +  "radium/app/theme/theme_resources.grd": {
 +    "structures": [20020],
 +  },
 +  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/webui_gallery/resources/resources.grd": {
-+    "META": {"sizes": {"includes": [200],}},
++    "META": {"sizes": {"includes": [100],}},
 +    "includes": [20040],
 +  },
 +  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/example/resources/resources.grd": {
-+    "META": {"sizes": {"includes": [200],}},
++    "META": {"sizes": {"includes": [100],}},
 +    "includes": [20060],
 +  },
  }
 diff --git a/ui/base/resource/resource_bundle_android.cc b/ui/base/resource/resource_bundle_android.cc
-index 7d9b6242e571c..c9bcc4896506c 100644
+index 1589ab81ed12e..88a1fe4dd7760 100644
 --- a/ui/base/resource/resource_bundle_android.cc
 +++ b/ui/base/resource/resource_bundle_android.cc
-@@ -90,9 +90,9 @@ std::unique_ptr<DataPack> LoadDataPackFromLocalePak(
+@@ -249,9 +249,9 @@ bool LoadLocaleResourcesForLocaleAndGender(
  void ResourceBundle::LoadCommonResources() {
    base::FilePath disk_path;
    base::PathService::Get(ui::DIR_RESOURCE_PAKS_ANDROID, &disk_path);

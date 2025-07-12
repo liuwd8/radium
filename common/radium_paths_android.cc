@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "base/files/file_path.h"
-#include "base/notreached.h"
+#include "base/notimplemented.h"
 #include "base/path_service.h"
 #include "radium/common/radium_paths_internal.h"
 

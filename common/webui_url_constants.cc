@@ -4,6 +4,8 @@
 
 #include "radium/common/webui_url_constants.h"
 
+#include <array>
+
 #include "third_party/blink/public/common/chrome_debug_urls.h"
 
 base::span<const base::cstring_view> RadiumDebugURLs() {

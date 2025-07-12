@@ -19,7 +19,7 @@ public class ApplicationLifetime {
         void onTerminate(boolean restart);
     }
 
-    private static ObserverList<Observer> sObservers = new ObserverList<Observer>();
+    private static final ObserverList<Observer> sObservers = new ObserverList<>();
 
     /**
      * Adds an observer to watch for application termination.

@@ -30,7 +30,6 @@ class CookieEncryptionProviderImpl
   mojo::PendingRemote<network::mojom::CookieEncryptionProvider> BindNewRemote();
 
  private:
-  std::list<base::CallbackListSubscription> subscriptions_;
   mojo::ReceiverSet<network::mojom::CookieEncryptionProvider> receivers_;
 };
 

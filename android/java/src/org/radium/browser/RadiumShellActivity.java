@@ -53,7 +53,11 @@ public class RadiumShellActivity extends AppCompatActivity {
         mStartupUrl = "radium://example";
 
         BrowserStartupController.getInstance().startBrowserProcessesAsync(
-                LibraryProcessType.PROCESS_BROWSER, true, false,
+                LibraryProcessType.PROCESS_BROWSER,
+                true,
+                false,
+                false,
+                false,
                 new BrowserStartupController.StartupCallback() {
                     @Override
                     public void onSuccess() {

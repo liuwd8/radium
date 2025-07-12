@@ -6,6 +6,7 @@
 
 #include "components/keep_alive_registry/scoped_keep_alive.h"
 #include "content/public/browser/devtools_agent_host.h"
+#include "content/public/browser/web_contents.h"
 #include "radium/browser/devtools/devtools_browser_context_manager.h"
 #include "radium/browser/devtools/radium_devtools_session.h"
 #include "ui/views/controls/webview/webview.h"

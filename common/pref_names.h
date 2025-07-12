@@ -252,10 +252,6 @@ inline constexpr char kSSLVersionMin[] = "ssl.version_min";
 // are "tls1.2", "tls1.3"
 inline constexpr char kSSLVersionMax[] = "ssl.version_max";
 
-// Boolean that specifies whether Zstd Content-Encoding is enabled.
-inline constexpr char kZstdContentEncodingEnabled[] =
-    "net.zstd_content_encoding_enabled";
-
 }  // namespace prefs
 
 #endif  // RADIUM_COMMON_PREF_NAMES_H_

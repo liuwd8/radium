@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 
+#include "base/notimplemented.h"
 #include "base/run_loop.h"
 #include "base/sequence_checker.h"
 #include "base/synchronization/waitable_event.h"
