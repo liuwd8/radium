@@ -8,10 +8,12 @@
 
 #include "base/notreached.h"
 #include "base/trace_event/typed_macros.h"
+#include "content/public/browser/web_contents.h"
 #include "radium/browser/ui/views/dragging/drag_context.h"
 #include "radium/browser/ui/window_finder.h"
 #include "ui/display/screen.h"
 #include "ui/views/view.h"
+#include "ui/views/view_tracker.h"
 #include "ui/views/widget/widget.h"
 
 #if defined(USE_AURA)
@@ -32,7 +34,21 @@ gfx::Rect GetViewInScreenBounds(const views::View* context) {
 }  // namespace
 
 DragController::DragController() = default;
-DragController::~DragController() = default;
+DragController::~DragController() {
+  widget_observation_.Reset();
+
+  if (current_state_ == DragState::kDraggingWindow) {
+    VLOG(1) << "EndMoveLoop in TabDragController dtor";
+    GetAttachedWidget()->EndMoveLoop();
+  }
+
+  if (event_source_ == ui::mojom::DragEventSource::kTouch) {
+    DragContext* capture_context =
+        attached_context_ ? attached_context_.get() : source_context_.get();
+    capture_context->GetWidget()->ReleaseCapture();
+  }
+  CHECK(!IsInObserverList());
+}
 
 DragController::Liveness DragController::Init(
     DragContext* source_context,
@@ -80,19 +96,63 @@ DragController::Liveness DragController::Init(
     //   }
     // }
 
-    current_state_ = DragState::kDraggingTabs;
     StartDrag();
+
+    if (source_context_->IsDragWindow()) {
+      // Drag the window relative to `start_point_in_screen_` to pretend that
+      // this was the plan all along.
+      const gfx::Vector2d drag_offset =
+          start_point_in_screen_ -
+          attached_context_->GetWidget()->GetWindowBoundsInScreen().origin();
+      return RunMoveLoop(point_in_screen, drag_offset);
+    }
+
+    current_state_ = DragState::kDraggingTabs;
   }
 
   return ContinueDragging(point_in_screen);
 }
 
 void DragController::EndDrag() {
+  // End the move loop if we're in one. Note that the drag will end (just below)
+  // before the move loop actually exits.
+  if (current_state_ == DragState::kDraggingWindow && in_move_loop_) {
+    VLOG(1) << "EndMoveLoop in EndDrag";
+    GetAttachedWidget()->EndMoveLoop();
+  }
+
+  // DragState previous_state = current_state_;
+  current_state_ = DragState::kStopped;
+
   bring_to_front_timer_.Stop();
   // todo
   DragContext* owning_context =
       attached_context_ ? attached_context_.get() : source_context_.get();
   owning_context->DestroyDragController();
+}
+
+void DragController::OnWidgetBoundsChanged(views::Widget* widget,
+                                           const gfx::Rect& new_bounds) {
+  TRACE_EVENT1("views", "DragController::OnWidgetBoundsChanged", "new_bounds",
+               new_bounds.ToString());
+#if defined(USE_AURA)
+  aura::Env* env = aura::Env::GetInstance();
+  // WidgetBoundsChanged happens as a step of ending a drag, but Drag() doesn't
+  // have to be called -- GetCursorScreenPoint() may return an incorrect
+  // location in such case and causes a weird effect. See
+  // https://crbug.com/914527 for the details.
+  if (!env->IsMouseButtonDown() && !env->is_touch_down()) {
+    return;
+  }
+#endif
+  // ignore the Liveness; it's fine if Drag destroys `this`.
+  std::ignore = Drag(GetCursorScreenPoint());
+
+  // !! N.B. `this` may be deleted here !!
+}
+
+void DragController::OnWidgetDestroyed(views::Widget* widget) {
+  widget_observation_.Reset();
 }
 
 void DragController::AttachImpl() {
@@ -165,6 +225,36 @@ bool DragController::CanAttachTo(gfx::NativeWindow window) {
   return attached_context_->CanAttachTo(window);
 }
 
+DragController::Liveness DragController::SaveFocus() {
+  base::WeakPtr<DragController> ref(weak_factory_.GetWeakPtr());
+  DCHECK(source_context_);
+
+  old_focused_view_tracker_->SetView(
+      source_context_->GetWidget()->GetFocusManager()->GetFocusedView());
+  source_context_->GetWidget()->GetFocusManager()->ClearFocus();
+
+  // WARNING: we may have been deleted.
+  return ref ? Liveness::ALIVE : Liveness::DELETED;
+}
+
+void DragController::RestoreFocus() {
+  if (attached_context_ != source_context_) {
+    // if (is_dragging_new_browser_) {
+    //   content::WebContents* active_contents =
+    //       drag_data_.source_dragged_contents();
+    //   if (active_contents && !active_contents->FocusLocationBarByDefault()) {
+    //     active_contents->Focus();
+    //   }
+    // }
+    return;
+  }
+  views::View* old_focused_view = old_focused_view_tracker_->view();
+  if (!old_focused_view || !old_focused_view->GetFocusManager()) {
+    return;
+  }
+  old_focused_view->GetFocusManager()->SetFocusedView(old_focused_view);
+}
+
 bool DragController::CanStartDrag(const gfx::Point& point_in_screen) const {
   // Determine if the mouse has moved beyond a minimum elasticity distance in
   // any direction from the starting point.
@@ -189,10 +279,10 @@ bool DragController::CanStartDrag(const gfx::Point& point_in_screen) const {
   }
 
   if (current_state_ == DragState::kDraggingWindow) {
-    // bring_to_front_timer_.Start(
-    //     FROM_HERE, base::Milliseconds(750),
-    //     base::BindOnce(&TabDragController::BringWindowUnderPointToFront,
-    //                    base::Unretained(this), point_in_screen));
+    bring_to_front_timer_.Start(
+        FROM_HERE, base::Milliseconds(750),
+        base::BindOnce(&DragController::BringWindowUnderPointToFront,
+                       base::Unretained(this), point_in_screen));
   }
 
   if (current_state_ == DragState::kDraggingTabs) {
@@ -204,6 +294,13 @@ bool DragController::CanStartDrag(const gfx::Point& point_in_screen) const {
 std::tuple<std::unique_ptr<DragController>,
            std::vector<std::unique_ptr<views::View>>>
 DragController::Detach(ReleaseCapture release_capture) {
+  TRACE_EVENT1("views", "DragController::Detach", "release_capture",
+               release_capture);
+
+  // Detaching may trigger the Widget bounds to change. Such bounds changes
+  // should be ignored as they may lead to reentrancy and bad things happening.
+  widget_observation_.Reset();
+
   // Release ownership of the drag controller and mouse capture. When we
   // reattach ownership is transferred.
   std::unique_ptr<DragController> me =
@@ -297,7 +394,63 @@ DragController::Liveness DragController::DragContainerToNewWidget(
   if (!target_context) {
     return DetachIntoNewWidgetAndRunMoveLoop(point_in_screen);
   }
-  // todo...
+
+  if (current_state_ == DragState::kDraggingWindow) {
+    // ReleaseCapture() is going to result in calling back to us (because it
+    // results in a move). That'll cause all sorts of problems.  Reset the
+    // observer so we don't get notified and process the event.
+#if BUILDFLAG(IS_CHROMEOS)
+    widget_observation_.Reset();
+    move_loop_widget_ = nullptr;
+#endif  // BUILDFLAG(IS_CHROMEOS)
+    views::Widget* widget = GetAttachedWidget();
+    // Disable animations so that we don't see a close animation on aero.
+    widget->SetVisibilityChangedAnimationsEnabled(false);
+    if (can_release_capture_) {
+      widget->ReleaseCapture();
+    } else {
+      CHECK_EQ(SetCapture(target_context), Liveness::ALIVE);
+    }
+
+#if !BUILDFLAG(IS_LINUX)
+    // EndMoveLoop is going to snap the window back to its original location.
+    // Hide it so users don't see this. Hiding a window in Linux aura causes
+    // it to lose capture so skip it.
+    widget->Hide();
+#endif
+    // Does not immediately exit the move loop - that only happens when control
+    // returns to the event loop. The rest of this method will complete before
+    // control returns to RunMoveLoop().
+    VLOG(1) << "EndMoveLoop in DragBrowserToNewTabStrip";
+    widget->EndMoveLoop();
+
+    // Ideally we would always swap the tabs now, but on non-ash Windows, it
+    // seems that running the move loop implicitly activates the window when
+    // done, leading to all sorts of flicker. So, on non-ash Windows, instead
+    // we process the move after the loop completes. But on ChromeOS Ash, we
+    // can do tab swapping now to avoid the tab flashing issue
+    // (crbug.com/116329).
+    if (can_release_capture_) {
+      drag_views_to_attach_to_after_exit_ = target_context;
+      current_state_ = DragState::kWaitingToDragTabs;
+    } else {
+      // We already transferred ownership of `this` above, before we released
+      // capture.
+      DetachAndAttachToNewContext(DONT_RELEASE_CAPTURE, target_context);
+
+      // Enter kWaitingToExitRunLoop until we actually have exited the nested
+      // run loop. Otherwise, we might attempt to start another nested run loop,
+      // which will CHECK. See https://crbug.com/41493121.
+      current_state_ = DragState::kWaitingToExitRunLoop;
+
+      // Move the tabs into position.
+      // StartDraggingTabsSession(false, point_in_screen);
+      attached_context_->GetWidget()->Activate();
+    }
+
+    return Liveness::ALIVE;
+  }
+
   return Liveness::ALIVE;
 }
 
@@ -406,6 +559,10 @@ DragController::Liveness DragController::RunMoveLoop(
   move_loop_widget_->SetBounds(
       gfx::Rect(point_in_screen - drag_offset, move_loop_widget_->GetSize()));
 
+  // RunMoveLoop can be called reentrantly from within another RunMoveLoop,
+  // in which case the observation is already established.
+  widget_observation_.Reset();
+  widget_observation_.Observe(move_loop_widget_.get());
   current_state_ = DragState::kDraggingWindow;
   base::WeakPtr<DragController> ref(weak_factory_.GetWeakPtr());
   if (can_release_capture_) {
@@ -444,6 +601,7 @@ DragController::Liveness DragController::RunMoveLoop(
   }
 
   in_move_loop_ = false;
+  widget_observation_.Reset();
   move_loop_widget_ = nullptr;
 
   if (current_state_ == DragState::kWaitingToExitRunLoop) {
@@ -467,6 +625,39 @@ DragController::Liveness DragController::RunMoveLoop(
   }
 
   return Liveness::ALIVE;
+}
+
+void DragController::BringWindowUnderPointToFront(
+    const gfx::Point& point_in_screen) {
+  gfx::NativeWindow native_window;
+  if (GetLocalProcessWindow(point_in_screen, true, &native_window) ==
+      Liveness::DELETED) {
+    return;
+  }
+
+  if (!native_window) {
+    return;
+  }
+
+  // Only bring browser windows to front - only windows with a
+  // TabDragContext can be tab drag targets.
+  if (!CanAttachTo(native_window)) {
+    return;
+  }
+
+  views::Widget* widget_window =
+      views::Widget::GetWidgetForNativeWindow(native_window);
+  if (!widget_window) {
+    return;
+  }
+
+  widget_window->StackAtTop();
+
+  // The previous call made the window appear on top of the dragged window,
+  // move the dragged window to the front.
+  if (current_state_ == DragState::kDraggingWindow) {
+    attached_context_->GetWidget()->StackAtTop();
+  }
 }
 
 DragController::Liveness DragController::SetCapture(DragContext* context) {

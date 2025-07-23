@@ -80,6 +80,8 @@ class DragContext : public views::View {
 
   virtual bool CanAttachTo(gfx::NativeWindow window) = 0;
 
+  virtual bool IsDragWindow() = 0;
+
   // views::View:
   void AddedToWidget() override;
 };
