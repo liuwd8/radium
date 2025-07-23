@@ -5,10 +5,12 @@
 #ifndef RADIUM_BROWSER_UI_VIEWS_DRAGGING_DRAG_CONTROLLER_H_
 #define RADIUM_BROWSER_UI_VIEWS_DRAGGING_DRAG_CONTROLLER_H_
 
+#include "base/scoped_observation.h"
 #include "base/timer/timer.h"
 #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-shared.h"
 #include "ui/gfx/geometry/point.h"
 #include "ui/gfx/native_widget_types.h"
+#include "ui/views/widget/widget_observer.h"
 
 class DragContext;
 class WindowFinder;
@@ -16,15 +18,16 @@ class WindowFinder;
 namespace views {
 class View;
 class Widget;
+class ViewTracker;
 }  // namespace views
 
-class DragController {
+class DragController : public views::WidgetObserver {
  public:
   explicit DragController();
   DragController(const DragController&) = delete;
   DragController& operator=(const DragController&) = delete;
 
-  ~DragController();
+  ~DragController() override;
 
   enum class Liveness {
     ALIVE,
@@ -98,6 +101,11 @@ class DragController {
     kStopped
   };
 
+  // views::WidgetObserver:
+  void OnWidgetBoundsChanged(views::Widget* widget,
+                             const gfx::Rect& new_bounds) override;
+  void OnWidgetDestroyed(views::Widget* widget) override;
+
   // Sets up dragging in `attached_context_`. The dragged tabs must already
   // be present.
   void AttachImpl();
@@ -114,6 +122,14 @@ class DragController {
   // showing a modal, has a different profile, is a different browser type
   // (NORMAL vs APP).
   bool CanAttachTo(gfx::NativeWindow window);
+
+  // Saves focus in the window that the drag initiated from. Focus will be
+  // restored appropriately if the drag ends within this same window.
+  [[nodiscard]] Liveness SaveFocus();
+
+  // Restore focus to the View that had focus before the drag was started, if
+  // the drag ends within the same Window as it began.
+  void RestoreFocus();
 
   // Tests whether `point_in_screen` is past a minimum elasticity threshold
   // required to start a drag.
@@ -193,6 +209,8 @@ class DragController {
   [[nodiscard]] Liveness RunMoveLoop(gfx::Point point_in_screen,
                                      gfx::Vector2d drag_offset);
 
+  void BringWindowUnderPointToFront(const gfx::Point& point_in_screen);
+
   [[nodiscard]] Liveness SetCapture(DragContext* context);
 
   // Begin the drag session by attaching to `source_context_`.
@@ -209,6 +227,9 @@ class DragController {
   raw_ptr<views::Widget> move_loop_widget_;
 
   std::unique_ptr<WindowFinder> window_finder_;
+
+  base::ScopedObservation<views::Widget, views::WidgetObserver>
+      widget_observation_{this};
 
   // The DragContext the drag originated from. This is set to null
   // if destroyed during the drag.
@@ -233,6 +254,11 @@ class DragController {
   // positioned at the correct location during the drag, and to ensure that the
   // detached window is created at the right location.
   gfx::Point mouse_offset_;
+
+  // Used to track the view that had focus in the window containing
+  // `source_view_`. This is saved so that focus can be restored properly when
+  // a drag begins and ends within this same window.
+  std::unique_ptr<views::ViewTracker> old_focused_view_tracker_;
 
   // Timer used to bring the window under the cursor to front. If the user
   // stops moving the mouse for a brief time over a browser window, it is
