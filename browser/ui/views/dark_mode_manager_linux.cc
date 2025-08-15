@@ -8,6 +8,7 @@
 #include "base/logging.h"
 #include "base/memory/raw_ptr.h"
 #include "components/dbus/thread_linux/dbus_thread_linux.h"
+#include "components/dbus/xdg/systemd.h"
 #include "dbus/bus.h"
 #include "dbus/message.h"
 #include "dbus/object_proxy.h"
@@ -18,21 +19,9 @@
 
 namespace ui {
 
-namespace {
-
-scoped_refptr<dbus::Bus> CreateBus() {
-  dbus::Bus::Options options;
-  options.bus_type = dbus::Bus::SESSION;
-  options.connection_type = dbus::Bus::PRIVATE;
-  options.dbus_task_runner = dbus_thread_linux::GetTaskRunner();
-  return base::MakeRefCounted<dbus::Bus>(options);
-}
-
-}  // namespace
-
 DarkModeManagerLinux::DarkModeManagerLinux()
     : DarkModeManagerLinux(
-          CreateBus(),
+          dbus_thread_linux::GetSharedSessionBus(),
           ui::GetDefaultLinuxUiTheme(),
           &ui::GetLinuxUiThemes(),
           std::vector<raw_ptr<ui::NativeTheme, VectorExperimental>>{
@@ -51,6 +40,27 @@ DarkModeManagerLinux::DarkModeManagerLinux(
       settings_proxy_(bus_->GetObjectProxy(
           kFreedesktopSettingsService,
           dbus::ObjectPath(kFreedesktopSettingsObjectPath))) {
+  dbus_xdg::SetSystemdScopeUnitNameForXdgPortal(
+      bus_.get(), base::BindOnce(&DarkModeManagerLinux::OnSystemdUnitStarted,
+                                 weak_ptr_factory_.GetWeakPtr()));
+
+  // Read the toolkit preference while asynchronously fetching the
+  // portal preference.
+  if (default_linux_ui_theme) {
+    auto* native_theme = default_linux_ui_theme->GetNativeTheme();
+    native_theme_observer_.Observe(native_theme);
+    SetColorScheme(native_theme->ShouldUseDarkColors(), true);
+  }
+}
+
+DarkModeManagerLinux::~DarkModeManagerLinux() = default;
+
+void DarkModeManagerLinux::OnNativeThemeUpdated(
+    ui::NativeTheme* observed_theme) {
+  SetColorScheme(observed_theme->ShouldUseDarkColors(), true);
+}
+
+void DarkModeManagerLinux::OnSystemdUnitStarted(dbus_xdg::SystemdUnitStatus) {
   // Subscribe to changes in the color scheme preference.
   settings_proxy_->ConnectToSignal(
       kFreedesktopSettingsInterface, kSettingChangedSignal,
@@ -65,11 +75,9 @@ DarkModeManagerLinux::DarkModeManagerLinux(
     dbus::MessageWriter writer(&method_call);
     writer.AppendString(kSettingsNamespace);
     writer.AppendString(kColorSchemeKey);
-    settings_proxy_->CallMethodWithErrorCallback(
+    settings_proxy_->CallMethodWithErrorResponse(
         &method_call, dbus::ObjectProxy::TIMEOUT_USE_DEFAULT,
-        base::BindOnce(&DarkModeManagerLinux::OnReadColorSchemeResponse,
-                       weak_ptr_factory_.GetWeakPtr()),
-        base::BindOnce(&DarkModeManagerLinux::OnReadError,
+        base::BindOnce(&DarkModeManagerLinux::OnReadColorScheme,
                        weak_ptr_factory_.GetWeakPtr()));
   }
 
@@ -79,37 +87,11 @@ DarkModeManagerLinux::DarkModeManagerLinux(
     dbus::MessageWriter writer(&method_call);
     writer.AppendString(kSettingsNamespace);
     writer.AppendString(kAccentColorKey);
-    settings_proxy_->CallMethodWithErrorCallback(
+    settings_proxy_->CallMethodWithErrorResponse(
         &method_call, dbus::ObjectProxy::TIMEOUT_USE_DEFAULT,
-        base::BindOnce(&DarkModeManagerLinux::OnReadAccentColorResponse,
-                       weak_ptr_factory_.GetWeakPtr()),
-        base::BindOnce(&DarkModeManagerLinux::OnReadError,
+        base::BindOnce(&DarkModeManagerLinux::OnReadAccentColor,
                        weak_ptr_factory_.GetWeakPtr()));
   }
-
-  // Read the toolkit preference while asynchronously fetching the
-  // portal preference.
-  if (default_linux_ui_theme) {
-    auto* native_theme = default_linux_ui_theme->GetNativeTheme();
-    native_theme_observer_.Observe(native_theme);
-    SetColorScheme(native_theme->ShouldUseDarkColors(), true);
-  }
-}
-
-DarkModeManagerLinux::~DarkModeManagerLinux() {
-  settings_proxy_ = nullptr;
-  dbus::Bus* const bus_ptr = bus_.get();
-  // `task_runner` may be nullptr in testing.
-  if (auto* task_runner = bus_ptr->GetDBusTaskRunner()) {
-    task_runner->PostTask(
-        FROM_HERE,
-        base::BindOnce(&dbus::Bus::ShutdownAndBlock, std::move(bus_)));
-  }
-}
-
-void DarkModeManagerLinux::OnNativeThemeUpdated(
-    ui::NativeTheme* observed_theme) {
-  SetColorScheme(observed_theme->ShouldUseDarkColors(), true);
 }
 
 void DarkModeManagerLinux::OnSignalConnected(const std::string& interface_name,
@@ -150,7 +132,9 @@ void DarkModeManagerLinux::OnPortalSettingChanged(dbus::Signal* signal) {
   }
 }
 
-void DarkModeManagerLinux::OnReadColorSchemeResponse(dbus::Response* response) {
+void DarkModeManagerLinux::OnReadColorScheme(
+    dbus::Response* response,
+    dbus::ErrorResponse* error_response) {
   if (!response) {
     // Continue using the toolkit setting.
     return;
@@ -178,7 +162,9 @@ void DarkModeManagerLinux::OnReadColorSchemeResponse(dbus::Response* response) {
   SetColorScheme(new_color_scheme == kFreedesktopColorSchemeDark, false);
 }
 
-void DarkModeManagerLinux::OnReadAccentColorResponse(dbus::Response* response) {
+void DarkModeManagerLinux::OnReadAccentColor(
+    dbus::Response* response,
+    dbus::ErrorResponse* error_response) {
   if (!response) {
     // Continue using the toolkit setting.
     return;
@@ -198,10 +184,6 @@ void DarkModeManagerLinux::OnReadAccentColorResponse(dbus::Response* response) {
   }
 
   SetAccentColor(&inner_variant_reader);
-}
-
-void DarkModeManagerLinux::OnReadError(dbus::ErrorResponse* error) {
-  // Ignore errors.  It's expected that the settings portal may not exist.
 }
 
 void DarkModeManagerLinux::SetColorScheme(bool prefer_dark_theme,

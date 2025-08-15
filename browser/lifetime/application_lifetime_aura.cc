@@ -67,7 +67,7 @@ void HandleAppExitingForPlatform() {
   // Close all non browser windows now. Those includes notifications
   // and windows created by Ash (launcher, background, etc).
 
-  views::Widget::CloseAllSecondaryWidgets();
+  views::Widget::CloseAllWidgets();
 }
 
 }  // namespace radium
