@@ -43,7 +43,7 @@ void HandleAppExitingForPlatform() {
   // complains if it is destroyed while in-use. By this point, all browser
   // windows are closed, which tear down any Widgets parented to them. This will
   // additionally close any unparented, non-Browser Widgets.
-  views::Widget::CloseAllSecondaryWidgets();
+  views::Widget::CloseAllWidgets();
 }
 
 }  // namespace radium

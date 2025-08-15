@@ -11,6 +11,7 @@ radium_java_resources = [
   "java/res/transition/fade.xml",
   "java/res/transition/move_image.xml",
   "java/res/values-v27/styles.xml",
+  "java/res/values/dimens.xml",
   "java/res/values/strings.xml",
   "java/res/values/styles.xml",
 ]
