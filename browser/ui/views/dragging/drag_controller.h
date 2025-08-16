@@ -40,6 +40,21 @@ class DragController : public views::WidgetObserver {
     DONT_RELEASE_CAPTURE,
   };
 
+  // Enum passed to EndDrag().
+  enum EndDragReason {
+    // Complete the drag.
+    END_DRAG_COMPLETE,
+
+    // Cancel/revert the drag.
+    END_DRAG_CANCEL,
+
+    // The drag should end as the result of a capture lost.
+    END_DRAG_CAPTURE_LOST,
+
+    // The model mutated.
+    END_DRAG_MODEL_ADDED_TAB,
+  };
+
   ui::mojom::DragEventSource event_source() const { return event_source_; }
 
   // See description above fields for details on these.
@@ -70,7 +85,7 @@ class DragController : public views::WidgetObserver {
   [[nodiscard]] Liveness Drag(const gfx::Point& point_in_screen);
 
   // Complete the current drag session.
-  void EndDrag();
+  void EndDrag(EndDragReason reason);
 
  private:
   enum class DragState {
@@ -105,6 +120,10 @@ class DragController : public views::WidgetObserver {
   void OnWidgetBoundsChanged(views::Widget* widget,
                              const gfx::Rect& new_bounds) override;
   void OnWidgetDestroyed(views::Widget* widget) override;
+
+  // Forget the source tabstrip. It doesn't exist any more, so it doesn't
+  // make sense to insert dragged tabs back into it if the drag is reverted.
+  void OnSourceContextDestory();
 
   // Sets up dragging in `attached_context_`. The dragged tabs must already
   // be present.
@@ -180,7 +199,7 @@ class DragController : public views::WidgetObserver {
 
   // Calculates the drag offset needed to place the correct point on the
   // source view under the cursor.
-  gfx::Vector2d CalculateDragViewOffsetInWidget();
+  gfx::Vector2d CalculateWindowDragOffset();
 
   // Returns the NativeWindow in `window` at the specified point. If
   // `exclude_dragged_view` is true, then the dragged view is not considered.
@@ -234,6 +253,8 @@ class DragController : public views::WidgetObserver {
   // The DragContext the drag originated from. This is set to null
   // if destroyed during the drag.
   raw_ptr<DragContext> source_context_;
+
+  std::unique_ptr<views::ViewTracker> source_context_destory_tracker_;
 
   // The DragContext the dragged Tab is currently attached to, or
   // null if the dragged Tab is detached.

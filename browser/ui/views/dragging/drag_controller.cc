@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "base/functional/bind.h"
 #include "base/notreached.h"
 #include "base/trace_event/typed_macros.h"
 #include "content/public/browser/web_contents.h"
@@ -26,10 +27,8 @@ namespace {
 
 gfx::Rect GetViewInScreenBounds(const views::View* context) {
   const views::View* view = context;
-  gfx::Point view_topleft;
-  views::View::ConvertPointToScreen(view, &view_topleft);
   gfx::Rect view_screen_bounds = view->GetLocalBounds();
-  view_screen_bounds.Offset(view_topleft.x(), view_topleft.y());
+  views::View::ConvertRectToScreen(view, &view_screen_bounds);
   return view_screen_bounds;
 }
 
@@ -72,6 +71,11 @@ DragController::Liveness DragController::Init(
   can_release_capture_ = false;
 #endif
 
+  source_context_destory_tracker_ =
+      std::make_unique<views::ViewTracker>(source_context_);
+  source_context_destory_tracker_->SetIsDeletingCallback(base::BindOnce(
+      &DragController::OnSourceContextDestory, base::Unretained(this)));
+
   window_finder_ = std::make_unique<WindowFinder>();
   return Liveness::ALIVE;
 }
@@ -86,7 +90,7 @@ DragController::Liveness DragController::Init(
     // If any of the tabs have disappeared (e.g. closed or discarded), cancel
     // the drag session. See crbug.com/1445776.
     if (GetViewsMatchingDraggedContents(source_context_).empty()) {
-      EndDrag();
+      EndDrag(END_DRAG_CANCEL);
       return Liveness::DELETED;
     }
 
@@ -115,7 +119,21 @@ DragController::Liveness DragController::Init(
   return ContinueDragging(point_in_screen);
 }
 
-void DragController::EndDrag() {
+void DragController::EndDrag(EndDragReason reason) {
+  // If we're dragging a window ignore capture lost since it'll ultimately
+  // trigger the move loop to end and we'll revert the drag when RunMoveLoop()
+  // finishes.
+  if (reason == END_DRAG_CAPTURE_LOST &&
+      current_state_ == DragState::kDraggingWindow) {
+    return;
+  }
+
+  // We always lose capture when hiding `attached_context_`, just ignore it.
+  if (reason == END_DRAG_CAPTURE_LOST &&
+      current_state_ == DragState::kDraggingUsingSystemDnD) {
+    return;
+  }
+
   // End the move loop if we're in one. Note that the drag will end (just below)
   // before the move loop actually exits.
   if (current_state_ == DragState::kDraggingWindow && in_move_loop_) {
@@ -155,6 +173,12 @@ void DragController::OnWidgetBoundsChanged(views::Widget* widget,
 
 void DragController::OnWidgetDestroyed(views::Widget* widget) {
   widget_observation_.Reset();
+}
+
+void DragController::OnSourceContextDestory() {
+  // NULL out source_context_ so that we don't attempt to add back to it (in
+  // the case of a revert).
+  source_context_ = nullptr;
 }
 
 void DragController::AttachImpl() {
@@ -350,12 +374,14 @@ DragController::Liveness DragController::DetachIntoNewWidgetAndRunMoveLoop(
   // Drag the window relative to `start_point_in_screen_` to pretend that
   // this was the plan all along.
   const gfx::Vector2d drag_offset =
-      CalculateDragViewOffsetInWidget() + cusor_point_in_view;
+      CalculateWindowDragOffset() + cusor_point_in_view;
 #if (!BUILDFLAG(IS_MAC))
   // Set the window origin before making it visible, to avoid flicker on
   // Windows. See https://crbug.com/394529650
   widget->SetBounds(gfx::Rect(point_in_screen - drag_offset,
                               attached_context_->GetDraggedWindowSize()));
+#else
+  const gfx::Size widget_size = attached_context_->GetDraggedWindowSize();
 #endif
 
   widget->SetVisibilityChangedAnimationsEnabled(false);
@@ -365,8 +391,8 @@ DragController::Liveness DragController::DetachIntoNewWidgetAndRunMoveLoop(
 #if BUILDFLAG(IS_MAC)
   // Set the window origin after making it visible, to avoid child windows (such
   // as the find bar) being misplaced on Mac. See https://crbug.com/403129048
-  widget->SetBounds(gfx::Rect(point_in_screen - drag_offset,
-                              attached_context_->GetDraggedWindowSize()));
+  widget->SetBoundsConstrained(
+      gfx::Rect(point_in_screen - drag_offset, widget_size));
 #endif
 
   // Activate may trigger a focus loss, destroying us.
@@ -464,28 +490,15 @@ gfx::Point DragController::GetCursorScreenPoint() {
   return display::Screen::GetScreen()->GetCursorScreenPoint();
 }
 
-gfx::Vector2d DragController::CalculateDragViewOffsetInWidget() {
+gfx::Vector2d DragController::CalculateWindowDragOffset() {
   const gfx::Rect source_tab_bounds =
       attached_context_->GetAnchorView()->bounds();
-
-  const int cursor_offset_within_tab = source_tab_bounds.width();
   gfx::Point desired_cursor_pos_in_widget(
-      attached_context_->GetMirroredXInView(source_tab_bounds.x() +
-                                            cursor_offset_within_tab),
+      attached_context_->GetMirroredXInView(source_tab_bounds.x()),
       source_tab_bounds.y());
   views::View::ConvertPointToWidget(attached_context_,
                                     &desired_cursor_pos_in_widget);
   return desired_cursor_pos_in_widget.OffsetFromOrigin();
-
-  // gfx::Point desired_cursor_pos_in_widget =
-  //     GetViewInScreenBounds(attached_context_->GetAnchorView()).origin() +
-  //     cursor_pos_in_view;
-  // views::View::ConvertPointToWidget(attached_context_,
-  //                                   &desired_cursor_pos_in_widget);
-  // // Drag the window relative to `start_point_in_screen_` to pretend that
-  // // this was the plan all along.
-  // const gfx::Vector2d drag_offset =
-  //     desired_cursor_pos_in_widget.OffsetFromOrigin();
 }
 
 DragController::Liveness DragController::GetLocalProcessWindow(
@@ -594,8 +607,8 @@ DragController::Liveness DragController::RunMoveLoop(
 
   CHECK(!in_move_loop_);
   in_move_loop_ = true;
-  std::ignore = move_loop_widget_->RunMoveLoop(drag_offset, move_loop_source,
-                                               escape_behavior);
+  views::Widget::MoveLoopResult result = move_loop_widget_->RunMoveLoop(
+      drag_offset, move_loop_source, escape_behavior);
   // Note: `this` can be deleted here!
 
   if (!ref) {
@@ -622,7 +635,9 @@ DragController::Liveness DragController::RunMoveLoop(
     }
     drag_views_to_attach_to_after_exit_ = nullptr;
   } else if (current_state_ == DragState::kDraggingWindow) {
-    EndDrag();
+    EndDrag(result == views::Widget::MoveLoopResult::kCanceled
+                ? END_DRAG_CANCEL
+                : END_DRAG_COMPLETE);
     return Liveness::DELETED;
   }
 
