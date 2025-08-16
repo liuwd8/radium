@@ -124,6 +124,23 @@ std::unique_ptr<content::WebContents> Browser::RemoveWebContents(
   return value;
 }
 
+bool Browser::TryToCloseWindow(
+    bool skip_beforeunload,
+    const base::RepeatingCallback<void(bool)>& on_close_confirmed) {
+  cancel_download_confirmation_state_ = RESPONSE_RECEIVED;
+  return unload_controller_.TryToCloseWindow(skip_beforeunload,
+                                             on_close_confirmed);
+}
+
+void Browser::ResetTryToCloseWindow() {
+  cancel_download_confirmation_state_ = NOT_PROMPTED;
+  unload_controller_.ResetTryToCloseWindow();
+}
+
+bool Browser::TabsNeedBeforeUnloadFired() const {
+  return unload_controller_.TabsNeedBeforeUnloadFired();
+}
+
 void Browser::OnWindowClosing() {
   std::vector<content::WebContents*> tabs;
   tabs.reserve(tabs_.size());
@@ -154,6 +171,18 @@ void Browser::OnWindowClosing() {
     }
     contents->Close();
   }
+}
+
+bool Browser::ShouldRunUnloadListenerBeforeClosing(
+    content::WebContents* web_contents) {
+  return !force_skip_warning_user_on_close_ &&
+         unload_controller_.ShouldRunUnloadEventsHelper(web_contents);
+}
+
+bool Browser::RunUnloadListenerBeforeClosing(
+    content::WebContents* web_contents) {
+  return !force_skip_warning_user_on_close_ &&
+         unload_controller_.RunUnloadEventsHelper(web_contents);
 }
 
 void Browser::BeforeUnloadFired(content::WebContents* web_contents,

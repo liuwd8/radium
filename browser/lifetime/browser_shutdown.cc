@@ -14,6 +14,10 @@
 namespace browser_shutdown {
 
 namespace {
+
+// Whether the browser is trying to quit (e.g., Quit chosen from menu).
+bool g_trying_to_quit = false;
+
 base::Time* g_shutdown_started = nullptr;
 ShutdownType g_shutdown_type = ShutdownType::kNotValid;
 int g_shutdown_num_processes;
@@ -95,6 +99,22 @@ void OnShutdownStarting(ShutdownType type) {
 bool HasShutdownStarted() {
   CheckAccessedOnCorrectThread();
   return g_shutdown_type != ShutdownType::kNotValid;
+}
+
+bool ShouldIgnoreUnloadHandlers() {
+  CheckAccessedOnCorrectThread();
+  return g_shutdown_type == ShutdownType::kEndSession ||
+         g_shutdown_type == ShutdownType::kSilentExit;
+}
+
+void SetTryingToQuit(bool quitting) {
+  CheckAccessedOnCorrectThread();
+  g_trying_to_quit = quitting;
+}
+
+bool IsTryingToQuit() {
+  CheckAccessedOnCorrectThread();
+  return g_trying_to_quit;
 }
 
 }  // namespace browser_shutdown

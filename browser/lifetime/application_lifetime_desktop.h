@@ -25,8 +25,8 @@ void ShutdownIfNeeded();
 // Begins shutdown of the application when the desktop session is ending.
 void SessionEnding();
 
-// Close all top widget
-void CloseAllTopWidgetForPlatform();
+// Called once the application is exiting.
+void OnAppExiting();
 
 // Called once the application is exiting to do any platform specific
 // processing required.

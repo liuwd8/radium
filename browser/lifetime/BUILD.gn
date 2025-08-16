@@ -6,8 +6,12 @@ import("//build/config/ui.gni")
 
 source_set("lifetime") {
   sources = [
+    "//chrome/browser/lifetime/termination_notification.cc",
+    "//chrome/browser/lifetime/termination_notification.h",
     "application_lifetime.cc",
     "application_lifetime.h",
+    "browser_close_manager.cc",
+    "browser_close_manager.h",
     "browser_shutdown.cc",
     "browser_shutdown.h",
   ]

@@ -7,6 +7,7 @@
 #include "base/no_destructor.h"
 #include "base/observer_list.h"
 #include "radium/browser/ui/browser.h"
+#include "radium/browser/ui/browser_list_enumerator.h"
 #include "radium/browser/ui/browser_list_observer.h"
 
 // static
@@ -15,6 +16,27 @@ BrowserList* BrowserList::GetInstance() {
   return g_browser_list.get();
 }
 
+void BrowserList::ForEachCurrentBrowser(
+    base::FunctionRef<void(Browser*)> on_browser) {
+  // Make a copy of the BrowserList to simplify the case where we need to
+  // add or remove a Browser during the loop.
+  constexpr bool kEnumerateNewBrowser = false;
+  BrowserListEnumerator browser_list_copy(kEnumerateNewBrowser);
+  while (!browser_list_copy.empty()) {
+    on_browser(browser_list_copy.Next());
+  }
+}
+
+void BrowserList::ForEachCurrentAndNewBrowser(
+    base::FunctionRef<void(Browser*)> on_browser) {
+  // Make a copy of the BrowserList to simplify the case where we need to
+  // add or remove a Browser during the loop.
+  constexpr bool kEnumerateNewBrowser = true;
+  BrowserListEnumerator browser_list_copy(kEnumerateNewBrowser);
+  while (!browser_list_copy.empty()) {
+    on_browser(browser_list_copy.Next());
+  }
+}
 void BrowserList::AddBrowser(Browser* browser) {
   // Remove |browser| from the appropriate list instance.
   BrowserList* browser_list = GetInstance();

@@ -1,4 +1,4 @@
-From f43efda0da7c15c3faa52fcd65543cfc9fe082bf Mon Sep 17 00:00:00 2001
+From d4864c5d048a864c7129db1ff480947da8fd17cf Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:55 +0800
 Subject: [PATCH 3/4] Resource file changes
@@ -9,34 +9,34 @@ Subject: [PATCH 3/4] Resource file changes
  2 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/tools/gritsettings/resource_ids.spec b/tools/gritsettings/resource_ids.spec
-index f24d7bfb0baa8..22b35a87009cc 100644
+index 88cdb957f4be2..bfb2b4de8bec6 100644
 --- a/tools/gritsettings/resource_ids.spec
 +++ b/tools/gritsettings/resource_ids.spec
-@@ -1546,4 +1546,19 @@
-
+@@ -1572,4 +1572,19 @@
+ 
    # Thinking about appending to the end?
    # Please read the header and find the right section above instead.
 +
 +  "radium/app/radium_strings.grd": {
-+    "messages": [20000],
++    "messages": [200000],
 +  },
 +  "radium/app/theme/theme_resources.grd": {
-+    "structures": [20020],
++    "structures": [200020],
 +  },
 +  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/webui_gallery/resources/resources.grd": {
 +    "META": {"sizes": {"includes": [100],}},
-+    "includes": [20040],
++    "includes": [200040],
 +  },
 +  "<(SHARED_INTERMEDIATE_DIR)/radium/browser/ui/webui/example/resources/resources.grd": {
 +    "META": {"sizes": {"includes": [100],}},
-+    "includes": [20060],
++    "includes": [200060],
 +  },
  }
 diff --git a/ui/base/resource/resource_bundle_android.cc b/ui/base/resource/resource_bundle_android.cc
-index 1589ab81ed12e..88a1fe4dd7760 100644
+index 251f847b6961d..b7a205475e210 100644
 --- a/ui/base/resource/resource_bundle_android.cc
 +++ b/ui/base/resource/resource_bundle_android.cc
-@@ -249,9 +249,9 @@ bool LoadLocaleResourcesForLocaleAndGender(
+@@ -252,9 +252,9 @@ bool LoadLocaleResourcesForLocaleAndGender(
  void ResourceBundle::LoadCommonResources() {
    base::FilePath disk_path;
    base::PathService::Get(ui::DIR_RESOURCE_PAKS_ANDROID, &disk_path);
@@ -47,6 +47,7 @@ index 1589ab81ed12e..88a1fe4dd7760 100644
 +      LoadFromApkOrFile("assets/radium_100_percent.pak", &disk_path,
                          &g_chrome_100_percent_fd, &g_chrome_100_percent_region);
    DCHECK(success);
-
---
+ 
+-- 
 2.34.1
+

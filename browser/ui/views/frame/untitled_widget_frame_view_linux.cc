@@ -12,6 +12,7 @@
 #include "radium/browser/ui/views/radium_layout_provider.h"
 #include "third_party/skia/include/core/SkRRect.h"
 #include "ui/base/metadata/metadata_impl_macros.h"
+#include "ui/compositor/clip_recorder.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/color_utils.h"
 #include "ui/gfx/geometry/skia_conversions.h"
@@ -69,6 +70,30 @@ SkRRect UntitledWidgetFrameViewLinux::GetRestoredClipRegion() const {
 
 bool UntitledWidgetFrameViewLinux::ShouldDrawRestoredFrameShadow() const {
   return true;
+}
+
+void UntitledWidgetFrameViewLinux::PaintChildren(const views::PaintInfo& info) {
+  // Clip children based on the tab's fill path.  This has no effect except when
+  // the tab is too narrow to completely show even one icon, at which point this
+  // serves to clip the favicon.
+  ui::ClipRecorder clip_recorder(info.context());
+  // The paint recording scale for tabs is consistent along the x and y axis.
+  const float paint_recording_scale = info.paint_recording_scale_x();
+  const bool tiled = untitled_widget()->tiled();
+  bool showing_shadow = ShouldDrawRestoredFrameShadow();
+  SkRRect clip = GetRestoredClipRegion();
+
+  // If rendering shadows, draw a 1px exterior border, otherwise draw a 1px
+  // interior border.
+  const SkScalar one_pixel = SkFloatToScalar(1 / paint_recording_scale);
+  if (!tiled && !showing_shadow) {
+    clip.inset(one_pixel, one_pixel);
+  }
+
+  SkPath clip_path;
+  clip_path.addRRect(clip);
+  clip_recorder.ClipPathWithAntiAliasing(clip_path);
+  View::PaintChildren(info);
 }
 
 void UntitledWidgetFrameViewLinux::PaintRestoredFrameBorder(

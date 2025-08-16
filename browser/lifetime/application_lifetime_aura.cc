@@ -31,38 +31,6 @@
 
 namespace radium {
 
-namespace {
-#if BUILDFLAG(ENABLE_DESKTOP_AURA) && (BUILDFLAG(IS_WIN) || BUILDFLAG(IS_OZONE))
-void CloseWindow(aura::Window* window) {
-  if (window) {
-    views::Widget* widget = views::Widget::GetWidgetForNativeView(window);
-    if (widget && !widget->is_secondary_widget()) {
-      widget->Close();
-    }
-  }
-}
-#endif
-
-#if BUILDFLAG(IS_WIN)
-BOOL CALLBACK WindowCallbackProc(HWND hwnd, LPARAM lParam) {
-  aura::Window* root_window =
-      views::DesktopWindowTreeHostWin::GetContentWindowForHWND(hwnd);
-  CloseWindow(root_window);
-  return TRUE;
-}
-#endif
-}  // namespace
-
-void CloseAllTopWidgetForPlatform() {
-#if BUILDFLAG(IS_WIN)
-  EnumThreadWindows(GetCurrentThreadId(), WindowCallbackProc, 0);
-#endif
-
-#if BUILDFLAG(ENABLE_DESKTOP_AURA) && BUILDFLAG(IS_OZONE)
-  views::DesktopWindowTreeHostPlatform::CleanUpWindowList(CloseWindow);
-#endif
-}
-
 void HandleAppExitingForPlatform() {
   // Close all non browser windows now. Those includes notifications
   // and windows created by Ash (launcher, background, etc).

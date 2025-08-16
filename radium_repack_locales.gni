@@ -63,9 +63,11 @@ template("radium_repack_locales") {
       deps += invoker.deps
     }
 
-    if (!is_android) {
-      source_patterns += [ "${root_gen_dir}/components/strings/search_engine_descriptions_strings_" ]
-      deps += [ "//components/strings:search_engine_descriptions_strings" ]
+    if (enable_builtin_search_provider_assets && !is_android) {
+      source_patterns += [ "${root_gen_dir}/third_party/search_engines_data/search_engine_descriptions_strings_" ]
+      deps += [
+        "//third_party/search_engines_data:search_engine_descriptions_strings",
+      ]
     }
 
     if (defined(invoker.additional_source_patterns)) {
