@@ -22,6 +22,8 @@ UntitledWidget::UntitledWidget(UntitledWidgetDelegate* delegate,
       title_bar_background_height_(
           RadiumLayoutProvider::Get()->GetDistanceMetric(
               DISTANCE_UNTITLED_WIDGET_TITLE_BAR_HEIGHT)) {
+  CHECK(profile_);
+
   set_is_secondary_widget(false);
   // Don't focus anything on creation, selecting a tab will set the focus.
   set_focus_on_creation(false);
