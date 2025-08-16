@@ -25,6 +25,7 @@ class UntitledWidgetFrameViewLinux : public OpaqueFrameView {
   gfx::Insets RestoredMirroredFrameBorderInsets() const override;
   gfx::Insets GetInputInsets() const override;
   SkRRect GetRestoredClipRegion() const override;
+  void PaintChildren(const views::PaintInfo& info) override;
   void PaintRestoredFrameBorder(gfx::Canvas* canvas) const override;
 
   bool ShouldDrawRestoredFrameShadow() const;

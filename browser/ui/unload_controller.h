@@ -51,9 +51,25 @@ class UnloadController : public BrowserObserver,
   // its BeforeUnloadHandler.
   bool BeforeUnloadFired(content::WebContents* contents, bool proceed);
 
-  bool is_calling_before_unload_handlers() {
-    return !on_close_confirmed_.is_null();
-  }
+  // Begins the process of confirming whether the associated browser can be
+  // closed. Beforeunload events won't be fired if |skip_beforeunload|
+  // is true.
+  bool TryToCloseWindow(
+      bool skip_beforeunload,
+      const base::RepeatingCallback<void(bool)>& on_close_confirmed);
+
+  // Clears the results of any beforeunload confirmation dialogs triggered by a
+  // TryToCloseWindow call.
+  void ResetTryToCloseWindow();
+
+  // Returns true if |browser_| has any tabs that have BeforeUnload handlers
+  // that have not been fired. This method is non-const because it builds a list
+  // of tabs that need their BeforeUnloadHandlers fired.
+  // TODO(beng): This seems like it could be private but it is used by
+  //             AreAllBrowsersCloseable() in application_lifetime.cc. It seems
+  //             very similar to ShouldCloseWindow() and some consolidation
+  //             could be pursued.
+  bool TabsNeedBeforeUnloadFired() const;
 
   // Clears all the state associated with processing tabs' beforeunload/unload
   // events since the user cancelled closing the window.
@@ -95,6 +111,10 @@ class UnloadController : public BrowserObserver,
   // may result in deleting |tab|. If you know that shouldn't happen (because of
   // the state of the stack), pass in false.
   void ClearUnloadState(content::WebContents* web_contents, bool process_now);
+
+  bool is_calling_before_unload_handlers() {
+    return !on_close_confirmed_.is_null();
+  }
 
   WebContentsCollection web_contents_collection_;
 

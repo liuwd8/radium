@@ -1,4 +1,4 @@
-From 4347c9284e12636dc30dfc0a9aa31ba9f610b4c0 Mon Sep 17 00:00:00 2001
+From bbd450ca6ba3bb56b5bec62dc78b6222aa84001e Mon Sep 17 00:00:00 2001
 From: weidongliu <weidongliu@chromium.org>
 Date: Fri, 8 Nov 2024 21:46:17 +0800
 Subject: [PATCH 2/4] Basic gn file modification
@@ -8,7 +8,7 @@ Subject: [PATCH 2/4] Basic gn file modification
  1 file changed, 3 insertions(+)
 
 diff --git a/.gn b/.gn
-index 3f65718281973..87767e81a5cba 100644
+index ae58a0b0a64ae..75bf86080cab2 100644
 --- a/.gn
 +++ b/.gn
 @@ -3,6 +3,7 @@
@@ -19,7 +19,7 @@ index 3f65718281973..87767e81a5cba 100644
  import("//third_party/angle/dotfile_settings.gni")
  
  # The location of the build configuration file.
-@@ -173,3 +174,5 @@ exec_script_allowlist =
+@@ -168,3 +169,5 @@ exec_script_allowlist =
        "//tools/grit/grit_rule.gni",
        "//tools/gritsettings/BUILD.gn",
      ]

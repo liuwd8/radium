@@ -26,14 +26,29 @@ class FilePath;
 
 class BrowserList {
  public:
-  using BrowserSet = base::flat_set<raw_ptr<Browser>>;
-  using BrowserVector = std::vector<raw_ptr<Browser>>;
+  using BrowserSet = base::flat_set<raw_ptr<Browser, CtnExperimental>>;
+  using BrowserVector = std::vector<raw_ptr<Browser, VectorExperimental>>;
   using BrowserWeakVector = std::vector<base::WeakPtr<Browser>>;
   using CloseCallback = base::RepeatingCallback<void(const base::FilePath&)>;
   using const_iterator = BrowserVector::const_iterator;
   using const_reverse_iterator = BrowserVector::const_reverse_iterator;
 
   static BrowserList* GetInstance();
+
+  const_iterator begin() const { return browsers_.begin(); }
+  const_iterator end() const { return browsers_.end(); }
+
+  bool empty() const { return browsers_.empty(); }
+  size_t size() const { return browsers_.size(); }
+
+  Browser* get(size_t index) const { return browsers_[index]; }
+
+  // Enumerate the current browser and the new browser in-order.
+  void ForEachCurrentAndNewBrowser(
+      base::FunctionRef<void(Browser*)> on_browser);
+
+  // Enumerate the current browser in-order.
+  void ForEachCurrentBrowser(base::FunctionRef<void(Browser*)> on_browser);
 
   // Adds or removes |browser| from the list it is associated with. The browser
   // object should be valid BEFORE these calls (for the benefit of observers),

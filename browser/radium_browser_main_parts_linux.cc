@@ -7,18 +7,23 @@
 #include "base/command_line.h"
 #include "base/linux_util.h"
 #include "base/task/thread_pool.h"
-#include "components/os_crypt/sync/key_storage_config_linux.h"
-#include "components/os_crypt/sync/os_crypt.h"
 #include "components/password_manager/core/browser/password_manager_switches.h"
 #include "device/bluetooth/dbus/bluez_dbus_manager.h"
-#include "device/bluetooth/dbus/bluez_dbus_thread_manager.h"
 #include "radium/browser/radium_browser_main_parts_posix.h"
 #include "radium/common/radium_paths_internal.h"
 #include "radium/grit/radium_strings.h"
 #include "ui/base/l10n/l10n_util.h"
 
 #if BUILDFLAG(IS_LINUX)
+#include "components/dbus/thread_linux/dbus_thread_linux.h"
+#include "dbus/bus.h"
 #include "ui/ozone/public/ozone_platform.h"
+#endif
+
+#if !BUILDFLAG(IS_CHROMEOS)
+#include "base/linux_util.h"
+#include "components/os_crypt/sync/key_storage_config_linux.h"
+#include "components/os_crypt/sync/os_crypt.h"
 #endif
 
 RadiumBrowserMainPartsLinux::RadiumBrowserMainPartsLinux(
@@ -41,7 +46,8 @@ void RadiumBrowserMainPartsLinux::PostCreateMainMessageLoop() {
 #endif  // BUILDFLAG(IS_CHROMEOS)
 
 #if !BUILDFLAG(IS_CHROMEOS)
-  bluez::BluezDBusManager::Initialize(nullptr /* system_bus */);
+  bluez::BluezDBusManager::Initialize(
+      dbus_thread_linux::GetSharedSystemBus().get());
 
   // Set up crypt config. This needs to be done before anything starts the
   // network service, as the raw encryption key needs to be shared with the
@@ -92,7 +98,6 @@ void RadiumBrowserMainPartsLinux::PostDestroyThreads() {
   // No-op; per PostBrowserStart() comment, this is done elsewhere.
 #else
   bluez::BluezDBusManager::Shutdown();
-  bluez::BluezDBusThreadManager::Shutdown();
 #endif  // BUILDFLAG(IS_CHROMEOS)
 
   RadiumBrowserMainPartsPosix::PostDestroyThreads();

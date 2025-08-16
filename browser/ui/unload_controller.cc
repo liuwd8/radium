@@ -95,6 +95,39 @@ bool UnloadController::BeforeUnloadFired(content::WebContents* contents,
   return true;
 }
 
+bool UnloadController::TryToCloseWindow(
+    bool skip_beforeunload,
+    const base::RepeatingCallback<void(bool)>& on_close_confirmed) {
+  // The devtools browser gets its beforeunload events as the results of
+  // intercepting events from the inspected tab, so don't send them here as
+  // well.
+  if (HasCompletedUnloadProcessing()) {
+    return false;
+  }
+
+  tabs_needing_before_unload_fired_ = GetTabsNeedingBeforeUnloadFired();
+  if (tabs_needing_before_unload_fired_.empty()) {
+    return false;
+  }
+
+  is_attempting_to_close_browser_ = true;
+  on_close_confirmed_ = on_close_confirmed;
+
+  ProcessPendingTabs(skip_beforeunload);
+  return !skip_beforeunload;
+}
+
+void UnloadController::ResetTryToCloseWindow() {
+  if (!is_calling_before_unload_handlers()) {
+    return;
+  }
+  CancelWindowClose();
+}
+
+bool UnloadController::TabsNeedBeforeUnloadFired() const {
+  return !GetTabsNeedingBeforeUnloadFired().empty();
+}
+
 void UnloadController::CancelWindowClose() {
   tabs_needing_unload_fired_.clear();
   if (is_calling_before_unload_handlers()) {

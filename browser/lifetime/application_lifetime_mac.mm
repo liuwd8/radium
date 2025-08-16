@@ -15,17 +15,6 @@
 
 namespace radium {
 
-void CloseAllTopWidgetForPlatform() {
-  for (NSWindow* window : [NSApp windows]) {
-    if (views::Widget* widget = views::Widget::GetWidgetForNativeWindow(
-            gfx::NativeWindow(window))) {
-      if (!widget->is_secondary_widget()) {
-        widget->Close();
-      }
-    }
-  }
-}
-
 // At this point, the user is trying to quit (or the system is forcing the
 // application to quit) and all browsers have been successfully closed. The
 // final step in shutdown is to post the NSApplicationWillTerminateNotification
