@@ -82,6 +82,19 @@ DragController::Liveness DragController::Init(
 
 [[nodiscard]] DragController::Liveness DragController::Drag(
     const gfx::Point& point_in_screen) {
+  // If we're in `kWaitingToExitRunLoop` or `kWaitingToDragTabs`, then we have
+  // asked to exit the nested run loop, but are still in it. We should ignore
+  // any events until we actually exit the nested run loop, to avoid potentially
+  // starting another one (see https://crbug.com/41493121). Similary, if we're
+  // kStopped but haven't been destroyed yet, we should ignore events.
+  if (current_state_ == DragState::kWaitingToExitRunLoop ||
+      current_state_ == DragState::kWaitingToDragTabs ||
+      current_state_ == DragState::kStopped) {
+    return Liveness::ALIVE;
+  }
+
+  bring_to_front_timer_.Stop();
+
   if (current_state_ == DragState::kNotStarted) {
     if (!CanStartDrag(point_in_screen)) {
       return Liveness::ALIVE;  // User hasn't dragged far enough yet.
