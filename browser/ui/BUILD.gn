@@ -8,8 +8,6 @@ import("//crypto/features.gni")
 static_library("ui") {
   public = [
     "browser.h",
-    "browser_finder.h",
-    "browser_list_enumerator.h",
     "simple_message_box.h",
     "startup/startup_browser_creator.h",
     "ui_features.h",
@@ -17,8 +15,6 @@ static_library("ui") {
 
   sources = [
     "browser.cc",
-    "browser_finder.cc",
-    "browser_list_enumerator.cc",
     "simple_message_box_internal.cc",
     "simple_message_box_internal.h",
     "startup/startup_browser_creator.cc",
@@ -38,10 +34,16 @@ static_library("ui") {
   ]
 
   if (!is_android) {
-    public += [ "browser_list.h" ]
+    public += [
+      "browser_finder.h",
+      "browser_list.h",
+      "browser_list_enumerator.h",
+    ]
 
     sources += [
+      "browser_finder.cc",
       "browser_list.cc",
+      "browser_list_enumerator.cc",
       "browser_list_observer.h",
       "browser_observer.h",
       "browser_user_data.h",

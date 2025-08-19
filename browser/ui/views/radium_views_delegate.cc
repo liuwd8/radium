@@ -10,6 +10,7 @@
 #include "components/prefs/scoped_user_pref_update.h"
 #include "radium/browser/browser_process.h"
 #include "radium/common/pref_names.h"
+#include "ui/color/color_id.h"
 #include "ui/display/screen.h"
 
 namespace {
@@ -131,6 +132,11 @@ void RadiumViewsDelegate::OnBeforeWidgetInit(
   // We need to determine opacity if it's not already specified.
   if (params->opacity == views::Widget::InitParams::WindowOpacity::kInferred) {
     params->opacity = views::Widget::InitParams::WindowOpacity::kOpaque;
+  }
+
+  if (params->type != views::Widget::InitParams::TYPE_POPUP &&
+      !params->background_color) {
+    params->background_color = ui::kColorWindowBackground;
   }
 
   // If we already have a native_widget, we don't have to try to come

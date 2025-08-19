@@ -10,8 +10,6 @@ source_set("lifetime") {
     "//chrome/browser/lifetime/termination_notification.h",
     "application_lifetime.cc",
     "application_lifetime.h",
-    "browser_close_manager.cc",
-    "browser_close_manager.h",
     "browser_shutdown.cc",
     "browser_shutdown.h",
   ]
@@ -25,6 +23,8 @@ source_set("lifetime") {
     sources += [
       "application_lifetime_desktop.cc",
       "application_lifetime_desktop.h",
+      "browser_close_manager.cc",
+      "browser_close_manager.h",
     ]
   } else {
     sources += [

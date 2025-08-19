@@ -38,7 +38,7 @@
 #include "services/network/public/mojom/network_service.mojom.h"
 
 #if BUILDFLAG(IS_ANDROID)
-#include "base/android/build_info.h"
+#include "base/android/android_info.h"
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -87,7 +87,7 @@ bool ShouldEnableAsyncDns() {
 #if BUILDFLAG(IS_ANDROID)
   int min_sdk = base::GetFieldTrialParamByFeatureAsInt(net::features::kAsyncDns,
                                                        "min_sdk", 0);
-  if (base::android::BuildInfo::GetInstance()->sdk_int() < min_sdk) {
+  if (base::android::android_info::sdk_int() < min_sdk) {
     feature_can_be_enabled = false;
   }
 #endif
