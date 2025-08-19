@@ -57,9 +57,6 @@ class FrameColorHelper {
   // The frame color when active. If empty the default colors should be used.
   std::optional<SkColor> dwm_frame_color_;
 
-  // The frame color when inactive. If empty the default colors should be used.
-  std::optional<SkColor> dwm_inactive_frame_color_;
-
   // The DWM accent border color, if available; white otherwise.
   SkColor dwm_accent_border_color_ = SK_ColorWHITE;
 };
@@ -120,9 +117,9 @@ void FrameColorHelper::AddNativeChromeColors(
   //   inactive_frame_transform = {color.value()};
   // } else
   if (use_native_colors) {
-    if (dwm_inactive_frame_color_) {
-      inactive_frame_transform = {dwm_inactive_frame_color_.value()};
-    }
+    // if (dwm_inactive_frame_color_) {
+    //   inactive_frame_transform = {dwm_inactive_frame_color_.value()};
+    // }
     // else if (dwm_frame_color_) {
     //   inactive_frame_transform =
     //       ui::HSLShift({dwm_frame_color_.value()},
@@ -214,7 +211,6 @@ color_utils::HSL FrameColorHelper::GetTint(
 void FrameColorHelper::OnAccentColorUpdated() {
   FetchAccentColors();
   ui::NativeTheme::GetInstanceForNativeUi()->NotifyOnNativeThemeUpdated();
-  ui::NativeTheme::GetInstanceForDarkUI()->NotifyOnNativeThemeUpdated();
   ui::NativeTheme::GetInstanceForWeb()->NotifyOnNativeThemeUpdated();
 }
 
@@ -225,13 +221,11 @@ void FrameColorHelper::FetchAccentColors() {
   const auto* accent_color_observer = ui::AccentColorObserver::Get();
   const auto accent_color = accent_color_observer->accent_color();
   ui::NativeTheme::GetInstanceForNativeUi()->set_user_color(accent_color);
-  ui::NativeTheme::GetInstanceForDarkUI()->set_user_color(accent_color);
   ui::NativeTheme::GetInstanceForWeb()->set_user_color(accent_color);
 
   if (!accent_color_observer->use_dwm_frame_color()) {
     dwm_accent_border_color_ = SK_ColorWHITE;
     dwm_frame_color_.reset();
-    dwm_inactive_frame_color_.reset();
     return;
   }
 
@@ -239,7 +233,6 @@ void FrameColorHelper::FetchAccentColors() {
       accent_color_observer->accent_border_color().value_or(SK_ColorWHITE);
 
   dwm_frame_color_ = accent_color;
-  dwm_inactive_frame_color_ = accent_color_observer->accent_color_inactive();
 }
 
 ui::ColorTransform GetCaptionForegroundColor(
