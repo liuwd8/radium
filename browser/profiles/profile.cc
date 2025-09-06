@@ -255,7 +255,7 @@ std::unique_ptr<content::ZoomLevelDelegate> Profile::CreateZoomLevelDelegate(
   return nullptr;
 }
 
-base::FilePath Profile::GetPath() {
+base::FilePath Profile::GetPath() const {
   return path_;
 }
 

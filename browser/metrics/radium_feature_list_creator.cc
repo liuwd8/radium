@@ -5,7 +5,9 @@
 #include "radium/browser/metrics/radium_feature_list_creator.h"
 
 #include "base/check.h"
+#include "base/command_line.h"
 #include "base/debug/leak_annotations.h"
+#include "base/feature_list.h"
 #include "base/files/file_path.h"
 #include "base/path_service.h"
 #include "components/language/core/browser/pref_names.h"

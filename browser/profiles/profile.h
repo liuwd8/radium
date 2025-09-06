@@ -5,6 +5,7 @@
 #ifndef RADIUM_BROWSER_PROFILES_PROFILE_H_
 #define RADIUM_BROWSER_PROFILES_PROFILE_H_
 
+#include "base/files/file_path.h"
 #include "base/types/pass_key.h"
 #include "content/public/browser/browser_context.h"
 
@@ -115,7 +116,7 @@ class Profile : public content::BrowserContext {
   // content::BrowserContext:
   std::unique_ptr<content::ZoomLevelDelegate> CreateZoomLevelDelegate(
       const base::FilePath& partition_path) override;
-  base::FilePath GetPath() override;
+  base::FilePath GetPath() const override;
   bool IsOffTheRecord() override;
   content::DownloadManagerDelegate* GetDownloadManagerDelegate() override;
   content::BrowserPluginGuestManager* GetGuestManager() override;
