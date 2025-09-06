@@ -61,10 +61,14 @@ constexpr int kDefaultTestWindowHeightDip = 600;
 // static constructor/destructor.
 // Acquired in Shell::Init(), released in Shell::Shutdown().
 ShellPlatformDelegate* g_platform;
-}  // namespace
 
-std::vector<Shell*> Shell::windows_;
-base::OnceCallback<void(Shell*)> Shell::shell_created_callback_;
+base::OnceCallback<void(Shell*)>& GetShellCreatedCallback() {
+  static base::NoDestructor<base::OnceCallback<void(Shell*)>>
+      g_shell_created_callback_;
+  return *g_shell_created_callback_;
+}
+
+}  // namespace
 
 Shell::Shell(std::unique_ptr<content::WebContents> web_contents,
              bool should_set_delegate)
@@ -77,19 +81,19 @@ Shell::Shell(std::unique_ptr<content::WebContents> web_contents,
   content::UpdateFontRendererPreferencesFromSystemSettings(
       web_contents_->GetMutableRendererPrefs());
 
-  windows_.push_back(this);
+  windows().push_back(this);
 
-  if (shell_created_callback_) {
-    std::move(shell_created_callback_).Run(this);
+  if (GetShellCreatedCallback()) {
+    std::move(GetShellCreatedCallback()).Run(this);
   }
 }
 
 Shell::~Shell() {
   g_platform->CleanUp(this);
 
-  for (size_t i = 0; i < windows_.size(); ++i) {
-    if (windows_[i] == this) {
-      windows_.erase(windows_.begin() + i);
+  for (size_t i = 0; i < windows().size(); ++i) {
+    if (windows()[i] == this) {
+      windows().erase(windows().begin() + i);
       break;
     }
   }
@@ -145,8 +149,8 @@ void Shell::QuitMainMessageLoopForTesting() {
 // static
 void Shell::SetShellCreatedCallback(
     base::OnceCallback<void(Shell*)> shell_created_callback) {
-  DCHECK(!shell_created_callback_);
-  shell_created_callback_ = std::move(shell_created_callback);
+  DCHECK(!(GetShellCreatedCallback()));
+  GetShellCreatedCallback() = std::move(shell_created_callback);
 }
 
 // static
@@ -156,12 +160,17 @@ bool Shell::ShouldHideToolbar() {
 
 // static
 Shell* Shell::FromWebContents(content::WebContents* web_contents) {
-  for (Shell* window : windows_) {
+  for (Shell* window : windows()) {
     if (window->web_contents() && window->web_contents() == web_contents) {
       return window;
     }
   }
   return nullptr;
+}
+
+std::vector<Shell*>& Shell::windows() {
+  static base::NoDestructor<std::vector<Shell*>> g_windows_;
+  return *g_windows_;
 }
 
 // static
@@ -300,18 +309,6 @@ content::WebContents* Shell::AddNewContents(
     const blink::mojom::WindowFeatures& window_features,
     bool user_gesture,
     bool* was_blocked) {
-#if !BUILDFLAG(IS_ANDROID)
-  // If the shell is opening a document picture-in-picture window, it needs to
-  // inform the DocumentPictureInPictureWindowController.
-  if (disposition == WindowOpenDisposition::NEW_PICTURE_IN_PICTURE) {
-    DocumentPictureInPictureWindowController* controller =
-        PictureInPictureWindowController::
-            GetOrCreateDocumentPictureInPictureController(source);
-    controller->SetChildWebContents(new_contents.get());
-    controller->Show();
-  }
-#endif  // !BUILDFLAG(IS_ANDROID)
-
   CreateShell(
       std::move(new_contents), AdjustWindowSize(window_features.bounds.size()),
       !delay_popup_contents_delegate_for_testing_ /* should_set_delegate */);
@@ -552,7 +549,7 @@ void Shell::RegisterProtocolHandler(content::RenderFrameHost* requesting_frame,
     return;
   }
 
-  if (!user_gesture && !windows_.empty()) {
+  if (!user_gesture && !windows().empty()) {
     // TODO(jfernandez): This is not strictly needed, but we need a way to
     // inform the observers in browser tests that the request has been
     // cancelled, to avoid timeouts. Chrome just holds the handler as pending in

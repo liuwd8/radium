@@ -5,6 +5,7 @@
 #include "radium/browser/profiles/profile_manager.h"
 
 #include "absl/cleanup/cleanup.h"
+#include "base/logging.h"
 #include "base/memory/ptr_util.h"
 #include "base/path_service.h"
 #include "base/trace_event/trace_event.h"
@@ -101,8 +102,7 @@ void ProfileManager::CreateProfileAsync(
   };
 
   if (!CanCreateProfileAtPath(profile_path)) {
-    LOG(ERROR) << "Cannot create profile at path "
-               << profile_path.AsUTF8Unsafe();
+    LOG(ERROR) << "Cannot create profile at path " << profile_path;
     return;
   }
 
