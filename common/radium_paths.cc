@@ -15,7 +15,6 @@
 #include "build/chromeos_buildflags.h"
 #include "components/policy/core/common/policy_paths.h"
 #include "media/media_buildflags.h"
-#include "ppapi/buildflags/buildflags.h"
 #include "radium/common/radium_constants.h"
 #include "radium/common/radium_paths.h"
 #include "radium/common/radium_paths_internal.h"
@@ -108,29 +107,6 @@ bool GetChromeOsCrdDataDirInternal(base::FilePath* result,
 base::FilePath& GetInvalidSpecifiedUserDataDirInternal() {
   static base::NoDestructor<base::FilePath> s;
   return *s;
-}
-
-// Gets the path for internal plugins.
-bool GetInternalPluginsDirectory(base::FilePath* result) {
-#if BUILDFLAG(ENABLE_PPAPI)
-#if BUILDFLAG(IS_MAC)
-  // If called from Chrome, get internal plugins from a subdirectory of the
-  // framework.
-  if (base::apple::AmIBundled()) {
-    *result = radium::GetFrameworkBundlePath();
-    DCHECK(!result->empty());
-    *result = result->Append("Internet Plug-Ins");
-    return true;
-  }
-  // In tests, just look in the module directory (below).
-#endif  //  BUILDFLAG(IS_MAC)
-
-  // The rest of the world expects plugins in the module directory.
-  return base::PathService::Get(base::DIR_MODULE, result);
-#else  // BUILDFLAG(ENABLE_PPAPI)
-  // PPAPI plugins are not enabled, so don't return an internal plugins path.
-  return false;
-#endif
 }
 
 // Gets the path for bundled implementations of components. Note that these
@@ -322,11 +298,6 @@ bool PathProvider(int key, base::FilePath* result) {
 #endif
       cur = cur.Append(FILE_PATH_LITERAL("Dictionaries"));
       create_dir = true;
-      break;
-    case radium::DIR_INTERNAL_PLUGINS:
-      if (!GetInternalPluginsDirectory(&cur)) {
-        return false;
-      }
       break;
     case radium::DIR_COMPONENTS:
       if (!GetComponentDirectory(&cur)) {
